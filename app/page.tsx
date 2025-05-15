@@ -1,16 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import {
-  Code,
   GitBranch,
-  Users,
   LayoutPanelLeft,
   MessageSquare,
   Sparkles,
   BarChart2,
   Github,
   ArrowRight,
-  CheckCircle,
   Terminal,
   Cpu,
   GitPullRequest,
@@ -83,13 +80,13 @@ export default function Home() {
 
           <div className='flex items-center space-x-3'>
             <a
-              href='#'
+              href='/login'
               className='text-gray-300 hover:text-emerald-400 text-sm'
             >
               Login
             </a>
             <a
-              href='#'
+              href='/login'
               className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-3 py-1.5 rounded-md text-sm font-medium hover:opacity-90 transition-opacity'
             >
               Sign Up
@@ -272,6 +269,62 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className='py-20 bg-gradient-to-br '>
+        <div className='container mx-auto px-6'>
+          <div className='max-w-3xl mx-auto text-center mb-16'>
+            <h2 className='text-3xl md:text-4xl font-bold text-slate-900 mb-4'>
+              How
+              <span className='text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent'>
+                DevSync
+              </span>
+              Works
+            </h2>
+            <p className='text-lg text-slate-600'>
+              Get started in minutes and find your perfect developer team
+            </p>
+          </div>
+
+          <div className='grid md:grid-cols-4 gap-8'>
+            {[
+              {
+                step: '1',
+                title: 'Create Profile',
+                desc: 'Highlight your skills and preferred roles',
+              },
+              {
+                step: '2',
+                title: 'Browse Projects',
+                desc: 'Find exciting projects needing your skills',
+              },
+              {
+                step: '3',
+                title: 'Join Team',
+                desc: 'Claim an open role that matches your expertise',
+              },
+              {
+                step: '4',
+                title: 'Build & Ship',
+                desc: 'Collaborate and create something amazing',
+              },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className='bg-gray-800/70 bg p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow'
+              >
+                <div className='w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg mb-4'>
+                  {item.step}
+                </div>
+                <h3 className='text-xl font-semibold text-white mb-2'>
+                  {item.title}
+                </h3>
+                <p className='text-slate-600'>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className='py-20 px-6 bg-gray-900'>
         <div className='container mx-auto max-w-2xl text-center'>
@@ -287,7 +340,7 @@ export default function Home() {
             href='#'
             className='inline-block bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity'
           >
-            Join DevSync — It's Free
+            Join DevSync — It is free
           </a>
         </div>
       </section>
