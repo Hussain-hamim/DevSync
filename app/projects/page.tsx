@@ -16,57 +16,59 @@ import Link from 'next/link';
 
 const ProjectCard = ({ project }) => {
   return (
-    <div className='bg-gray-800/60  hover:bg-gray-800/80 border border-gray-700 hover:border-emerald-400/30 rounded-xl p-5 transition-all cursor-pointer group h-full '>
-      <div className='flex justify-between items-start mb-3'>
-        <div className='flex items-center space-x-2'>
-          <GitBranch className='w-5 h-5 text-emerald-400' />
-          <h3 className='font-medium text-gray-100 group-hover:text-emerald-400 transition-colors'>
-            {project.name}
-          </h3>
+    <Link href={`/projects/${project.id}`} passHref>
+      <div className='bg-gray-800/60  hover:bg-gray-800/80 border border-gray-700 hover:border-emerald-400/30 rounded-xl p-5 transition-all cursor-pointer group h-full '>
+        <div className='flex justify-between items-start mb-3'>
+          <div className='flex items-center space-x-2'>
+            <GitBranch className='w-5 h-5 text-emerald-400' />
+            <h3 className='font-medium text-gray-100 group-hover:text-emerald-400 transition-colors'>
+              {project.name}
+            </h3>
+          </div>
+          <button className='text-gray-400 hover:text-emerald-400 p-1'>
+            <Star className='w-4 h-4' />
+          </button>
         </div>
-        <button className='text-gray-400 hover:text-emerald-400 p-1'>
-          <Star className='w-4 h-4' />
-        </button>
-      </div>
 
-      {/* Project Image */}
-      <div className='relative w-full h-40 mb-4 rounded-lg overflow-hidden'>
-        <Image
-          src={project.imageUrl}
-          alt={project.name}
-          fill
-          className='object-cover'
-          placeholder='blur'
-          blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-        />
-      </div>
-
-      <p className='text-gray-400 text-sm mb-4 line-clamp-2'>
-        {project.description}
-      </p>
-
-      <div className='flex flex-wrap gap-2 mb-4'>
-        {project.techStack.map((tech, index) => (
-          <span
-            key={index}
-            className='text-xs bg-gray-900/80 text-gray-300 px-2 py-1 rounded'
-          >
-            {tech}
-          </span>
-        ))}
-      </div>
-
-      <div className='flex justify-between items-center text-sm'>
-        <div className='flex items-center space-x-2 text-gray-400'>
-          <Users className='w-4 h-4' />
-          <span>{project.teamSize} members</span>
+        {/* Project Image */}
+        <div className='relative w-full h-40 mb-4 rounded-lg overflow-hidden'>
+          <Image
+            src={project.imageUrl}
+            alt={project.name}
+            fill
+            className='object-cover'
+            placeholder='blur'
+            blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+          />
         </div>
-        <div className='flex items-center space-x-2 text-gray-400'>
-          <Eye className='w-4 h-4' />
-          <span>{project.views} views</span>
+
+        <p className='text-gray-400 text-sm mb-4 line-clamp-2'>
+          {project.description}
+        </p>
+
+        <div className='flex flex-wrap gap-2 mb-4'>
+          {project.techStack.map((tech, index) => (
+            <span
+              key={index}
+              className='text-xs bg-gray-900/80 text-gray-300 px-2 py-1 rounded'
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
+
+        <div className='flex justify-between items-center text-sm'>
+          <div className='flex items-center space-x-2 text-gray-400'>
+            <Users className='w-4 h-4' />
+            <span>{project.teamSize} members</span>
+          </div>
+          <div className='flex items-center space-x-2 text-gray-400'>
+            <Eye className='w-4 h-4' />
+            <span>{project.views} views</span>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
