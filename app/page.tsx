@@ -12,10 +12,13 @@ import {
   Cpu,
   GitPullRequest,
 } from 'lucide-react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 export default function Home() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [visible, setVisible] = useState(true);
+  const { data: session } = useSession();
+  const isLoggedIn = !!session;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,7 +62,7 @@ export default function Home() {
               Features
             </a>
             <a
-              href='#'
+              href='/projects'
               className='text-gray-300 hover:text-emerald-400 transition-colors text-sm'
             >
               Projects
@@ -79,18 +82,24 @@ export default function Home() {
           </nav>
 
           <div className='flex items-center space-x-3'>
-            <a
-              href='/login'
-              className='text-gray-300 hover:text-emerald-400 text-sm'
-            >
-              Login
-            </a>
-            <a
-              href='/login'
-              className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-3 py-1.5 rounded-md text-sm font-medium hover:opacity-90 transition-opacity'
-            >
-              Sign Up
-            </a>
+            {session ? (
+              <>
+                <div>{session.user?.name}</div>
+                <button
+                  className='text-gray-300 hover:text-emerald-400 text-sm'
+                  onClick={() => signOut()}
+                >
+                  signout
+                </button>
+              </>
+            ) : (
+              <a
+                href='/login'
+                className='text-gray-300 hover:text-emerald-400 text-sm'
+              >
+                Login
+              </a>
+            )}
           </div>
         </div>
       </header>
@@ -129,7 +138,7 @@ export default function Home() {
               </a>
 
               <a
-                href='#'
+                onClick={() => signIn('github')}
                 className='bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2'
               >
                 <Github className='w-4 h-4' />
@@ -273,10 +282,10 @@ export default function Home() {
       <section className='py-20 bg-gradient-to-br '>
         <div className='container mx-auto px-6'>
           <div className='max-w-3xl mx-auto text-center mb-16'>
-            <h2 className='text-3xl md:text-4xl font-bold text-slate-900 mb-4'>
-              How
+            <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>
+              How{' '}
               <span className='text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent'>
-                DevSync
+                DevSync {''}
               </span>
               Works
             </h2>
@@ -288,7 +297,7 @@ export default function Home() {
           <div className='grid md:grid-cols-4 gap-8'>
             {[
               {
-                step: '1',
+                step: '👤',
                 title: 'Create Profile',
                 desc: 'Highlight your skills and preferred roles',
               },

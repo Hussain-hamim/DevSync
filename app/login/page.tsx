@@ -9,6 +9,7 @@ import {
   EyeOff,
   ArrowRight,
 } from 'lucide-react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session } = useSession();
 
   const validateForm = () => {
     let valid = true;
@@ -53,6 +55,11 @@ export default function LoginPage() {
       }, 1500);
     }
   };
+
+  if (session) {
+    window.location.href = '/'; // or use router.push('/')
+    return null;
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4'>
@@ -196,6 +203,7 @@ export default function LoginPage() {
           <div className='space-y-3'>
             <button
               type='button'
+              onClick={() => signIn('github')}
               className='w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg py-2.5 px-5 transition-colors flex items-center justify-center'
             >
               <Github className='w-5 h-5 mr-2' />
