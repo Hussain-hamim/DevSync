@@ -62,7 +62,7 @@ export default function Home() {
               Features
             </a>
             <a
-              href='#'
+              href='projects'
               className='text-gray-300 hover:text-emerald-400 transition-colors text-sm'
             >
               Projects
