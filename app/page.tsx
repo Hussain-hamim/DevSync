@@ -11,6 +11,10 @@ import {
   Terminal,
   Cpu,
   GitPullRequest,
+  Code2,
+  Search,
+  User,
+  Users,
 } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 
@@ -278,56 +282,52 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className='py-20 bg-gradient-to-br '>
+      {/* How It Works Section */}
+      <section className='py-20 bg-gradient-to-br from-gray-900 to-gray-800'>
         <div className='container mx-auto px-6'>
           <div className='max-w-3xl mx-auto text-center mb-16'>
-            <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>
-              How{' '}
-              <span className='text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent'>
-                DevSync {''}
-              </span>
-              Works
+            <h2 className='text-3xl md:text-4xl font-bold text-gray-100 mb-4'>
+              How <span className='text-emerald-400'>DevSync</span> Works
             </h2>
-            <p className='text-lg text-slate-600'>
+            <p className='text-lg text-gray-400'>
               Get started in minutes and find your perfect developer team
             </p>
           </div>
 
-          <div className='grid md:grid-cols-4 gap-8'>
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto'>
             {[
               {
-                step: '👤',
+                icon: <User className='w-6 h-6 text-emerald-400' />,
                 title: 'Create Profile',
                 desc: 'Highlight your skills and preferred roles',
               },
               {
-                step: '2',
+                icon: <Search className='w-6 h-6 text-emerald-400' />,
                 title: 'Browse Projects',
                 desc: 'Find exciting projects needing your skills',
               },
               {
-                step: '3',
+                icon: <Users className='w-6 h-6 text-emerald-400' />,
                 title: 'Join Team',
-                desc: 'Claim an open role that matches your expertise',
+                desc: 'Claim an open role matching your expertise',
               },
               {
-                step: '4',
+                icon: <Code2 className='w-6 h-6 text-emerald-400' />,
                 title: 'Build & Ship',
                 desc: 'Collaborate and create something amazing',
               },
             ].map((item, index) => (
               <div
                 key={index}
-                className='bg-gray-800/70 bg p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow'
+                className='bg-gray-800/60 p-6 rounded-xl border border-gray-700 hover:border-emerald-400/30 transition-colors group'
               >
-                <div className='w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg mb-4'>
-                  {item.step}
+                <div className='w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center mb-4 border border-gray-700 group-hover:border-emerald-400/30 transition-colors'>
+                  {item.icon}
                 </div>
-                <h3 className='text-xl font-semibold text-white mb-2'>
+                <h3 className='text-lg font-semibold text-gray-100 mb-2'>
                   {item.title}
                 </h3>
-                <p className='text-slate-600'>{item.desc}</p>
+                <p className='text-gray-400 text-sm'>{item.desc}</p>
               </div>
             ))}
           </div>
