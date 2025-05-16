@@ -26,6 +26,7 @@ import { signIn } from 'next-auth/react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import Header from '@/components/Header';
+import { supabase } from './lib/supabase';
 
 export default function Home() {
   const heroRef = useRef(null);
@@ -76,6 +77,20 @@ export default function Home() {
       delay: 0.4,
     },
   ];
+
+  const handleSignIn = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          // Request additional GitHub permissions
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100 overflow-x-hidden'>
@@ -192,7 +207,7 @@ export default function Home() {
               </a>
 
               <a
-                onClick={() => signIn('github')}
+                onClick={handleSignIn}
                 className='relative overflow-hidden group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
               >
                 <span className='relative z-10 flex items-center'>

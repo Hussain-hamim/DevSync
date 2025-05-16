@@ -63,11 +63,17 @@ export default function LoginPage() {
   }
 
   const handleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          // Request additional GitHub permissions
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
     });
-    if (error) console.error(error);
   };
 
   return (
