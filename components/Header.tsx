@@ -51,7 +51,7 @@ const Header = () => {
             </motion.div>
 
             <nav className='hidden md:flex items-center space-x-6'>
-              {['Features', 'Projects', 'Teams', 'Rankings'].map(
+              {['Projects', 'Dashboard', , 'Teams', 'Rankings'].map(
                 (item, index) => (
                   <motion.a
                     key={item}
