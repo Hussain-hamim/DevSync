@@ -71,6 +71,7 @@ export default function LoginPage() {
           // Request additional GitHub permissions
           access_type: 'offline',
           prompt: 'consent',
+          scopes: 'user:email', // ← Request email scope
         },
       },
     });

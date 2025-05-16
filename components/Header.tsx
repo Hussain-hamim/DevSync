@@ -5,11 +5,24 @@ import { useEffect, useState } from 'react';
 import { Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
+import { supabase } from '@/app/lib/supabase';
 
 const Header = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [visible, setVisible] = useState(true);
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
+  const [user, setUser] = useState(null);
+
+  console.log(user);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+      console.log(data);
+    };
+    getUser();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -73,13 +86,13 @@ const Header = () => {
               transition={{ delay: 0.6 }}
               className='flex items-center space-x-3'
             >
-              {session ? (
+              {user ? (
                 <>
                   <div className='flex items-center space-x-2'>
                     <div className='w-8 h-8 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center text-xs font-bold text-gray-900'>
-                      {session.user?.name?.charAt(0)}
+                      {user.email.charAt(0)}
                     </div>
-                    <div>{session.user?.name}</div>
+                    <div>{user.email}</div>
                   </div>
                   <button
                     className='text-gray-300 hover:text-emerald-400 text-sm'
