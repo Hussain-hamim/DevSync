@@ -82,9 +82,11 @@ export default function ProjectDetails({ params }) {
             </div>
           </div>
 
-          <button className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'>
-            Join Project
-          </button>
+          <Link href={`/projects/${project.id}/team`}>
+            <button className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'>
+              Join Project
+            </button>
+          </Link>
         </div>
       </div>
 

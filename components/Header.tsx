@@ -35,7 +35,7 @@ const Header = () => {
           animate={{ y: 0 }}
           exit={{ y: -100 }}
           transition={{ type: 'spring', damping: 20 }}
-          className={`fixed top-0 w-full z-50 bg-gray-800/90 backdrop-blur-md border-b border-gray-700`}
+          className={`fixed  top-0 w-full z-50 bg-gray-800/90 backdrop-blur-xs border-b border-gray-700`}
         >
           <div className='container mx-auto px-6 py-3 flex justify-between items-center'>
             <motion.div
