@@ -18,6 +18,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 
+// testing
+
 interface GitHubData {
   profile: {
     name: string;
