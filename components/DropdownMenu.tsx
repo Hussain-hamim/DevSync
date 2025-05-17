@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/utils/dropdown";
+} from "@/components/utils/dropDown";
 import { motion } from "framer-motion";
 import {
   ChevronDown,
