@@ -1,4 +1,3 @@
-// components/ProfileDropdown.tsx
 "use client";
 
 import {
@@ -8,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/utils/dropdownMenu";
+} from "@/components/utils/dropdown";
 import { motion } from "framer-motion";
 import {
   ChevronDown,
