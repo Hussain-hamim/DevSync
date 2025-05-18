@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
-import { supabase } from '@/app/lib/supabase';
+import MyDropdownMenu from './DropdownMenu';
 
 const Header = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -48,7 +48,7 @@ const Header = () => {
           animate={{ y: 0 }}
           exit={{ y: -100 }}
           transition={{ type: 'spring', damping: 20 }}
-          className={`fixed  top-0 w-full z-50 bg-gray-800/90 backdrop-blur-xs border-b border-gray-700`}
+          className={`fixed top-0 w-full z-50 bg-gray-800/90 backdrop-blur-md border-b border-gray-700`}
         >
           <div className='container mx-auto px-6 py-3 flex justify-between items-center'>
             <motion.div
@@ -64,7 +64,7 @@ const Header = () => {
             </motion.div>
 
             <nav className='hidden md:flex items-center space-x-6'>
-              {['Projects', 'Dashboard', , 'Teams', 'Rankings'].map(
+              {['Features', 'Projects', 'Teams', 'Rankings'].map(
                 (item, index) => (
                   <motion.a
                     key={item}
@@ -86,14 +86,17 @@ const Header = () => {
               transition={{ delay: 0.6 }}
               className='flex items-center space-x-3'
             >
-              {user ? (
+              <MyDropdownMenu />
+
+              {session ? (
                 <>
                   <div className='flex items-center space-x-2'>
                     <div className='w-8 h-8 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center text-xs font-bold text-gray-900'>
-                      {user.email.charAt(0)}
+                      {session.user?.name?.charAt(0)}
                     </div>
                     <div>{user.email}</div>
                   </div>
+                  // add dropDown menu
                   <button
                     className='text-gray-300 hover:text-emerald-400 text-sm'
                     onClick={() => signOut()}
