@@ -61,7 +61,7 @@ export default function ProfilePage() {
       try {
         const response = await fetch(`/api/github?username=${githubUsername}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch GitHub data');
+          throw new Error('Failed to fetch GitHub data, please try Login.');
         }
         const data = await response.json();
         setGithubData(data);
