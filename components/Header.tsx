@@ -6,11 +6,12 @@ import { Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
 import MyDropdownMenu from './DropdownMenu';
+import { supabase } from '@/app/lib/supabase';
 
 const Header = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [visible, setVisible] = useState(true);
-  // const { data: session } = useSession();
+  const { data: session } = useSession();
   const [user, setUser] = useState(null);
 
   console.log(user);
