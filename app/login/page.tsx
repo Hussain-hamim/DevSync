@@ -219,8 +219,8 @@ export default function LoginPage() {
           <div className='space-y-3'>
             <button
               type='button'
-              // onClick={() => signIn('github')}
-              onClick={handleSignIn}
+              onClick={() => signIn('github')}
+              // onClick={handleSignIn}
               className='w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg py-2.5 px-5 transition-colors flex items-center justify-center'
             >
               <Github className='w-5 h-5 mr-2' />

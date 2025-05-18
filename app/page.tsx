@@ -27,6 +27,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import Header from '@/components/Header';
 import { supabase } from './lib/supabase';
+import Link from 'next/link';
 
 export default function Home() {
   const heroRef = useRef(null);
@@ -207,12 +208,13 @@ export default function Home() {
               </a>
 
               <a
-                onClick={handleSignIn}
+                // onClick={handleSignIn}
+                onClick={() => signIn('github')}
                 className='relative overflow-hidden group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
               >
                 <span className='relative z-10 flex items-center'>
                   <Github className='w-4 h-4 mr-2' />
-                  <span>GitHub Connect</span>
+                  <Link href={'/'}>GitHub Connect</Link>
                 </span>
                 <span className='absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity'></span>
               </a>

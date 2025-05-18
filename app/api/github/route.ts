@@ -1,56 +1,56 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // adjust path if needed
 
 export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.accessToken) {
+    return NextResponse.json(
+      { error: 'Unauthorized. Please log in with GitHub.' },
+      { status: 401 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
-  const username = searchParams.get("username");
+  const username = searchParams.get('username');
 
   if (!username) {
     return NextResponse.json(
-      { error: "Username is required" },
+      { error: 'Username is required' },
       { status: 400 }
     );
   }
 
   try {
-    // Fetch user data
+    // Use user's GitHub access token
+    const headers = {
+      Authorization: `Bearer ${session.accessToken}`,
+      Accept: 'application/vnd.github+json',
+    };
+
     const userRes = await fetch(`https://api.github.com/users/${username}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        Accept: "application/vnd.github+json",
-      },
+      headers,
     });
 
     if (!userRes.ok) {
-      throw new Error("GitHub user not found");
+      throw new Error('GitHub user not found');
     }
 
     const userData = await userRes.json();
 
-    // Fetch user repositories
-    const reposRes = await fetch(userData.repos_url, {
-      headers: {
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        Accept: "application/vnd.github+json",
-      },
-    });
+    const reposRes = await fetch(userData.repos_url, { headers });
     const reposData = await reposRes.json();
 
-    // Fetch user contribution data (approximate)
     const eventsRes = await fetch(
       `https://api.github.com/users/${username}/events/public`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          Accept: "application/vnd.github+json",
-        },
-      }
+      { headers }
     );
     const eventsData = await eventsRes.json();
 
-    // Process data
     const contributions = eventsData.filter(
       (event: any) =>
-        event.type === "PushEvent" || event.type === "PullRequestEvent"
+        event.type === 'PushEvent' || event.type === 'PullRequestEvent'
     ).length;
 
     return NextResponse.json({
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to fetch GitHub data",
+            : 'Failed to fetch GitHub data',
       },
       { status: 500 }
     );

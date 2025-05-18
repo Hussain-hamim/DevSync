@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
 import MyDropdownMenu from './DropdownMenu';
 import { supabase } from '@/app/lib/supabase';
+import Link from 'next/link';
 
 const Header = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -60,12 +61,12 @@ const Header = () => {
             >
               <Terminal className='w-5 h-5 text-emerald-400' />
               <span className='text-lg font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent'>
-                DevSync
+                <Link href='/'>DevSync</Link>
               </span>
             </motion.div>
 
             <nav className='hidden md:flex items-center space-x-6'>
-              {['Features', 'Projects', 'Teams', 'Rankings'].map(
+              {['Profile', 'Projects', 'Teams', 'Rankings'].map(
                 (item, index) => (
                   <motion.a
                     key={item}
@@ -88,31 +89,6 @@ const Header = () => {
               className='flex items-center space-x-3'
             >
               <MyDropdownMenu />
-
-              {session ? (
-                <>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-8 h-8 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center text-xs font-bold text-gray-900'>
-                      {session.user?.name?.charAt(0)}
-                    </div>
-                    <div>{user.email}</div>
-                  </div>
-                  // add dropDown menu
-                  <button
-                    className='text-gray-300 hover:text-emerald-400 text-sm'
-                    onClick={() => signOut()}
-                  >
-                    Sign out
-                  </button>
-                </>
-              ) : (
-                <a
-                  href='/login'
-                  className='text-gray-300 hover:text-emerald-400 text-sm'
-                >
-                  Login
-                </a>
-              )}
             </motion.div>
           </div>
         </motion.header>
