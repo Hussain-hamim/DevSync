@@ -1,3 +1,4 @@
+import { supabase } from '@/app/lib/supabase';
 import NextAuth from 'next-auth';
 import GitHubProvider from 'next-auth/providers/github';
 
@@ -27,6 +28,35 @@ export const authOptions = {
         session.user.login = token.login; // GitHub username
       }
       return session;
+    },
+    async signIn({ user, account, profile }) {
+      if (!account || !profile) return false;
+
+      // Extract GitHub info
+      const github_id = `github_${profile.id}`;
+      const email = user.email!;
+      const name = user.name || profile.login;
+      const avatar_url = profile.avatar_url;
+      const github_token = account.access_token;
+
+      // Insert or update user in Supabase
+      const { data, error } = await supabase.from('users').upsert(
+        {
+          github_id,
+          email,
+          name,
+          avatar_url,
+          github_token,
+        },
+        { onConflict: 'github_id' }
+      );
+
+      if (error) {
+        console.error('Supabase user insert error:', error.message);
+        return false;
+      }
+
+      return true;
     },
   },
 };
