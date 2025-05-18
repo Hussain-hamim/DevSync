@@ -17,6 +17,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
+import { useSession } from 'next-auth/react';
 
 // testing
 
@@ -52,9 +53,12 @@ export default function ProfilePage() {
   const [githubData, setGithubData] = useState<GitHubData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
 
   // Replace with your actual GitHub username or get it from auth/session
-  const githubUsername = 'Hussain-hamim';
+  const githubUsername = session?.user?.login || 'octocat';
+
+  console.log('github username: ', githubUsername);
 
   useEffect(() => {
     const fetchGitHubData = async () => {
@@ -73,7 +77,7 @@ export default function ProfilePage() {
     };
 
     fetchGitHubData();
-  }, [githubUsername]);
+  }, [githubUsername, session?.user]);
 
   if (loading) {
     return (
