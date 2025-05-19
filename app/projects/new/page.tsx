@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Terminal,
   X,
@@ -7,62 +7,67 @@ import {
   Text,
   Code,
   Cpu,
-  Server,
-  Settings,
-  Plus,
   ChevronDown,
   Users,
+  Plus,
 } from 'lucide-react';
+import { saveProject } from '@/app/actions/saveProject';
 
 export default function NewProjectPage() {
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
     description: '',
-    githubRepo: '',
-    techStack: [],
-    rolesNeeded: [],
+    github_url: '',
+    tech_stack: [] as string[],
+    roles_needed: [] as string[],
   });
   const [techInput, setTechInput] = useState('');
   const [roleInput, setRoleInput] = useState('');
 
   const handleAddTech = () => {
-    if (techInput && !formData.techStack.includes(techInput)) {
+    if (techInput && !formData.tech_stack.includes(techInput)) {
       setFormData({
         ...formData,
-        techStack: [...formData.techStack, techInput],
+        tech_stack: [...formData.tech_stack, techInput],
       });
       setTechInput('');
     }
   };
 
   const handleAddRole = () => {
-    if (roleInput && !formData.rolesNeeded.includes(roleInput)) {
+    if (roleInput && !formData.roles_needed.includes(roleInput)) {
       setFormData({
         ...formData,
-        rolesNeeded: [...formData.rolesNeeded, roleInput],
+        roles_needed: [...formData.roles_needed, roleInput],
       });
       setRoleInput('');
     }
   };
 
-  const removeTech = (tech) => {
+  const removeTech = (tech: string) => {
     setFormData({
       ...formData,
-      techStack: formData.techStack.filter((t) => t !== tech),
+      tech_stack: formData.tech_stack.filter((t) => t !== tech),
     });
   };
 
-  const removeRole = (role) => {
+  const removeRole = (role: string) => {
     setFormData({
       ...formData,
-      rolesNeeded: formData.rolesNeeded.filter((r) => r !== role),
+      roles_needed: formData.roles_needed.filter((r) => r !== role),
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Project created:', formData);
+
+    try {
+      await saveProject(formData);
+      alert('Project saved successfully!');
+      // Optionally redirect or reset form
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -89,7 +94,7 @@ export default function NewProjectPage() {
           {/* Project Name */}
           <div>
             <label
-              htmlFor='name'
+              htmlFor='title'
               className='block text-sm font-medium text-gray-300 mb-2'
             >
               Project Name
@@ -100,10 +105,11 @@ export default function NewProjectPage() {
               </div>
               <input
                 type='text'
-                id='name'
-                value={formData.name}
+                id='title'
+                name='title'
+                value={formData.title}
                 onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                  setFormData({ ...formData, title: e.target.value })
                 }
                 className='bg-gray-800 border border-gray-700 text-gray-100 rounded-lg block w-full pl-10 p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition'
                 placeholder='My Awesome Project'
@@ -125,6 +131,7 @@ export default function NewProjectPage() {
                 <Text className='h-5 w-5 text-gray-500' />
               </div>
               <textarea
+                name='description'
                 id='description'
                 value={formData.description}
                 onChange={(e) =>
@@ -141,7 +148,7 @@ export default function NewProjectPage() {
           {/* GitHub Repo */}
           <div>
             <label
-              htmlFor='githubRepo'
+              htmlFor='github_url'
               className='block text-sm font-medium text-gray-300 mb-2'
             >
               GitHub Repository (Optional)
@@ -152,10 +159,11 @@ export default function NewProjectPage() {
               </div>
               <input
                 type='url'
-                id='githubRepo'
-                value={formData.githubRepo}
+                id='github_url'
+                name='github_url'
+                value={formData.github_url}
                 onChange={(e) =>
-                  setFormData({ ...formData, githubRepo: e.target.value })
+                  setFormData({ ...formData, github_url: e.target.value })
                 }
                 className='bg-gray-800 border border-gray-700 text-gray-100 rounded-lg block w-full pl-10 p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition'
                 placeholder='https://github.com/username/repo'
@@ -169,7 +177,7 @@ export default function NewProjectPage() {
               Tech Stack
             </label>
             <div className='flex flex-wrap gap-2 mb-2'>
-              {formData.techStack.map((tech, index) => (
+              {formData.tech_stack.map((tech, index) => (
                 <span
                   key={index}
                   className='inline-flex items-center bg-gray-700 text-emerald-400 text-xs px-2 py-1 rounded'
@@ -217,7 +225,7 @@ export default function NewProjectPage() {
               Roles Needed
             </label>
             <div className='flex flex-wrap gap-2 mb-2'>
-              {formData.rolesNeeded.map((role, index) => (
+              {formData.roles_needed.map((role, index) => (
                 <span
                   key={index}
                   className='inline-flex items-center bg-gray-700 text-cyan-400 text-xs px-2 py-1 rounded'

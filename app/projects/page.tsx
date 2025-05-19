@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { supabase } from '../lib/supabase';
 
 const TechTag = ({ tech }) => (
   <motion.span
@@ -29,48 +30,78 @@ const TechTag = ({ tech }) => (
   </motion.span>
 );
 
+const projectsData = [
+  {
+    id: 1,
+    name: 'AI Code Review',
+    description: 'Automated code quality analysis using machine learning',
+    techStack: ['Python', 'TensorFlow', 'React'],
+    teamSize: 4,
+    views: 128,
+    category: 'ai',
+  },
+  {
+    id: 2,
+    name: 'AI Code Review',
+    description: 'Automated code quality analysis using machine learning',
+    techStack: ['Python', 'TensorFlow', 'React'],
+    teamSize: 4,
+    views: 128,
+    category: 'ai',
+  },
+  {
+    id: 3,
+    name: 'AI Code Review',
+    description: 'Automated code quality analysis using machine learning',
+    techStack: ['Python', 'TensorFlow', 'React'],
+    teamSize: 4,
+    views: 128,
+    category: 'ai',
+  },
+  {
+    id: 4,
+    name: 'AI Code Review',
+    description: 'Automated code quality analysis using machine learning',
+    techStack: ['Python', 'TensorFlow', 'React'],
+    teamSize: 4,
+    views: 128,
+    category: 'ai',
+  },
+];
+
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: 'AI Code Review',
-      description: 'Automated code quality analysis using machine learning',
-      techStack: ['Python', 'TensorFlow', 'React'],
-      teamSize: 4,
-      views: 128,
-      category: 'ai',
-    },
-    {
-      id: 2,
-      name: 'AI Code Review',
-      description: 'Automated code quality analysis using machine learning',
-      techStack: ['Python', 'TensorFlow', 'React'],
-      teamSize: 4,
-      views: 128,
-      category: 'ai',
-    },
-    {
-      id: 3,
-      name: 'AI Code Review',
-      description: 'Automated code quality analysis using machine learning',
-      techStack: ['Python', 'TensorFlow', 'React'],
-      teamSize: 4,
-      views: 128,
-      category: 'ai',
-    },
-    {
-      id: 4,
-      name: 'AI Code Review',
-      description: 'Automated code quality analysis using machine learning',
-      techStack: ['Python', 'TensorFlow', 'React'],
-      teamSize: 4,
-      views: 128,
-      category: 'ai',
-    },
-    // ... other projects with categories
-  ]);
+  const [projects, setProjects] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('is_public', true); // Only show public projects
+
+      if (error) {
+        console.error('Failed to fetch projects:', error.message);
+        return;
+      }
+
+      // Map Supabase data to your frontend format
+      const mapped = data.map((proj) => ({
+        id: proj.id,
+        name: proj.title,
+        description: proj.description,
+        techStack: proj.tech_stack || [],
+        teamSize: 4, // Optional: default or calculated
+        views: 0, // Optional: if you don’t track views yet
+        category: 'general', // You can infer or set this
+      }));
+
+      setProjects(mapped);
+    }
+
+    fetchProjects();
+  }, []);
 
   // Filter projects
   const filteredProjects =
