@@ -1,8 +1,6 @@
 // app/projects/[id]/page.jsx
 import {
-  Terminal,
   GitBranch,
-  Code,
   Users,
   Calendar,
   Github,
@@ -14,22 +12,49 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function ProjectDetails({ params }) {
-  // In a real app, you'd fetch this data based on params.id
-  const project = {
-    id: params.id,
-    name: 'AI Code Review Tool',
-    description:
-      'An automated code review system using machine learning to detect bugs and suggest improvements. This project aims to help developers catch issues before they reach production.',
-    techStack: ['Python', 'TensorFlow', 'React', 'FastAPI'],
-    teamSize: 4,
-    views: 128,
-    createdAt: '2023-10-15',
-    githubUrl: 'https://github.com/username/ai-code-review',
-    rolesNeeded: ['Frontend Developer', 'ML Engineer'],
-    discussions: 23,
-    starred: false,
-  };
+import { notFound } from 'next/navigation';
+import { supabase } from '@/app/lib/supabase';
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  github_url: string | null;
+  tech_stack: string[];
+  roles_needed: string[];
+  created_at: string;
+}
+
+export default async function ProjectDetails({
+  params,
+}: {
+  params: { id: string };
+}) {
+  // Fetch the project from Supabase
+  const { data: project, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', params.id)
+    .single();
+
+  if (error || !project) {
+    notFound();
+  }
+
+  // const project = {
+  //   id: params.id,
+  //   name: 'AI Code Review Tool',
+  //   description:
+  //     'An automated code review system using machine learning to detect bugs and suggest improvements. This project aims to help developers catch issues before they reach production.',
+  //   techStack: ['Python', 'TensorFlow', 'React', 'FastAPI'],
+  //   teamSize: 4,
+  //   views: 128,
+  //   createdAt: '2023-10-15',
+  //   githubUrl: 'https://github.com/username/ai-code-review',
+  //   rolesNeeded: ['Frontend Developer', 'ML Engineer'],
+  //   discussions: 23,
+  //   starred: false,
+  // };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
@@ -62,7 +87,7 @@ export default function ProjectDetails({ params }) {
             <div className='flex items-center space-x-3 mb-4'>
               <GitBranch className='w-6 h-6 text-emerald-400' />
               <h1 className='text-2xl md:text-3xl font-bold text-gray-100'>
-                {project.name}
+                {project.title}
               </h1>
             </div>
 
@@ -219,7 +244,7 @@ export default function ProjectDetails({ params }) {
               Tech Stack
             </h2>
             <div className='flex flex-wrap gap-2'>
-              {project.techStack.map((tech, index) => (
+              {project.tech_stack?.map((tech, index) => (
                 <span
                   key={index}
                   className='text-xs bg-gray-900/80 text-emerald-400 px-3 py-1.5 rounded-full'
@@ -236,7 +261,7 @@ export default function ProjectDetails({ params }) {
               Roles Needed
             </h2>
             <ul className='space-y-3'>
-              {project.rolesNeeded.map((role, index) => (
+              {project.roles_needed?.map((role, index) => (
                 <li key={index} className='flex items-center'>
                   <span className='w-2 h-2 bg-cyan-400 rounded-full mr-3'></span>
                   <span className='text-gray-300'>{role}</span>
