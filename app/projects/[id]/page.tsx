@@ -39,23 +39,48 @@ export default function ProjectDetails() {
 
   const [showJoinModal, setShowJoinModal] = useState(false);
 
-  // 1. Fetch project data
+  // Inside your ProjectDetails component
+
+  const [availableRoles, setAvailableRoles] = useState([]);
+
+  // Fetch project data and roles
   useEffect(() => {
-    const fetchProject = async () => {
-      const { data, error } = await supabase
+    const fetchProjectAndRoles = async () => {
+      // 1. Fetch project data
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', params.id)
         .single();
 
-      if (!error && data) {
-        setProject(data);
+      if (!projectError && projectData) {
+        setProject(projectData);
+
+        // 2. Fetch project roles (already taken roles)
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('project_roles')
+          .select('title')
+          .eq('project_id', params.id);
+
+        if (!rolesError) {
+          // 3. Filter out taken roles
+          const takenRoles = rolesData.map((role) => role.title);
+          const filteredRoles = projectData.roles_needed.filter(
+            (role) => !takenRoles.includes(role)
+          );
+
+          setAvailableRoles(filteredRoles);
+        } else {
+          console.error('Error fetching roles:', rolesError);
+          // If error, show all roles as available
+          setAvailableRoles(projectData.roles_needed || []);
+        }
       } else {
-        console.error('Project not found:', error);
+        console.error('Project not found:', projectError);
       }
     };
 
-    fetchProject();
+    fetchProjectAndRoles();
   }, [params.id]);
 
   // 2. Fetch user ID from your Supabase `users` table using NextAuth session email
@@ -79,25 +104,21 @@ export default function ProjectDetails() {
     fetchUserId();
   }, [session]);
 
-  // 3. Join handler
-  const handleJoin = async () => {
+  const handleJoinSubmit = async (role: string, message: string) => {
+    console.log('Join request submitted:', { role, message });
+    // Here you would typically make an API call
+
+    // 3. Join handler
     if (!project || !userId) {
       alert('Missing project or user info');
       return;
     }
-
-    const result = await joinProjectRole({
+    await joinProjectRole({
       filled_by: userId,
       project_id: project.id,
-      title: 'nooooooooooooo Dev',
+      title: role,
     });
 
-    alert('You joined the project!');
-  };
-
-  const handleJoinSubmit = (role: string, message: string) => {
-    console.log('Join request submitted:', { role, message });
-    // Here you would typically make an API call
     setShowJoinModal(false);
   };
 
@@ -343,7 +364,7 @@ export default function ProjectDetails() {
       {/* Join Project Modal */}
       <JoinProjectModal
         projectName={project.title}
-        rolesNeeded={project.roles_needed}
+        rolesNeeded={availableRoles}
         show={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         onSubmit={handleJoinSubmit}
