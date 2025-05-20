@@ -1,4 +1,5 @@
 // app/projects/[id]/page.jsx
+'use client';
 import {
   GitBranch,
   Users,
@@ -12,8 +13,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
+import { joinProjectRole } from '@/app/actions/joinProject';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { JoinProjectModal } from './JoinProjectModal';
 
 interface Project {
   id: string;
@@ -25,36 +30,76 @@ interface Project {
   created_at: string;
 }
 
-export default async function ProjectDetails({
-  params,
-}: {
-  params: { id: string };
-}) {
-  // Fetch the project from Supabase
-  const { data: project, error } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', params.id)
-    .single();
+export default function ProjectDetails() {
+  const { data: session } = useSession();
+  const params = useParams();
 
-  if (error || !project) {
-    notFound();
-  }
+  const [project, setProject] = useState({});
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // const project = {
-  //   id: params.id,
-  //   name: 'AI Code Review Tool',
-  //   description:
-  //     'An automated code review system using machine learning to detect bugs and suggest improvements. This project aims to help developers catch issues before they reach production.',
-  //   techStack: ['Python', 'TensorFlow', 'React', 'FastAPI'],
-  //   teamSize: 4,
-  //   views: 128,
-  //   createdAt: '2023-10-15',
-  //   githubUrl: 'https://github.com/username/ai-code-review',
-  //   rolesNeeded: ['Frontend Developer', 'ML Engineer'],
-  //   discussions: 23,
-  //   starred: false,
-  // };
+  const [showJoinModal, setShowJoinModal] = useState(false);
+
+  // 1. Fetch project data
+  useEffect(() => {
+    const fetchProject = async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (!error && data) {
+        setProject(data);
+      } else {
+        console.error('Project not found:', error);
+      }
+    };
+
+    fetchProject();
+  }, [params.id]);
+
+  // 2. Fetch user ID from your Supabase `users` table using NextAuth session email
+  useEffect(() => {
+    const fetchUserId = async () => {
+      if (!session?.user?.email) return;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', session.user.email)
+        .single();
+
+      if (!error && data) {
+        setUserId(data.id);
+      } else {
+        console.error('User not found in Supabase:', error);
+      }
+    };
+
+    fetchUserId();
+  }, [session]);
+
+  // 3. Join handler
+  const handleJoin = async () => {
+    if (!project || !userId) {
+      alert('Missing project or user info');
+      return;
+    }
+
+    const result = await joinProjectRole({
+      filled_by: userId,
+      project_id: project.id,
+      title: 'nooooooooooooo Dev',
+    });
+
+    alert('You joined the project!');
+  };
+
+  const handleJoinSubmit = (role: string, message: string) => {
+    console.log('Join request submitted:', { role, message });
+    // Here you would typically make an API call
+    setShowJoinModal(false);
+  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
@@ -107,11 +152,14 @@ export default async function ProjectDetails({
             </div>
           </div>
 
-          <Link href={`/projects/${project.id}/team`}>
-            <button className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'>
-              Join Project
-            </button>
-          </Link>
+          {/* <Link href={`/projects/${project.id}/team`}> */}
+          <button
+            onClick={() => setShowJoinModal(true)}
+            className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'
+          >
+            Join Project
+          </button>
+          {/* </Link> */}
         </div>
       </div>
 
@@ -292,6 +340,14 @@ export default async function ProjectDetails({
           )}
         </div>
       </div>
+      {/* Join Project Modal */}
+      <JoinProjectModal
+        projectName={project.title}
+        rolesNeeded={project.roles_needed}
+        show={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSubmit={handleJoinSubmit}
+      />
     </div>
   );
 }
