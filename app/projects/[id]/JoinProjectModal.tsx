@@ -1,9 +1,9 @@
 // components/JoinProjectModal.tsx
-"use client";
+'use client';
 
-import { X, ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { X, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 
 interface JoinProjectModalProps {
   projectName: string;
@@ -20,8 +20,8 @@ export function JoinProjectModal({
   onClose,
   onSubmit,
 }: JoinProjectModalProps) {
-  const [selectedRole, setSelectedRole] = useState("");
-  const [message, setMessage] = useState("");
+  const [selectedRole, setSelectedRole] = useState('');
+  const [message, setMessage] = useState('');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,44 +43,45 @@ export function JoinProjectModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className='fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4'
         >
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
-            className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md relative"
+            className='bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md relative'
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-200"
+              className='absolute top-4 right-4 text-gray-400 hover:text-gray-200'
             >
-              <X className="w-6 h-6" />
+              <X className='w-6 h-6' />
             </button>
 
-            <div className="p-6">
-              <h2 className="text-2xl font-bold text-gray-100 mb-2">
+            <div className='p-6'>
+              <h2 className='text-2xl font-bold text-gray-100 mb-2'>
                 Join Project
               </h2>
-              <p className="text-gray-400 mb-6">
-                Request to join {projectName}
+              <p className='text-gray-400 mb-6'>
+                Request to join
+                <span className='text-pink-500'> {projectName}</span>
               </p>
 
               <form onSubmit={handleSubmit}>
-                <div className="mb-6">
-                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                <div className='mb-6'>
+                  <label className='block text-gray-300 text-sm font-medium mb-2'>
                     Select Role
                   </label>
-                  <div className="relative">
+                  <div className='relative'>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                      className="w-full flex items-center justify-between bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-300 hover:border-emerald-400 transition-colors"
+                      className='w-full flex items-center justify-between bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-300 hover:border-emerald-400 transition-colors'
                     >
-                      {selectedRole || "Choose a role"}
+                      {selectedRole || 'Choose a role'}
                       <ChevronDown
                         className={`w-5 h-5 text-gray-400 transition-transform ${
-                          showRoleDropdown ? "rotate-180" : ""
+                          showRoleDropdown ? 'rotate-180' : ''
                         }`}
                       />
                     </button>
@@ -88,20 +89,20 @@ export function JoinProjectModal({
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute z-10 mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg"
+                        className='absolute z-10 mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg'
                       >
                         {rolesNeeded.map((role) => (
                           <button
                             key={role}
-                            type="button"
+                            type='button'
                             onClick={() => {
                               setSelectedRole(role);
                               setShowRoleDropdown(false);
                             }}
                             className={`w-full text-left px-4 py-2 hover:bg-gray-600 ${
                               selectedRole === role
-                                ? "text-emerald-400"
-                                : "text-gray-300"
+                                ? 'text-emerald-400'
+                                : 'text-gray-300'
                             }`}
                           >
                             {role}
@@ -112,28 +113,28 @@ export function JoinProjectModal({
                   </div>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                <div className='mb-6'>
+                  <label className='block text-gray-300 text-sm font-medium mb-2'>
                     Message (Optional)
                   </label>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Tell the team why you want to join and your relevant experience..."
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-300 hover:border-emerald-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-colors min-h-[120px]"
+                    placeholder='Tell the team why you want to join and your relevant experience...'
+                    className='w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-300 hover:border-emerald-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-colors min-h-[120px]'
                   />
                 </div>
 
                 <button
-                  type="submit"
+                  type='submit'
                   disabled={!selectedRole || isSubmitting}
                   className={`w-full py-3 rounded-lg font-medium transition-colors ${
                     selectedRole
-                      ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 hover:opacity-90"
-                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                      ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 hover:opacity-90'
+                      : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  {isSubmitting ? "Sending Request..." : "Send Join Request"}
+                  {isSubmitting ? 'Sending Request...' : 'Send Join Request'}
                 </button>
               </form>
             </div>
