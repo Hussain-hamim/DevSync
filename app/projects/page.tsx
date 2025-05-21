@@ -18,6 +18,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import Header from '@/components/Header';
+import { NewProjectModal } from './NewProjectModal';
+import { toast } from 'sonner';
 
 const TechTag = ({ tech }) => (
   <motion.span
@@ -74,13 +76,48 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
 
-  useEffect(() => {
-    async function fetchProjects() {
+  const fetchProjects = async () => {
+    try {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('is_public', true); // Only show public projects
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch projects:', error.message);
+        return;
+      }
+
+      // Map Supabase data to your frontend format
+      const mapped = data.map((proj) => ({
+        id: proj.id,
+        name: proj.title,
+        description: proj.description,
+        techStack: proj.tech_stack || [],
+        teamSize: 4, // Optional: default or calculated
+        views: 0, // Optional: if you don’t track views yet
+        category: 'general', // You can infer or set this
+      }));
+
+      setProjects(mapped);
+    } catch (error) {
+      toast.error('Failed to load projects');
+      console.error('Error:', error);
+    }
+  };
+
+  const handleProjectCreated = () => {
+    fetchProjects();
+    // Optionally, you can show a success message
+    toast.success('Project created successfully!');
+    setShowNewProjectModal(false);
+  };
+
+  useEffect(() => {
+    async function fetchProjects() {
+      const { data, error } = await supabase.from('projects').select('*');
 
       if (error) {
         console.error('Failed to fetch projects:', error.message);
@@ -137,19 +174,16 @@ export default function ProjectsPage() {
             <Terminal className='w-6 h-6 text-emerald-400' />
             <h1 className='text-2xl font-bold text-gray-100'>Projects</h1>
           </div>
-          <Link
-            href='/projects/new'
-            // className='hidden md:flex items-center gap-2 text-gray-300 hover:text-emerald-400 transition-colors'
+
+          <motion.button
+            onClick={() => setShowNewProjectModal(true)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2'
           >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2'
-            >
-              <Plus className='w-4 h-4' />
-              <span>Add New Project</span>
-            </motion.button>
-          </Link>
+            <Plus className='w-4 h-4' />
+            <span>Add New Project</span>
+          </motion.button>
         </div>
       </motion.header>
 
@@ -323,6 +357,13 @@ export default function ProjectsPage() {
           ))}
         </AnimatePresence>
       </motion.div>
+
+      {/* New Project Modal */}
+      <NewProjectModal
+        show={showNewProjectModal}
+        onClose={() => setShowNewProjectModal(false)}
+        onProjectCreated={handleProjectCreated}
+      />
 
       {/* Floating Create Button */}
       <Link href='/projects/new'>
