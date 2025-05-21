@@ -10,6 +10,7 @@ import {
   Star,
   Eye,
   Sparkles,
+  Crown,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -82,55 +83,106 @@ export default function ProjectDetails() {
     fetchProjectAndRoles();
   }, [params.id]);
 
-  // Add this useEffect to fetch members when the project loads
-  useEffect(() => {
-    const fetchProjectMembers = async () => {
-      if (!params.id) return;
+  // Add this function near your other utility functions
+  const fetchProjectMembers = async () => {
+    if (!params.id) return;
 
-      const { data, error } = await supabase
-        .from('project_roles')
-        .select(
-          `
-        title,
-        users (
-          id,
-          name,
-          avatar_url
-        )
-      `
-        )
-        .eq('project_id', params.id)
-        .not('filled_by', 'is', null);
+    // First get the project to access creator_id
+    const { data: projectData } = await supabase
+      .from('projects')
+      .select('creator_id')
+      .eq('id', params.id)
+      .single();
 
-      if (!error) {
-        // Transform the data to group roles by user
-        const membersMap = new Map();
+    // Then get all members including their roles
+    const { data: rolesData, error } = await supabase
+      .from('project_roles')
+      .select(
+        `
+      title,
+      users (
+        id,
+        name,
+        avatar_url
+      )
+    `
+      )
+      .eq('project_id', params.id)
+      .not('filled_by', 'is', null);
 
-        data.forEach((role) => {
-          if (role.users) {
-            if (!membersMap.has(role.users.id)) {
-              membersMap.set(role.users.id, {
-                ...role.users,
-                roles: [role.title],
-              });
-            } else {
-              const existingMember = membersMap.get(role.users.id);
-              membersMap.set(role.users.id, {
-                ...existingMember,
-                roles: [...existingMember.roles, role.title],
-              });
-            }
-          }
-        });
+    if (!error) {
+      const membersMap = new Map();
 
-        setProjectMembers(Array.from(membersMap.values()));
-      } else {
-        console.error('Error fetching project members:', error);
+      // Add the creator first if they haven't taken a role yet
+      if (projectData?.creator_id) {
+        const { data: creator } = await supabase
+          .from('users')
+          .select('id, name, avatar_url')
+          .eq('id', projectData.creator_id)
+          .single();
+
+        if (creator) {
+          membersMap.set(creator.id, {
+            ...creator,
+            roles: ['Owner'],
+            isOwner: true,
+          });
+        }
       }
-    };
 
+      // Add other members with their roles
+      rolesData.forEach((role) => {
+        if (role.users) {
+          if (!membersMap.has(role.users.id)) {
+            membersMap.set(role.users.id, {
+              ...role.users,
+              roles: [role.title],
+              isOwner: role.users.id === projectData?.creator_id,
+            });
+          } else {
+            const existingMember = membersMap.get(role.users.id);
+            membersMap.set(role.users.id, {
+              ...existingMember,
+              roles: [...existingMember.roles, role.title],
+            });
+          }
+        }
+      });
+
+      setProjectMembers(Array.from(membersMap.values()));
+    }
+  };
+
+  // Then update your useEffect to use this function
+  useEffect(() => {
     fetchProjectMembers();
   }, [params.id]);
+
+  // And update handleJoinSubmit to use it
+  const handleJoinSubmit = async (role: string, message: string) => {
+    console.log('Join request submitted:', { role, message });
+
+    if (!project || !userId) {
+      alert('Missing project or user info');
+      return;
+    }
+
+    try {
+      await joinProjectRole({
+        filled_by: userId,
+        project_id: project.id,
+        title: role,
+      });
+
+      // Refresh members and available roles
+      await fetchProjectMembers();
+      setAvailableRoles((prev) => prev.filter((r) => r !== role));
+      setShowJoinModal(false);
+    } catch (error) {
+      console.error('Error joining project:', error);
+      alert('Failed to join project');
+    }
+  };
 
   // 2. Fetch user ID from your Supabase `users` table using NextAuth session email
   useEffect(() => {
@@ -152,24 +204,6 @@ export default function ProjectDetails() {
 
     fetchUserId();
   }, [session]);
-
-  const handleJoinSubmit = async (role: string, message: string) => {
-    console.log('Join request submitted:', { role, message });
-    // Here you would typically make an API call
-
-    // 3. Join handler
-    if (!project || !userId) {
-      alert('Missing project or user info');
-      return;
-    }
-    await joinProjectRole({
-      filled_by: userId,
-      project_id: project.id,
-      title: role,
-    });
-
-    setShowJoinModal(false);
-  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
@@ -376,6 +410,73 @@ export default function ProjectDetails() {
             </div>
           </div>
 
+          {/* Team Members with Assigned Roles */}
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-100'>
+                Project Members
+              </h2>
+              <button className='text-sm text-emerald-400 hover:text-emerald-300 transition-colors'>
+                View Team
+              </button>
+            </div>
+
+            {projectMembers.map((member) => (
+              <li key={member.id} className='flex items-start gap-4 group'>
+                <div className='relative flex-shrink-0'>
+                  <div className='w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium'>
+                    {member.avatar_url ? (
+                      <img
+                        src={member.avatar_url}
+                        alt={member.name}
+                        className='w-full h-full rounded-full object-cover'
+                      />
+                    ) : (
+                      member.name?.charAt(0) || 'U'
+                    )}
+                  </div>
+                  {member.isOwner && (
+                    <div className='absolute -bottom-1 -right-1 bg-purple-600 rounded-full p-0.5'>
+                      <Crown className='w-3 h-3 text-white' />
+                    </div>
+                  )}
+                </div>
+
+                <div className='flex-1 min-w-0'>
+                  <div className='flex items-baseline gap-2'>
+                    <h3 className='text-gray-100 font-medium truncate'>
+                      {member.name}
+                    </h3>
+                    {member.isOwner ? (
+                      <span className='text-xs bg-gradient-to-r from-purple-600 to-purple-800 text-white px-2 py-0.5 rounded-full'>
+                        Owner
+                      </span>
+                    ) : (
+                      <span className='text-xs text-gray-400'>
+                        @{member.name.toLowerCase().replace(/\s+/g, '')}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className='mt-1 flex flex-wrap gap-2'>
+                    {member.roles.map((role) => (
+                      <span
+                        key={role}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          role === 'Owner'
+                            ? 'bg-purple-900/70 text-purple-100'
+                            : 'bg-cyan-900/50 text-cyan-300'
+                        }`}
+                      >
+                        {role}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </div>
+
           {/* Roles Needed */}
           <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
             <h2 className='text-xl font-semibold text-gray-100 mb-4'>
@@ -392,69 +493,6 @@ export default function ProjectDetails() {
             <button className='mt-4 text-emerald-400 hover:underline text-sm'>
               View all roles
             </button>
-          </div>
-
-          {/* Team Members with Assigned Roles */}
-          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-xl font-semibold text-gray-100'>
-                Project Members
-              </h2>
-              <button className='text-sm text-emerald-400 hover:text-emerald-300 transition-colors'>
-                View Team
-              </button>
-            </div>
-
-            {projectMembers.length > 0 ? (
-              <ul className='space-y-4'>
-                {projectMembers.map((member) => (
-                  <li key={member.id} className='flex items-start gap-4'>
-                    <div className='flex-shrink-0'>
-                      <div className='w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium'>
-                        {member.avatar_url ? (
-                          <img
-                            src={member.avatar_url}
-                            alt={member.name}
-                            className='w-full h-full rounded-full object-cover'
-                          />
-                        ) : (
-                          member.name?.charAt(0) || 'U'
-                        )}
-                      </div>
-                    </div>
-
-                    <div className='flex-1 min-w-0'>
-                      <div className='flex items-baseline gap-2'>
-                        <h3 className='text-gray-100 font-medium truncate'>
-                          {member.name}
-                        </h3>
-                        {member.name && (
-                          <span className='text-xs text-gray-400'>
-                            @{member.name.toLowerCase().replace(/\s+/g, '')}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Assigned Roles */}
-                      <div className='mt-1 flex flex-wrap gap-2'>
-                        {member.roles?.map((role) => (
-                          <span
-                            key={role}
-                            className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-900/50 text-cyan-300 border border-cyan-800/50'
-                          >
-                            {role}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className='text-gray-500 text-sm'>
-                No members have joined this project yet.
-              </p>
-            )}
           </div>
 
           {/* Project Tasks Card */}
