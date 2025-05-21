@@ -39,9 +39,8 @@ export default function ProjectDetails() {
 
   const [showJoinModal, setShowJoinModal] = useState(false);
 
-  // Inside your ProjectDetails component
-
   const [availableRoles, setAvailableRoles] = useState([]);
+  const [projectMembers, setProjectMembers] = useState([]);
 
   // Fetch project data and roles
   useEffect(() => {
@@ -81,6 +80,56 @@ export default function ProjectDetails() {
     };
 
     fetchProjectAndRoles();
+  }, [params.id]);
+
+  // Add this useEffect to fetch members when the project loads
+  useEffect(() => {
+    const fetchProjectMembers = async () => {
+      if (!params.id) return;
+
+      const { data, error } = await supabase
+        .from('project_roles')
+        .select(
+          `
+        title,
+        users (
+          id,
+          name,
+          avatar_url
+        )
+      `
+        )
+        .eq('project_id', params.id)
+        .not('filled_by', 'is', null);
+
+      if (!error) {
+        // Transform the data to group roles by user
+        const membersMap = new Map();
+
+        data.forEach((role) => {
+          if (role.users) {
+            if (!membersMap.has(role.users.id)) {
+              membersMap.set(role.users.id, {
+                ...role.users,
+                roles: [role.title],
+              });
+            } else {
+              const existingMember = membersMap.get(role.users.id);
+              membersMap.set(role.users.id, {
+                ...existingMember,
+                roles: [...existingMember.roles, role.title],
+              });
+            }
+          }
+        });
+
+        setProjectMembers(Array.from(membersMap.values()));
+      } else {
+        console.error('Error fetching project members:', error);
+      }
+    };
+
+    fetchProjectMembers();
   }, [params.id]);
 
   // 2. Fetch user ID from your Supabase `users` table using NextAuth session email
@@ -160,11 +209,14 @@ export default function ProjectDetails() {
             <div className='flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-6'>
               <div className='flex items-center space-x-1'>
                 <Users className='w-4 h-4' />
-                <span>{project.teamSize} members</span>
+                <span>
+                  {project.roles_needed?.length - availableRoles.length + 1}{' '}
+                  members
+                </span>
               </div>
               <div className='flex items-center space-x-1'>
                 <Calendar className='w-4 h-4' />
-                <span>Created {project.createdAt}</span>
+                <span>Created {project.created_at}</span>
               </div>
               <div className='flex items-center space-x-1'>
                 <Eye className='w-4 h-4' />
@@ -342,14 +394,206 @@ export default function ProjectDetails() {
             </button>
           </div>
 
+          {/* Team Members with Assigned Roles */}
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-100'>
+                Project Members
+              </h2>
+              <button className='text-sm text-emerald-400 hover:text-emerald-300 transition-colors'>
+                View Team
+              </button>
+            </div>
+
+            {projectMembers.length > 0 ? (
+              <ul className='space-y-4'>
+                {projectMembers.map((member) => (
+                  <li key={member.id} className='flex items-start gap-4'>
+                    <div className='flex-shrink-0'>
+                      <div className='w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium'>
+                        {member.avatar_url ? (
+                          <img
+                            src={member.avatar_url}
+                            alt={member.name}
+                            className='w-full h-full rounded-full object-cover'
+                          />
+                        ) : (
+                          member.name?.charAt(0) || 'U'
+                        )}
+                      </div>
+                    </div>
+
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-baseline gap-2'>
+                        <h3 className='text-gray-100 font-medium truncate'>
+                          {member.name}
+                        </h3>
+                        {member.name && (
+                          <span className='text-xs text-gray-400'>
+                            @{member.name.toLowerCase().replace(/\s+/g, '')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Assigned Roles */}
+                      <div className='mt-1 flex flex-wrap gap-2'>
+                        {member.roles?.map((role) => (
+                          <span
+                            key={role}
+                            className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-900/50 text-cyan-300 border border-cyan-800/50'
+                          >
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className='text-gray-500 text-sm'>
+                No members have joined this project yet.
+              </p>
+            )}
+          </div>
+
+          {/* Project Tasks Card */}
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-100'>
+                Project Tasks
+              </h2>
+              <button className='text-sm text-emerald-400 hover:text-emerald-300 transition-colors'>
+                View All Tasks
+              </button>
+            </div>
+
+            <div className='space-y-4'>
+              {[
+                {
+                  id: 1,
+                  title: 'Implement user authentication',
+                  status: 'In Progress',
+                  priority: 'High',
+                  assignee: 'Alex Johnson',
+                  due_date: '2023-06-15',
+                },
+                {
+                  id: 2,
+                  title: 'Design dashboard UI',
+                  status: 'Completed',
+                  priority: 'Medium',
+                  assignee: 'Sam Wilson',
+                  due_date: '2023-05-28',
+                },
+                {
+                  id: 3,
+                  title: 'Database schema design',
+                  status: 'Not Started',
+                  priority: 'High',
+                  assignee: 'Jordan Chen',
+                  due_date: '2023-06-01',
+                },
+                {
+                  id: 4,
+                  title: 'API documentation',
+                  status: 'In Review',
+                  priority: 'Low',
+                  assignee: 'Taylor Smith',
+                  due_date: '2023-06-10',
+                },
+              ].map((task) => (
+                <div
+                  key={task.id}
+                  className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors'
+                >
+                  <div className='flex justify-between items-start'>
+                    <div className='flex items-center gap-3'>
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          task.status === 'Completed'
+                            ? 'bg-green-500'
+                            : task.status === 'In Progress'
+                            ? 'bg-amber-500'
+                            : task.status === 'In Review'
+                            ? 'bg-blue-500'
+                            : 'bg-gray-500'
+                        }`}
+                      ></div>
+                      <h3 className='text-gray-100 font-medium'>
+                        {task.title}
+                      </h3>
+                    </div>
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${
+                        task.priority === 'High'
+                          ? 'bg-red-900/50 text-red-300'
+                          : task.priority === 'Medium'
+                          ? 'bg-amber-900/50 text-amber-300'
+                          : 'bg-gray-700 text-gray-300'
+                      }`}
+                    >
+                      {task.priority}
+                    </span>
+                  </div>
+
+                  <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
+                    <div className='flex items-center gap-2 text-gray-400'>
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                        />
+                      </svg>
+                      <span>{task.assignee}</span>
+                    </div>
+
+                    <div className='flex items-center gap-2 text-gray-400'>
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                        />
+                      </svg>
+                      <span>
+                        {new Date(task.due_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button className='mt-6 w-full py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors'>
+              + Create New Task
+            </button>
+          </div>
+
           {/* GitHub Repo */}
-          {project.githubUrl && (
+          {project.github_url && (
             <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
               <h2 className='text-xl font-semibold text-gray-100 mb-4'>
                 Repository
               </h2>
               <a
-                href={project.githubUrl}
+                href={project.github_url}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='inline-flex items-center text-emerald-400 hover:underline'

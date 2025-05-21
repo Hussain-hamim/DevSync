@@ -7,11 +7,11 @@ import {
   Text,
   Code,
   Cpu,
-  ChevronDown,
   Users,
   Plus,
 } from 'lucide-react';
 import { saveProject } from '@/app/actions/saveProject';
+//////// ////// /// /// // /// /// /// /// ///  / ////// / /// /// // //// // /// /// /// // /////
 
 export default function NewProjectPage() {
   const [formData, setFormData] = useState({
@@ -23,6 +23,8 @@ export default function NewProjectPage() {
   });
   const [techInput, setTechInput] = useState('');
   const [roleInput, setRoleInput] = useState('');
+
+  console.log('//////');
 
   const handleAddTech = () => {
     if (techInput && !formData.tech_stack.includes(techInput)) {
