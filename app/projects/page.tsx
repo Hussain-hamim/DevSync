@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
+import Header from '@/components/Header';
 
 const TechTag = ({ tech }) => (
   <motion.span
@@ -123,12 +124,13 @@ export default function ProjectsPage() {
   }, []);
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
+    <div className='min-h-screen  bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
+      {/* <Header /> */}
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className='mb-8'
+        className='mb-8 '
       >
         <div className='flex justify-between items-center'>
           <div className='flex items-center gap-3'>
@@ -145,7 +147,7 @@ export default function ProjectsPage() {
               className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2'
             >
               <Plus className='w-4 h-4' />
-              <span>New Project</span>
+              <span>Add New Project</span>
             </motion.button>
           </Link>
         </div>
@@ -323,13 +325,15 @@ export default function ProjectsPage() {
       </motion.div>
 
       {/* Floating Create Button */}
-      <motion.div
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        className='fixed bottom-6 right-6 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 p-3 rounded-full shadow-xl'
-      >
-        <Plus className='w-6 h-6' />
-      </motion.div>
+      <Link href='/projects/new'>
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className='fixed bottom-6 right-6 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 p-3 rounded-full shadow-xl'
+        >
+          <Plus className='w-6 h-6' />
+        </motion.div>
+      </Link>
     </div>
   );
 }

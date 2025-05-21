@@ -30,10 +30,10 @@ export function JoinProjectModal({
     setIsSubmitting(true);
     onSubmit(selectedRole, message);
     // Reset form after submission if needed
-    // setIsSubmitting(false);
-    // setSelectedRole('');
-    // setMessage('');
-    // onClose();
+    setIsSubmitting(false);
+    setSelectedRole('');
+    setMessage('');
+    onClose();
   };
 
   return (
@@ -64,7 +64,7 @@ export function JoinProjectModal({
               </h2>
               <p className='text-gray-400 mb-6'>
                 Request to join
-                <span className='text-pink-500'> {projectName}</span>
+                <span className='text-pink-300'> {projectName}</span>
               </p>
 
               <form onSubmit={handleSubmit}>
