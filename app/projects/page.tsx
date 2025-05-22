@@ -43,33 +43,6 @@ const projectsData = [
     views: 128,
     category: 'ai',
   },
-  {
-    id: 2,
-    name: 'AI Code Review',
-    description: 'Automated code quality analysis using machine learning',
-    techStack: ['Python', 'TensorFlow', 'React'],
-    teamSize: 4,
-    views: 128,
-    category: 'ai',
-  },
-  {
-    id: 3,
-    name: 'AI Code Review',
-    description: 'Automated code quality analysis using machine learning',
-    techStack: ['Python', 'TensorFlow', 'React'],
-    teamSize: 4,
-    views: 128,
-    category: 'ai',
-  },
-  {
-    id: 4,
-    name: 'AI Code Review',
-    description: 'Automated code quality analysis using machine learning',
-    techStack: ['Python', 'TensorFlow', 'React'],
-    teamSize: 4,
-    views: 128,
-    category: 'ai',
-  },
 ];
 
 export default function ProjectsPage() {
@@ -117,7 +90,10 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     async function fetchProjects() {
-      const { data, error } = await supabase.from('projects').select('*');
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Failed to fetch projects:', error.message);
