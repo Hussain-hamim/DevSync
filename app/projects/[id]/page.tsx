@@ -20,6 +20,7 @@ import { joinProjectRole } from '@/app/actions/joinProject';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from './JoinProjectModal';
+import Header from '@/components/Header';
 
 interface Project {
   id: string;
@@ -34,6 +35,7 @@ interface Project {
 export default function ProjectDetails() {
   const { data: session } = useSession();
   const params = useParams();
+  const [loading, setLoading] = useState(false);
 
   const [project, setProject] = useState({});
   const [userId, setUserId] = useState<string | null>(null);
@@ -47,12 +49,14 @@ export default function ProjectDetails() {
   useEffect(() => {
     const fetchProjectAndRoles = async () => {
       // 1. Fetch project data
+      setLoading(true);
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', params.id)
         .single();
 
+      setLoading(false);
       if (!projectError && projectData) {
         setProject(projectData);
 
@@ -204,6 +208,19 @@ export default function ProjectDetails() {
 
     fetchUserId();
   }, [session]);
+
+  if (loading) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
+        <Header />
+        <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
+          <div className='animate-pulse text-gray-400'>
+            Loading project details data...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
@@ -447,15 +464,10 @@ export default function ProjectDetails() {
                     <h3 className='text-gray-100 font-medium truncate'>
                       {member.name}
                     </h3>
-                    {member.isOwner ? (
-                      <span className='text-xs bg-gradient-to-r from-purple-600 to-purple-800 text-white px-2 py-0.5 rounded-full'>
-                        Owner
-                      </span>
-                    ) : (
-                      <span className='text-xs text-gray-400'>
-                        @{member.name.toLowerCase().replace(/\s+/g, '')}
-                      </span>
-                    )}
+
+                    <span className='text-xs text-gray-400'>
+                      @{member.name.toLowerCase().replace(/\s+/g, '')}
+                    </span>
                   </div>
 
                   <div className='mt-1 flex flex-wrap gap-2'>

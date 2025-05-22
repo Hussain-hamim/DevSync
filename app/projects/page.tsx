@@ -50,13 +50,18 @@ export default function ProjectsPage() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const fetchProjects = async () => {
+    setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
+
+      setLoading(false);
 
       if (error) {
         console.error('Failed to fetch projects:', error.message);
@@ -90,10 +95,14 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     async function fetchProjects() {
+      setLoading(true);
+
       const { data, error } = await supabase
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
+
+      setLoading(false);
 
       if (error) {
         console.error('Failed to fetch projects:', error.message);
@@ -136,9 +145,23 @@ export default function ProjectsPage() {
     return () => clearInterval(interval);
   }, []);
 
+  if (loading) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
+        <Header />
+        <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
+          <div className='animate-pulse text-gray-400'>
+            Loading projects data...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='min-h-screen  bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
       {/* <Header /> */}
+
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
@@ -236,6 +259,32 @@ export default function ProjectsPage() {
           )}
         </div>
       </motion.div>
+
+      {/*  */}
+      {filteredProjects.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className='flex  flex-col items-center justify-center py-12 text-center'
+        >
+          <Code className='w-12 h-12 text-gray-600 mb-4' />
+          <h3 className='text-xl font-medium text-gray-300 mb-2'>
+            No projects found
+          </h3>
+          <p className='text-gray-500 max-w-md'>
+            There are currently no public projects available
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowNewProjectModal(true)}
+            className='mt-6 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-6 py-2 rounded-lg font-medium flex items-center gap-2'
+          >
+            <Plus className='w-4 h-4' />
+            <span>Create First Project</span>
+          </motion.button>
+        </motion.div>
+      )}
 
       {/* Projects Grid */}
       <motion.div
