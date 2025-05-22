@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import { useSession } from 'next-auth/react';
 import { supabase } from '../lib/supabase';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -29,8 +30,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createdProjects, setCreatedProjects] = useState<Project[]>([]);
+  const [joinedProjects, setJoinedProjects] = useState<Project[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const { data: session, status: sessionStatus } = useSession();
+  const [allCommits, setAllCommits] = useState<any>(null);
 
   const githubUsername = session?.user?.login;
 
@@ -48,7 +51,7 @@ export default function ProfilePage() {
 
         // Try to get email from different possible locations
         const userEmail =
-          session.user.email || session.user.user?.email || session.user.name; // fallback to name if email not available
+          session.user.email || session.user.user?.email || session.user.name;
 
         if (!userEmail) {
           throw new Error(
@@ -59,6 +62,13 @@ export default function ProfilePage() {
         // Fetch GitHub data (if needed)
         const githubUsername =
           session.user.login || session.user.name || 'octocat';
+
+        const allCommits = await fetch(
+          `https://api.github.com/search/commits?q=author:${githubUsername}`
+        );
+        const allCommitsData = await allCommits.json();
+        setAllCommits(allCommitsData);
+
         if (githubUsername) {
           const githubResponse = await fetch(
             `/api/github?username=${githubUsername}`
@@ -86,7 +96,7 @@ export default function ProfilePage() {
         const userData = users[0];
         setUser(userData);
 
-        // Fetch projects
+        // Fetch created projects
         const { data: projects, error: projectsError } = await supabase
           .from('projects')
           .select('*')
@@ -96,6 +106,46 @@ export default function ProfilePage() {
 
         if (projectsError) throw projectsError;
         setCreatedProjects(projects || []);
+
+        // Inside your fetchData function in useEffect:.
+
+        // Fetch joined projects through project_roles table
+        const { data: projectRoles, error: rolesError } = await supabase
+          .from('project_roles')
+          .select('project_id, title') // Include title in the select
+          .eq('filled_by', userData.id);
+
+        if (rolesError) throw rolesError;
+
+        if (projectRoles && projectRoles.length > 0) {
+          const projectIds = projectRoles.map((role) => role.project_id);
+
+          // Fetch the actual projects
+          const { data: joinedProjects, error: joinedProjectsError } =
+            await supabase
+              .from('projects')
+              .select('*')
+              .in('id', projectIds)
+              .limit(4)
+              .order('created_at', { ascending: false });
+
+          if (joinedProjectsError) throw joinedProjectsError;
+
+          // Combine projects with their roles
+          const projectsWithRoles = joinedProjects.map((project) => {
+            const role = projectRoles.find(
+              (role) => role.project_id === project.id
+            );
+            return {
+              ...project,
+              roleTitle: role?.title || 'Member', // Default to 'Member' if no title found
+            };
+          });
+
+          setJoinedProjects(projectsWithRoles || []);
+        } else {
+          setJoinedProjects([]);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
       } finally {
@@ -105,7 +155,6 @@ export default function ProfilePage() {
 
     fetchData();
   }, [session, sessionStatus]);
-
   // Social media data
   const socialLinks = [
     {
@@ -137,25 +186,6 @@ export default function ProfilePage() {
       color: 'text-gray-400 hover:text-emerald-400',
     },
   ];
-
-  // useEffect(() => {
-  //   const fetchGitHubData = async () => {
-  //     try {
-  //       const response = await fetch(`/api/github?username=${githubUsername}`);
-  //       if (!response.ok) {
-  //         throw new Error('Failed to fetch GitHub data, please try Login.');
-  //       }
-  //       const data = await response.json();
-  //       setGithubData(data);
-  //     } catch (err) {
-  //       setError(err instanceof Error ? err.message : 'Unknown error occurred');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchGitHubData();
-  // }, [githubUsername, session?.user]);
 
   if (loading) {
     return (
@@ -290,9 +320,12 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className='bg-gray-800/50 p-4 rounded-lg border border-gray-700'>
-                <div className='text-sm text-gray-400 mb-1'>Contributions</div>
+                <div className='text-sm text-gray-400 mb-1'>
+                  Total Contributions
+                </div>
                 <div className='text-2xl font-bold text-cyan-400'>
-                  {githubData.stats.contributions}
+                  {/* {githubData.stats.contributions} */}
+                  {allCommits.total_count}
                 </div>
               </div>
               <div className='bg-gray-800/50 p-4 rounded-lg border border-gray-700'>
@@ -328,28 +361,27 @@ export default function ProfilePage() {
               </h2>
               <div className='space-y-4'>
                 {createdProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className='group hover:bg-gray-700/50 p-3 rounded-lg transition-colors'
-                  >
-                    <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
-                      {project.title}
-                    </h3>
-                    <p className='text-sm text-gray-400 mt-1'>
-                      {project.description}
-                    </p>
-                    <div className='flex justify-between items-center mt-2'>
-                      <span className='flex items-center gap-1 text-xs text-gray-400'>
-                        <Users className='w-3 h-3' />
-                        {+1} members
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${'bg-green-900/50 text-green-400'}`}
-                      >
-                        Active
-                      </span>
+                  <Link href={`/projects/${project.id}`} key={project.id}>
+                    <div className='group hover:bg-gray-700/50 p-3 rounded-lg transition-colors'>
+                      <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
+                        {project.title}
+                      </h3>
+                      <p className='text-sm text-gray-400 mt-1'>
+                        {project.description}
+                      </p>
+                      <div className='flex justify-between items-center mt-2'>
+                        <span className='flex items-center gap-1 text-xs text-gray-400'>
+                          <Users className='w-3 h-3' />
+                          {+1} members
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${'bg-green-900/50 text-green-400'}`}
+                        >
+                          Active
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </motion.div>
@@ -367,34 +399,31 @@ export default function ProfilePage() {
               </h2>
               <div className='space-y-4'>
                 {joinedProjects.map((project) => (
-                  <div
+                  <Link
+                    href={`/projects/${project.id}`}
                     key={project.id}
-                    className='group hover:bg-gray-700/50 p-3 rounded-lg transition-colors'
+                    className='group'
                   >
-                    <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
-                      {project.name}
-                    </h3>
-                    <p className='text-sm text-gray-400 mt-1'>
-                      {project.description}
-                    </p>
-                    <div className='flex justify-between items-center mt-2'>
-                      <span className='flex items-center gap-1 text-xs text-gray-400'>
-                        <Users className='w-3 h-3' />
-                        {project.members} members
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${
-                          project.status === 'active'
-                            ? 'bg-green-900/50 text-green-400'
-                            : project.status === 'paused'
-                            ? 'bg-yellow-900/50 text-yellow-400'
-                            : 'bg-gray-700 text-gray-400'
-                        }`}
-                      >
-                        {project.status}
-                      </span>
+                    <div className='group hover:bg-gray-700/50 p-3 rounded-lg transition-colors'>
+                      <div className='flex items-center gap-2 justify-between'>
+                        <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
+                          {project.title}
+                        </h3>
+                        <span className='text-xs bg-gray-900 px-2 py-1 rounded'>
+                          {project.roleTitle}
+                        </span>
+                      </div>
+                      <p className='text-sm text-gray-400 mt-1'>
+                        {project.description}
+                      </p>
+                      <div className='flex justify-between items-center mt-2'>
+                        <span className='flex items-center gap-1 text-xs text-gray-400'>
+                          <Users className='w-3 h-3' />
+                          {project.members} members
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </motion.div>
@@ -537,79 +566,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-interface GitHubData {
-  profile: {
-    name: string;
-    avatar_url: string;
-    bio: string;
-    public_repos: number;
-    followers: number;
-    following: number;
-    created_at: string;
-  };
-  stats: {
-    contributions: number;
-    repositories: number;
-    stars: number;
-    forks: number;
-  };
-  skills: string[];
-  recentRepos: {
-    name: string;
-    url: string;
-    description: string;
-    language: string;
-    stars: number;
-    forks: number;
-  }[];
-}
-
-// Dummy project data
-const createdProjects2 = [
-  {
-    id: 1,
-    name: 'DevSync Core',
-    description: 'The main framework for DevSync platform',
-    members: 4,
-    status: 'active',
-  },
-  {
-    id: 2,
-    name: 'CodeCollab',
-    description: 'Real-time collaborative coding environment',
-    members: 2,
-    status: 'active',
-  },
-  {
-    id: 3,
-    name: 'API Gateway',
-    description: 'Centralized API management system',
-    members: 3,
-    status: 'paused',
-  },
-];
-
-const joinedProjects = [
-  {
-    id: 4,
-    name: 'UI Components',
-    description: 'Shared component library',
-    members: 5,
-    status: 'active',
-  },
-  {
-    id: 5,
-    name: 'DevOps Pipeline',
-    description: 'CI/CD automation tools',
-    members: 3,
-    status: 'active',
-  },
-  {
-    id: 6,
-    name: 'Analytics Dashboard',
-    description: 'Project metrics visualization',
-    members: 4,
-    status: 'completed',
-  },
-];
