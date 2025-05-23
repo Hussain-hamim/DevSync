@@ -636,9 +636,30 @@ export default function ProjectDetails() {
               ))}
             </div>
 
-            <button className='mt-6 w-full py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors'>
+            {/* Add Task Button */}
+            {projectMembers.map((member) => {
+              const isCurrentUserOwner =
+                member.isOwner && member.name === session?.user?.name;
+
+              return (
+                isCurrentUserOwner && (
+                  <div
+                    key={member.id}
+                    className='flex items-center justify-between mt-4'
+                  >
+                    <span className='text-sm text-gray-400'>
+                      You can add tasks to this project.
+                    </span>
+                    <button className='text-emerald-400 hover:underline text-sm inline-flex items-center'>
+                      <Sparkles className='w-4 h-4 mr-1' /> Add Task
+                    </button>
+                  </div>
+                )
+              );
+            })}
+            {/* <button className='mt-6 w-full py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors'>
               + Create New Task
-            </button>
+            </button> */}
           </div>
 
           {/* GitHub Repo */}
