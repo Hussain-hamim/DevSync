@@ -33,6 +33,8 @@ export default function Home() {
   const heroRef = useRef(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [allProjects, setAllProjects] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -43,6 +45,15 @@ export default function Home() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(4);
+
+        const { data: allProjects } = await supabase
+          .from('projects')
+          .select('*')
+          .order('created_at', { ascending: false });
+        setAllProjects(allProjects);
+
+        const { data: allUsers } = await supabase.from('users').select('*');
+        setAllUsers(allUsers);
 
         console.log(error?.message);
         if (error) {
@@ -243,8 +254,8 @@ export default function Home() {
               className='mt-16 grid grid-cols-3 gap-4 max-w-md mx-auto'
             >
               {[
-                { value: '250+', label: 'Active Projects' },
-                { value: '1.2k+', label: 'Developers' },
+                { value: allProjects.length + '+', label: 'Active Projects' },
+                { value: allUsers.length + '+', label: 'Developers' },
                 { value: '98%', label: 'Satisfaction' },
               ].map((stat, index) => (
                 <motion.div
@@ -574,7 +585,7 @@ export default function Home() {
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6 }}
-            href='#'
+            href='/login'
             className='inline-block relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-all'
           >
             <span className='relative z-10'>Join DevSync — It&apos;s free</span>
@@ -602,10 +613,11 @@ export default function Home() {
               viewport={{ once: true }}
               className='flex space-x-6'
             >
-              {['GitHub', 'Twitter', 'Discord', 'Blog'].map((item) => (
+              {['GitHub', 'Twitter', 'Discord', 'LinkedIn'].map((item) => (
                 <a
                   key={item}
-                  href='#'
+                  href='https://x.com/erencodes'
+                  target='_blank'
                   className='text-gray-400 hover:text-emerald-400 transition-colors text-sm'
                 >
                   {item}
