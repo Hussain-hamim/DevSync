@@ -22,6 +22,14 @@ import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from './JoinProjectModal';
 import Header from '@/components/Header';
 
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import calendar from 'dayjs/plugin/calendar';
+
+// Extend dayjs with plugins
+dayjs.extend(relativeTime);
+dayjs.extend(calendar);
+
 export default function ProjectDetails() {
   const { data: session } = useSession();
   const params = useParams();
@@ -251,17 +259,20 @@ export default function ProjectDetails() {
               <div className='flex items-center space-x-1'>
                 <Users className='w-4 h-4' />
                 <span>
-                  {project.roles_needed?.length - availableRoles.length + 1}{' '}
+                  {project.roles_needed?.length - availableRoles.length + 1 ||
+                    ''}{' '}
                   members
                 </span>
               </div>
+
               <div className='flex items-center space-x-1'>
                 <Calendar className='w-4 h-4' />
-                <span>Created {project.created_at}</span>
+                <span>Created {dayjs(project.created_at).fromNow()}</span>
               </div>
+
               <div className='flex items-center space-x-1'>
                 <Eye className='w-4 h-4' />
-                <span>{project.views} views</span>
+                <span>{project.views || 100} views</span>
               </div>
             </div>
           </div>
@@ -286,7 +297,11 @@ export default function ProjectDetails() {
             <h2 className='text-xl font-semibold text-gray-100 mb-4'>
               Description
             </h2>
-            <p className='text-gray-400'>{project.description}</p>
+            <div className='overflow-auto max-h-96 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50'>
+              <pre className='text-gray-400 whitespace-pre-wrap font-sans p-2'>
+                {project.description}
+              </pre>
+            </div>
           </div>
 
           {/* Discussions */}
