@@ -11,6 +11,7 @@ import {
   Eye,
   Sparkles,
   Crown,
+  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,6 +26,7 @@ import Header from '@/components/Header';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
+import { AddTaskModal } from './AddTaskModal';
 
 // Extend dayjs with plugins
 dayjs.extend(relativeTime);
@@ -39,6 +41,7 @@ export default function ProjectDetails() {
   const [userId, setUserId] = useState<string | null>(null);
 
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   const [availableRoles, setAvailableRoles] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
@@ -650,8 +653,12 @@ export default function ProjectDetails() {
                     <span className='text-sm text-gray-400'>
                       You can add tasks to this project.
                     </span>
-                    <button className='text-emerald-400 hover:underline text-sm inline-flex items-center'>
-                      <Sparkles className='w-4 h-4 mr-1' /> Add Task
+                    <button
+                      onClick={() => setShowTaskModal(true)}
+                      className='text-emerald-400 hover:underline text-md inline-flex items-center'
+                    >
+                      <Plus className='w-5 h-5 mr-1' />
+                      Add Task
                     </button>
                   </div>
                 )
@@ -688,6 +695,17 @@ export default function ProjectDetails() {
         show={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         onSubmit={handleJoinSubmit}
+      />
+
+      <AddTaskModal
+        show={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        onSubmit={(taskData) => {
+          // Handle task creation
+          console.log('New task:', taskData);
+        }}
+        projectName={project.title}
+        projectMembers={projectMembers}
       />
     </div>
   );
