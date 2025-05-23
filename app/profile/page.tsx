@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Github,
-  Calendar,
   Code2,
   Cpu,
   Star,
@@ -29,9 +28,9 @@ export default function ProfilePage() {
   const [githubData, setGithubData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [createdProjects, setCreatedProjects] = useState<Project[]>([]);
-  const [joinedProjects, setJoinedProjects] = useState<Project[]>([]);
-  const [user, setUser] = useState<User | null>(null);
+  const [createdProjects, setCreatedProjects] = useState([]);
+  const [joinedProjects, setJoinedProjects] = useState([]);
+  const [user, setUser] = useState(null);
   const { data: session, status: sessionStatus } = useSession();
   const [allCommits, setAllCommits] = useState<any>(null);
 
@@ -303,7 +302,7 @@ export default function ProfilePage() {
                   target='_blank'
                   rel='noopener noreferrer'
                   whileHover={{ y: -2 }}
-                  className={`flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700 text-sm ${social.color} transition-colors`}
+                  className={`flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm ${social.color} transition-colors`}
                 >
                   <social.icon className='w-4 h-4' />
                   <span>{social.username}</span>
