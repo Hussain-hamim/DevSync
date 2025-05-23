@@ -46,11 +46,11 @@ const projectsData = [
 ];
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -94,35 +94,6 @@ export default function ProjectsPage() {
   };
 
   useEffect(() => {
-    async function fetchProjects() {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      setLoading(false);
-
-      if (error) {
-        console.error('Failed to fetch projects:', error.message);
-        return;
-      }
-
-      // Map Supabase data to your frontend format
-      const mapped = data.map((proj) => ({
-        id: proj.id,
-        name: proj.title,
-        description: proj.description,
-        techStack: proj.tech_stack || [],
-        teamSize: 4, // Optional: default or calculated
-        views: 0, // Optional: if you don’t track views yet
-        category: 'general', // You can infer or set this
-      }));
-
-      setProjects(mapped);
-    }
-
     fetchProjects();
   }, []);
 
@@ -131,19 +102,6 @@ export default function ProjectsPage() {
     activeFilter === 'all'
       ? projects
       : projects.filter((p) => p.category === activeFilter);
-
-  // Simulate view increments
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProjects((prev) =>
-        prev.map((p) => ({
-          ...p,
-          views: p.views + Math.floor(Math.random() * 3),
-        }))
-      );
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
   if (loading) {
     return (
