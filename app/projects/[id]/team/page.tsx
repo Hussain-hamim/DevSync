@@ -1,14 +1,6 @@
 // app/projects/[id]/team/page.jsx
 'use client';
-import {
-  Terminal,
-  Users,
-  GitBranch,
-  CheckCircle,
-  Mail,
-  Github,
-  ArrowLeft,
-} from 'lucide-react';
+import { Users, Mail, Github, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TeamPage({ params }) {

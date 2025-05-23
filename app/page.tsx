@@ -1,5 +1,4 @@
 'use client';
-
 import { useRef } from 'react';
 import {
   GitBranch,
@@ -78,20 +77,6 @@ export default function Home() {
       delay: 0.4,
     },
   ];
-
-  const handleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          // Request additional GitHub permissions
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
-    });
-  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100 overflow-x-hidden'>
@@ -196,7 +181,7 @@ export default function Home() {
               transition={{ delay: 1 }}
               className='flex flex-col sm:flex-row justify-center gap-3'
             >
-              <a
+              <Link
                 href='/projects'
                 className='relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center space-x-2'
               >
@@ -205,7 +190,7 @@ export default function Home() {
                   <ArrowRight className='w-4 h-4 ml-2 transition-transform group-hover:translate-x-1' />
                 </span>
                 <span className='absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity'></span>
-              </a>
+              </Link>
 
               <a
                 // onClick={handleSignIn}

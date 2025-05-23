@@ -14,23 +14,13 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { notFound, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
 import { joinProjectRole } from '@/app/actions/joinProject';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from './JoinProjectModal';
 import Header from '@/components/Header';
-
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  github_url: string | null;
-  tech_stack: string[];
-  roles_needed: string[];
-  created_at: string;
-}
 
 export default function ProjectDetails() {
   const { data: session } = useSession();
