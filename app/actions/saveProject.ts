@@ -1,6 +1,6 @@
 'use server';
 
-import { authOptions } from '../api/auth/[...nextauth]/route';
+import { authOptions } from '../authOptions';
 import { supabase } from '../lib/supabase';
 import { getServerSession } from 'next-auth';
 
