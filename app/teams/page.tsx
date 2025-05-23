@@ -1,14 +1,14 @@
 "use client";
 import Header from "@/components/Header";
 import React from "react";
-import {
-  GitBranch,
-  LayoutPanelLeft,
-  MessageSquare,
-  Sparkles,
-  BarChart2,
-  Cpu,
-} from "lucide-react";
+// import {
+//   GitBranch,
+//   LayoutPanelLeft,
+//   MessageSquare,
+//   Sparkles,
+//   BarChart2,
+//   Cpu, 
+// } from "lucide-react";
 import { motion } from "framer-motion";
 
 const teamData = [
