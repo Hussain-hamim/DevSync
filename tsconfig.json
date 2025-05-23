@@ -13,6 +13,11 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipDefaultLibCheck": true,
+    "noImplicitAny": false,
+
     "plugins": [
       {
         "name": "next"

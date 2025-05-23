@@ -10,7 +10,6 @@ import {
   Star,
   Eye,
   Sparkles,
-  Crown,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -34,6 +33,7 @@ interface Project {
 export default function ProjectDetails() {
   const { data: session } = useSession();
   const params = useParams();
+  const [loading, setLoading] = useState(false);
 
   const [project, setProject] = useState({});
   const [userId, setUserId] = useState<string | null>(null);
@@ -47,12 +47,14 @@ export default function ProjectDetails() {
   useEffect(() => {
     const fetchProjectAndRoles = async () => {
       // 1. Fetch project data
+      setLoading(true);
       const { data: projectData, error: projectError } = await supabase
         .from("projects")
         .select("*")
         .eq("id", params.id)
         .single();
 
+      setLoading(false);
       if (!projectError && projectData) {
         setProject(projectData);
 
@@ -87,25 +89,17 @@ export default function ProjectDetails() {
   const fetchProjectMembers = async () => {
     if (!params.id) return;
 
-    // First get the project to access creator_id
-    const { data: projectData } = await supabase
-      .from("projects")
-      .select("creator_id")
-      .eq("id", params.id)
-      .single();
-
-    // Then get all members including their roles
-    const { data: rolesData, error } = await supabase
+    const { data, error } = await supabase
       .from("project_roles")
       .select(
         `
-      title,
-      users (
-        id,
-        name,
-        avatar_url
-      )
-    `
+        title,
+        users (
+          id,
+          name,
+          avatar_url
+        )
+      `
       )
       .eq("project_id", params.id)
       .not("filled_by", "is", null);
@@ -113,31 +107,12 @@ export default function ProjectDetails() {
     if (!error) {
       const membersMap = new Map();
 
-      // Add the creator first if they haven't taken a role yet
-      if (projectData?.creator_id) {
-        const { data: creator } = await supabase
-          .from("users")
-          .select("id, name, avatar_url")
-          .eq("id", projectData.creator_id)
-          .single();
-
-        if (creator) {
-          membersMap.set(creator.id, {
-            ...creator,
-            roles: ["Owner"],
-            isOwner: true,
-          });
-        }
-      }
-
-      // Add other members with their roles
-      rolesData.forEach((role) => {
+      data.forEach((role) => {
         if (role.users) {
           if (!membersMap.has(role.users.id)) {
             membersMap.set(role.users.id, {
               ...role.users,
               roles: [role.title],
-              isOwner: role.users.id === projectData?.creator_id,
             });
           } else {
             const existingMember = membersMap.get(role.users.id);
@@ -157,6 +132,32 @@ export default function ProjectDetails() {
   useEffect(() => {
     fetchProjectMembers();
   }, [params.id]);
+
+  // And update handleJoinSubmit to use it
+  const handleJoinSubmit = async (role: string, message: string) => {
+    console.log("Join request submitted:", { role, message });
+
+    if (!project || !userId) {
+      alert("Missing project or user info");
+      return;
+    }
+
+    try {
+      await joinProjectRole({
+        filled_by: userId,
+        project_id: project.id,
+        title: role,
+      });
+
+      // Refresh members and available roles
+      await fetchProjectMembers();
+      setAvailableRoles((prev) => prev.filter((r) => r !== role));
+      setShowJoinModal(false);
+    } catch (error) {
+      console.error("Error joining project:", error);
+      alert("Failed to join project");
+    }
+  };
 
   // And update handleJoinSubmit to use it
   const handleJoinSubmit = async (role: string, message: string) => {
@@ -205,23 +206,23 @@ export default function ProjectDetails() {
     fetchUserId();
   }, [session]);
 
-  // const handleJoinSubmit = async (role: string, message: string) => {
-  //   console.log('Join request submitted:', { role, message });
-  //   // Here you would typically make an API call
+  const handleJoinSubmit = async (role: string, message: string) => {
+    console.log("Join request submitted:", { role, message });
+    // Here you would typically make an API call
 
-  //   // 3. Join handler
-  //   if (!project || !userId) {
-  //     alert('Missing project or user info');
-  //     return;
-  //   }
-  //   await joinProjectRole({
-  //     filled_by: userId,
-  //     project_id: project.id,
-  //     title: role,
-  //   });
+    // 3. Join handler
+    if (!project || !userId) {
+      alert("Missing project or user info");
+      return;
+    }
+    await joinProjectRole({
+      filled_by: userId,
+      project_id: project.id,
+      title: role,
+    });
 
-  //   setShowJoinModal(false);
-  // };
+    setShowJoinModal(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -439,78 +440,56 @@ export default function ProjectDetails() {
               </button>
             </div>
 
-            {projectMembers.map((member) => (
-              <li key={member.id} className="flex items-start gap-4 group">
-                <div className="relative flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium">
-                    {member.avatar_url ? (
-                      <img
-                        src={member.avatar_url}
-                        alt={member.name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      member.name?.charAt(0) || "U"
-                    )}
-                  </div>
-                  {member.isOwner && (
-                    <div className="absolute -bottom-1 -right-1 bg-purple-600 rounded-full p-0.5">
-                      <Crown className="w-3 h-3 text-white" />
+            {projectMembers.length > 0 ? (
+              <ul className="space-y-4">
+                {projectMembers.map((member) => (
+                  <li key={member.id} className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium">
+                        {member.avatar_url ? (
+                          <img
+                            src={member.avatar_url}
+                            alt={member.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          member.name?.charAt(0) || "U"
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2">
-                    <h3 className="text-gray-100 font-medium truncate">
-                      {member.name}
-                    </h3>
-                    {member.isOwner ? (
-                      <span className="text-xs bg-gradient-to-r from-purple-600 to-purple-800 text-white px-2 py-0.5 rounded-full">
-                        Owner
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-400">
-                        @{member.name.toLowerCase().replace(/\s+/g, "")}
-                      </span>
-                    )}
-                  </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <h3 className="text-gray-100 font-medium truncate">
+                          {member.name}
+                        </h3>
+                        {member.name && (
+                          <span className="text-xs text-gray-400">
+                            @{member.name.toLowerCase().replace(/\s+/g, "")}
+                          </span>
+                        )}
+                      </div>
 
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {member.roles.map((role) => (
-                      <span
-                        key={role}
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          role === "Owner"
-                            ? "bg-purple-900/70 text-purple-100"
-                            : "bg-cyan-900/50 text-cyan-300"
-                        }`}
-                      >
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </div>
-
-          {/* Roles Needed */}
-          <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-gray-100 mb-4">
-              Roles Needed
-            </h2>
-            <ul className="space-y-3">
-              {project.roles_needed?.map((role, index) => (
-                <li key={index} className="flex items-center">
-                  <span className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></span>
-                  <span className="text-gray-300">{role}</span>
-                </li>
-              ))}
-            </ul>
-            <button className="mt-4 text-emerald-400 hover:underline text-sm">
-              View all roles
-            </button>
+                      {/* Assigned Roles */}
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        {member.roles?.map((role) => (
+                          <span
+                            key={role}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-900/50 text-cyan-300 border border-cyan-800/50"
+                          >
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-sm">
+                No members have joined this project yet.
+              </p>
+            )}
           </div>
 
           {/* Project Tasks Card */}

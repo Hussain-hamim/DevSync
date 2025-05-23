@@ -18,6 +18,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import Header from '@/components/Header';
+import { NewProjectModal } from './NewProjectModal';
+import { toast } from 'sonner';
 
 const TechTag = ({ tech }) => (
   <motion.span
@@ -41,46 +43,66 @@ const projectsData = [
     views: 128,
     category: 'ai',
   },
-  {
-    id: 2,
-    name: 'AI Code Review',
-    description: 'Automated code quality analysis using machine learning',
-    techStack: ['Python', 'TensorFlow', 'React'],
-    teamSize: 4,
-    views: 128,
-    category: 'ai',
-  },
-  {
-    id: 3,
-    name: 'AI Code Review',
-    description: 'Automated code quality analysis using machine learning',
-    techStack: ['Python', 'TensorFlow', 'React'],
-    teamSize: 4,
-    views: 128,
-    category: 'ai',
-  },
-  {
-    id: 4,
-    name: 'AI Code Review',
-    description: 'Automated code quality analysis using machine learning',
-    techStack: ['Python', 'TensorFlow', 'React'],
-    teamSize: 4,
-    views: 128,
-    category: 'ai',
-  },
 ];
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    async function fetchProjects() {
+  const fetchProjects = async () => {
+    setLoading(true);
+
+    try {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('is_public', true); // Only show public projects
+        .order('created_at', { ascending: false });
+
+      setLoading(false);
+
+      if (error) {
+        console.error('Failed to fetch projects:', error.message);
+        return;
+      }
+
+      // Map Supabase data to your frontend format
+      const mapped = data.map((proj) => ({
+        id: proj.id,
+        name: proj.title,
+        description: proj.description,
+        techStack: proj.tech_stack || [],
+        teamSize: 4, // Optional: default or calculated
+        views: 0, // Optional: if you don’t track views yet
+        category: 'general', // You can infer or set this
+      }));
+
+      setProjects(mapped);
+    } catch (error) {
+      toast.error('Failed to load projects');
+      console.error('Error:', error);
+    }
+  };
+
+  const handleProjectCreated = () => {
+    fetchProjects();
+    // Optionally, you can show a success message
+    toast.success('Project created successfully!');
+    setShowNewProjectModal(false);
+  };
+
+  useEffect(() => {
+    async function fetchProjects() {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      setLoading(false);
 
       if (error) {
         console.error('Failed to fetch projects:', error.message);
@@ -123,9 +145,23 @@ export default function ProjectsPage() {
     return () => clearInterval(interval);
   }, []);
 
+  if (loading) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
+        <Header />
+        <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
+          <div className='animate-pulse text-gray-400'>
+            Loading projects data...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='min-h-screen  bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
       {/* <Header /> */}
+
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
@@ -137,19 +173,16 @@ export default function ProjectsPage() {
             <Terminal className='w-6 h-6 text-emerald-400' />
             <h1 className='text-2xl font-bold text-gray-100'>Projects</h1>
           </div>
-          <Link
-            href='/projects/new'
-            // className='hidden md:flex items-center gap-2 text-gray-300 hover:text-emerald-400 transition-colors'
+
+          <motion.button
+            onClick={() => setShowNewProjectModal(true)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2'
           >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2'
-            >
-              <Plus className='w-4 h-4' />
-              <span>Add New Project</span>
-            </motion.button>
-          </Link>
+            <Plus className='w-4 h-4' />
+            <span>Add New Project</span>
+          </motion.button>
         </div>
       </motion.header>
 
@@ -226,6 +259,32 @@ export default function ProjectsPage() {
           )}
         </div>
       </motion.div>
+
+      {/*  */}
+      {filteredProjects.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className='flex  flex-col items-center justify-center py-12 text-center'
+        >
+          <Code className='w-12 h-12 text-gray-600 mb-4' />
+          <h3 className='text-xl font-medium text-gray-300 mb-2'>
+            No projects found
+          </h3>
+          <p className='text-gray-500 max-w-md'>
+            There are currently no public projects available
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowNewProjectModal(true)}
+            className='mt-6 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-6 py-2 rounded-lg font-medium flex items-center gap-2'
+          >
+            <Plus className='w-4 h-4' />
+            <span>Create First Project</span>
+          </motion.button>
+        </motion.div>
+      )}
 
       {/* Projects Grid */}
       <motion.div
@@ -323,6 +382,13 @@ export default function ProjectsPage() {
           ))}
         </AnimatePresence>
       </motion.div>
+
+      {/* New Project Modal */}
+      <NewProjectModal
+        show={showNewProjectModal}
+        onClose={() => setShowNewProjectModal(false)}
+        onProjectCreated={handleProjectCreated}
+      />
 
       {/* Floating Create Button */}
       <Link href='/projects/new'>
