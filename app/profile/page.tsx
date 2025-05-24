@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { motion } from 'framer-motion';
@@ -153,7 +154,8 @@ export default function ProfilePage() {
     };
 
     fetchData();
-  }, [session, sessionStatus]);
+  }, [githubUsername]);
+
   // Social media data
   const socialLinks = [
     {

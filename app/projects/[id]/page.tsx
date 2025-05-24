@@ -10,25 +10,26 @@ import {
   Star,
   Eye,
   Sparkles,
-} from "lucide-react";
-import Link from "next/link";
+  Crown,
+} from 'lucide-react';
+import Link from 'next/link';
 
-import { notFound, useParams } from "next/navigation";
-import { supabase } from "@/app/lib/supabase";
-import { joinProjectRole } from "@/app/actions/joinProject";
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { JoinProjectModal } from "./JoinProjectModal";
+import { notFound, useParams } from 'next/navigation';
+import { supabase } from '@/app/lib/supabase';
+import { joinProjectRole } from '@/app/actions/joinProject';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { JoinProjectModal } from './JoinProjectModal';
+import Header from '@/components/Header';
 
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  github_url: string | null;
-  tech_stack: string[];
-  roles_needed: string[];
-  created_at: string;
-}
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import calendar from 'dayjs/plugin/calendar';
+import { AddTaskModal } from './AddTaskModal';
+
+// Extend dayjs with plugins
+dayjs.extend(relativeTime);
+dayjs.extend(calendar);
 
 export default function ProjectDetails() {
   const { data: session } = useSession();
@@ -39,6 +40,7 @@ export default function ProjectDetails() {
   const [userId, setUserId] = useState<string | null>(null);
 
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   const [availableRoles, setAvailableRoles] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
@@ -239,16 +241,16 @@ export default function ProjectDetails() {
               <div className="flex items-center space-x-1">
                 <Users className="w-4 h-4" />
                 <span>
-                  {project.roles_needed?.length - availableRoles.length + 1}{" "}
+                  {project.roles_needed?.length - availableRoles.length + 1}{' '}
                   members
                 </span>
               </div>
-              <div className="flex items-center space-x-1">
-                <Calendar className="w-4 h-4" />
+              <div className='flex items-center space-x-1'>
+                <Calendar className='w-4 h-4' />
                 <span>Created {project.created_at}</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <Eye className="w-4 h-4" />
+              <div className='flex items-center space-x-1'>
+                <Eye className='w-4 h-4' />
                 <span>{project.views} views</span>
               </div>
             </div>
@@ -274,7 +276,7 @@ export default function ProjectDetails() {
             <h2 className="text-xl font-semibold text-gray-100 mb-4">
               Description
             </h2>
-            <p className="text-gray-400">{project.description}</p>
+            <p className='text-gray-400'>{project.description}</p>
           </div>
 
           {/* Discussions */}
@@ -592,9 +594,9 @@ export default function ProjectDetails() {
               ))}
             </div>
 
-            <button className="mt-6 w-full py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors">
+            <button className='mt-6 w-full py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors'>
               + Create New Task
-            </button>
+            </button> */}
           </div>
 
           {/* GitHub Repo */}
@@ -623,6 +625,17 @@ export default function ProjectDetails() {
         show={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         onSubmit={handleJoinSubmit}
+      />
+
+      <AddTaskModal
+        show={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        onSubmit={(taskData) => {
+          // Handle task creation
+          console.log('New task:', taskData);
+        }}
+        projectName={project.title}
+        projectMembers={projectMembers}
       />
     </div>
   );

@@ -1,6 +1,5 @@
 'use client';
-
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   GitBranch,
   LayoutPanelLeft,
@@ -28,9 +27,51 @@ import { TypeAnimation } from 'react-type-animation';
 import Header from '@/components/Header';
 import { supabase } from './lib/supabase';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function Home() {
   const heroRef = useRef(null);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [allProjects, setAllProjects] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        const { data: allProjects } = await supabase
+          .from('projects')
+          .select('*')
+          .order('created_at', { ascending: false });
+        setAllProjects(allProjects);
+
+        const { data: allUsers } = await supabase.from('users').select('*');
+        setAllUsers(allUsers);
+
+        console.log(error?.message);
+        if (error) {
+          console.error('Failed to fetch projects:', error.message);
+          return;
+        }
+
+        setProjects(data);
+        setLoading(false);
+      } catch (error) {
+        toast.error('Failed to load projects');
+        console.error('Error:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -78,20 +119,6 @@ export default function Home() {
       delay: 0.4,
     },
   ];
-
-  const handleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          // Request additional GitHub permissions
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
-    });
-  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100 overflow-x-hidden'>
@@ -196,7 +223,7 @@ export default function Home() {
               transition={{ delay: 1 }}
               className='flex flex-col sm:flex-row justify-center gap-3'
             >
-              <a
+              <Link
                 href='/projects'
                 className='relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center space-x-2'
               >
@@ -205,10 +232,9 @@ export default function Home() {
                   <ArrowRight className='w-4 h-4 ml-2 transition-transform group-hover:translate-x-1' />
                 </span>
                 <span className='absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity'></span>
-              </a>
+              </Link>
 
-              <a
-                // onClick={handleSignIn}
+              <button
                 onClick={() => signIn('github')}
                 className='relative overflow-hidden group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
               >
@@ -217,7 +243,7 @@ export default function Home() {
                   <Link href={'/'}>GitHub Connect</Link>
                 </span>
                 <span className='absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity'></span>
-              </a>
+              </button>
             </motion.div>
 
             {/* Animated stats */}
@@ -228,8 +254,8 @@ export default function Home() {
               className='mt-16 grid grid-cols-3 gap-4 max-w-md mx-auto'
             >
               {[
-                { value: '250+', label: 'Active Projects' },
-                { value: '1.2k+', label: 'Developers' },
+                { value: allProjects.length + '+', label: 'Active Projects' },
+                { value: allUsers.length + '+', label: 'Developers' },
                 { value: '98%', label: 'Satisfaction' },
               ].map((stat, index) => (
                 <motion.div
@@ -381,66 +407,82 @@ export default function Home() {
             <p className='text-gray-400'>Real work happening right now</p>
           </motion.div>
 
-          <div className='grid md:grid-cols-2 gap-6 max-w-4xl mx-auto'>
-            {[
-              {
-                title: 'OpenAI API Wrapper',
-                tech: ['TypeScript', 'Next.js', 'Python'],
-                needs: ['Frontend', 'API Design'],
-                members: 3,
-              },
-              {
-                title: 'Rust CLI Tool',
-                tech: ['Rust', 'WASM'],
-                needs: ['Systems Programming', 'Performance'],
-                members: 2,
-              },
-              {
-                title: '3D Web Game',
-                tech: ['Three.js', 'React', 'WebGL'],
-                needs: ['3D Modeling', 'Shader Programming'],
-                members: 4,
-              },
-              {
-                title: 'Privacy-First Analytics',
-                tech: ['Go', 'PostgreSQL', 'Docker'],
-                needs: ['DevOps', 'Security'],
-                members: 5,
-              },
-            ].map((project, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                className='bg-gray-800/70 p-6 rounded-xl border border-gray-700 hover:border-cyan-400/30 transition-all'
-              >
-                <h3 className='text-lg font-semibold mb-3'>{project.title}</h3>
-                <div className='flex flex-wrap gap-2 mb-4'>
-                  {project.tech.map((tech, i) => (
-                    <motion.span
-                      key={i}
-                      whileHover={{ scale: 1.05 }}
-                      className='text-xs bg-gray-900 px-2 py-1 rounded'
-                    >
-                      {tech}
-                    </motion.span>
-                  ))}
+          {!loading ? (
+            <div className='grid md:grid-cols-2 gap-6 max-w-4xl mx-auto'>
+              {projects.map((project, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  className='bg-gray-800/70 p-6 rounded-xl border border-gray-700 hover:border-cyan-400/30 transition-all'
+                >
+                  <h3 className='text-lg font-semibold mb-3'>
+                    {project.title}
+                  </h3>
+                  <div className='flex flex-wrap gap-2 mb-4'>
+                    {project.tech_stack.map((tech) => (
+                      <motion.span
+                        key={tech}
+                        whileHover={{ scale: 1.05 }}
+                        className='text-xs bg-gray-900 px-2 py-1 rounded'
+                      >
+                        {tech}
+                      </motion.span>
+                    ))}
+                  </div>
+                  <div className='text-sm text-gray-400 mb-3'>
+                    <span className='text-cyan-400'>
+                      {/* {project.members} */}
+                      {1} members
+                    </span>{' '}
+                    • Needs:
+                    {project.roles_needed.map((role) => (
+                      <span key={role}>{' ' + role + ', '}</span>
+                    ))}
+                  </div>
+                  <Link href={`projects/${project.id}`}>
+                    <button className='text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition-colors'>
+                      View Details
+                    </button>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className='grid md:grid-cols-2 gap-6 max-w-4xl mx-auto'>
+              {[1, 2, 3, 4].map((_, index) => (
+                <div
+                  key={index}
+                  className='bg-gray-800/70 p-6 rounded-xl border border-gray-700'
+                >
+                  {/* Title Skeleton */}
+                  <div className='h-6 bg-gray-700 rounded mb-3 w-3/4 animate-pulse'></div>
+
+                  {/* Tech Stack Skeleton */}
+                  <div className='flex flex-wrap gap-2 mb-4'>
+                    {[1, 2, 3].map((tech) => (
+                      <div
+                        key={tech}
+                        className='h-6 bg-gray-700 rounded w-16 animate-pulse'
+                      ></div>
+                    ))}
+                  </div>
+
+                  {/* Members & Roles Skeleton */}
+                  <div className='space-y-2 mb-3'>
+                    <div className='h-4 bg-gray-700 rounded w-5/6 animate-pulse'></div>
+                    <div className='h-4 bg-gray-700 rounded w-4/6 animate-pulse'></div>
+                  </div>
+
+                  {/* Button Skeleton */}
+                  <div className='h-8 bg-gray-700 rounded w-24 animate-pulse'></div>
                 </div>
-                <div className='text-sm text-gray-400 mb-3'>
-                  <span className='text-cyan-400'>
-                    {project.members} members
-                  </span>{' '}
-                  • Needs: {project.needs.join(', ')}
-                </div>
-                <button className='text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition-colors'>
-                  View Details
-                </button>
-              </motion.div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -543,7 +585,7 @@ export default function Home() {
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6 }}
-            href='#'
+            href='/login'
             className='inline-block relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-all'
           >
             <span className='relative z-10'>Join DevSync — It&apos;s free</span>
@@ -571,10 +613,11 @@ export default function Home() {
               viewport={{ once: true }}
               className='flex space-x-6'
             >
-              {['GitHub', 'Twitter', 'Discord', 'Blog'].map((item) => (
+              {['GitHub', 'Twitter', 'Discord', 'LinkedIn'].map((item) => (
                 <a
                   key={item}
-                  href='#'
+                  href='https://x.com/erencodes'
+                  target='_blank'
                   className='text-gray-400 hover:text-emerald-400 transition-colors text-sm'
                 >
                   {item}

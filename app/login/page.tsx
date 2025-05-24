@@ -10,7 +10,6 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { signIn, useSession } from 'next-auth/react';
-import { supabase } from '../lib/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -61,21 +60,6 @@ export default function LoginPage() {
     window.location.href = '/'; // or use router.push('/')
     return null;
   }
-
-  const handleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          // Request additional GitHub permissions
-          access_type: 'offline',
-          prompt: 'consent',
-          scopes: 'user:email', // ← Request email scope
-        },
-      },
-    });
-  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4'>

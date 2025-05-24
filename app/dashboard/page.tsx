@@ -103,7 +103,7 @@ export default function Dashboard() {
                 Welcome back, {session?.user?.name}
               </h1>
               <p className='text-gray-400'>
-                Here's what's happening with your projects today
+                Here is what is happening with your projects today
               </p>
             </motion.div>
 
