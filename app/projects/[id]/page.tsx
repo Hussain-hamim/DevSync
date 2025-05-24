@@ -160,30 +160,6 @@ export default function ProjectDetails() {
   };
 
   // And update handleJoinSubmit to use it
-  const handleJoinSubmit = async (role: string, message: string) => {
-    console.log("Join request submitted:", { role, message });
-
-    if (!project || !userId) {
-      alert("Missing project or user info");
-      return;
-    }
-
-    try {
-      await joinProjectRole({
-        filled_by: userId,
-        project_id: project.id,
-        title: role,
-      });
-
-      // Refresh members and available roles
-      await fetchProjectMembers();
-      setAvailableRoles((prev) => prev.filter((r) => r !== role));
-      setShowJoinModal(false);
-    } catch (error) {
-      console.error("Error joining project:", error);
-      alert("Failed to join project");
-    }
-  };
 
   // 2. Fetch user ID from your Supabase users table using NextAuth session email
   useEffect(() => {
@@ -206,23 +182,23 @@ export default function ProjectDetails() {
     fetchUserId();
   }, [session]);
 
-  const handleJoinSubmit = async (role: string, message: string) => {
-    console.log("Join request submitted:", { role, message });
-    // Here you would typically make an API call
+  // const handleJoinSubmit = async (role: string, message: string) => {
+  //   console.log("Join request submitted:", { role, message });
+  //   // Here you would typically make an API call
 
-    // 3. Join handler
-    if (!project || !userId) {
-      alert("Missing project or user info");
-      return;
-    }
-    await joinProjectRole({
-      filled_by: userId,
-      project_id: project.id,
-      title: role,
-    });
+  //   // 3. Join handler
+  //   if (!project || !userId) {
+  //     alert("Missing project or user info");
+  //     return;
+  //   }
+  //   await joinProjectRole({
+  //     filled_by: userId,
+  //     project_id: project.id,
+  //     title: role,
+  //   });
 
-    setShowJoinModal(false);
-  };
+  //   setShowJoinModal(false);
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
