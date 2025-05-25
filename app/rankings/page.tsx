@@ -1,6 +1,6 @@
 // app/rankings/page.tsx
-"use client";
-import { useState, useEffect } from "react";
+'use client';
+import { useState, useEffect } from 'react';
 import {
   Trophy,
   TrendingUp,
@@ -15,8 +15,8 @@ import {
   Users,
   Clock,
   Code,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Define types
 type User = {
@@ -36,13 +36,13 @@ type User = {
 };
 
 type MetricType =
-  | "score"
-  | "commits"
-  | "repositories"
-  | "stars"
-  | "followers"
-  | "pullRequests"
-  | "activeHours";
+  | 'score'
+  | 'commits'
+  | 'repositories'
+  | 'stars'
+  | 'followers'
+  | 'pullRequests'
+  | 'activeHours';
 
 // Animated components
 const LivePulse = () => (
@@ -54,12 +54,12 @@ const LivePulse = () => (
     transition={{
       duration: 1.5,
       repeat: Infinity,
-      ease: "easeInOut",
+      ease: 'easeInOut',
     }}
-    className="flex items-center"
+    className='flex items-center'
   >
-    <Circle className="w-2 h-2 text-emerald-400 fill-emerald-400" />
-    <span className="text-xs text-emerald-400 ml-1">LIVE</span>
+    <Circle className='w-2 h-2 text-emerald-400 fill-emerald-400' />
+    <span className='text-xs text-emerald-400 ml-1'>LIVE</span>
   </motion.div>
 );
 
@@ -70,7 +70,7 @@ const ScoreChange = ({ value }: { value: number }) => (
     animate={{ y: 0, opacity: 1 }}
     exit={{ y: 10, opacity: 0 }}
     transition={{ duration: 0.4 }}
-    className="text-gray-100 font-bold"
+    className='text-gray-100 font-bold'
   >
     {value}
   </motion.span>
@@ -78,20 +78,20 @@ const ScoreChange = ({ value }: { value: number }) => (
 
 const MetricIcon = ({ metric }: { metric: MetricType }) => {
   const icons = {
-    commits: <GitCommit className="w-4 h-4" />,
-    repositories: <Code className="w-4 h-4" />,
-    stars: <Star className="w-4 h-4" />,
-    followers: <Users className="w-4 h-4" />,
-    pullRequests: <GitPullRequest className="w-4 h-4" />,
-    activeHours: <Clock className="w-4 h-4" />,
-    score: <TrendingUp className="w-4 h-4" />,
+    commits: <GitCommit className='w-4 h-4' />,
+    repositories: <Code className='w-4 h-4' />,
+    stars: <Star className='w-4 h-4' />,
+    followers: <Users className='w-4 h-4' />,
+    pullRequests: <GitPullRequest className='w-4 h-4' />,
+    activeHours: <Clock className='w-4 h-4' />,
+    score: <TrendingUp className='w-4 h-4' />,
   };
-  return icons[metric] || <Activity className="w-4 h-4" />;
+  return icons[metric] || <Activity className='w-4 h-4' />;
 };
 
 export default function RankingsPage() {
-  const [timeframe, setTimeframe] = useState<"weekly" | "monthly">("weekly");
-  const [sortBy, setSortBy] = useState<MetricType>("score");
+  const [timeframe, setTimeframe] = useState<'weekly' | 'monthly'>('weekly');
+  const [sortBy, setSortBy] = useState<MetricType>('score');
   const [rankings, setRankings] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -100,9 +100,9 @@ export default function RankingsPage() {
   const mockUsers: User[] = [
     {
       id: 1,
-      username: "octocat",
-      name: "The Octocat",
-      avatar: "https://avatars.githubusercontent.com/u/583231?v=4",
+      username: 'octocat',
+      name: 'The Octocat',
+      avatar: 'https://avatars.githubusercontent.com/u/583231?v=4',
       commits: 1428,
       repositories: 42,
       stars: 1560,
@@ -115,9 +115,9 @@ export default function RankingsPage() {
     },
     {
       id: 2,
-      username: "torvalds",
-      name: "Linus Torvalds",
-      avatar: "https://avatars.githubusercontent.com/u/1024025?v=4",
+      username: 'torvalds',
+      name: 'Linus Torvalds',
+      avatar: 'https://avatars.githubusercontent.com/u/1024025?v=4',
       commits: 56892,
       repositories: 7,
       stars: 142000,
@@ -130,9 +130,9 @@ export default function RankingsPage() {
     },
     {
       id: 3,
-      username: "gaearon",
-      name: "Dan Abramov",
-      avatar: "https://avatars.githubusercontent.com/u/810438?v=4",
+      username: 'gaearon',
+      name: 'Dan Abramov',
+      avatar: 'https://avatars.githubusercontent.com/u/810438?v=4',
       commits: 3245,
       repositories: 128,
       stars: 98700,
@@ -145,9 +145,9 @@ export default function RankingsPage() {
     },
     {
       id: 4,
-      username: "yyx990803",
-      name: "Evan You",
-      avatar: "https://avatars.githubusercontent.com/u/499550?v=4",
+      username: 'yyx990803',
+      name: 'Evan You',
+      avatar: 'https://avatars.githubusercontent.com/u/499550?v=4',
       commits: 2876,
       repositories: 56,
       stars: 203000,
@@ -162,7 +162,7 @@ export default function RankingsPage() {
 
   // Calculate score based on all metrics
   const calculateScore = (
-    user: Omit<User, "score" | "isLive" | "pulse">
+    user: Omit<User, 'score' | 'isLive' | 'pulse'>
   ): number => {
     return (
       user.commits * 0.3 +
@@ -190,7 +190,7 @@ export default function RankingsPage() {
 
   // Sort rankings based on selected metric
   const sortedRankings = [...rankings].sort((a, b) => {
-    if (sortBy === "score") return b.score - a.score;
+    if (sortBy === 'score') return b.score - a.score;
     return b[sortBy] - a[sortBy];
   });
 
@@ -226,32 +226,32 @@ export default function RankingsPage() {
 
   // Filter dropdown component
   const FilterDropdown = () => (
-    <motion.div className="relative" whileHover={{ scale: 1.02 }}>
+    <motion.div className='relative' whileHover={{ scale: 1.02 }}>
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center gap-2"
+        className='bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center gap-2'
       >
         <MetricIcon metric={sortBy} />
         <span>
-          {sortBy === "score"
-            ? "Overall Score"
-            : sortBy === "commits"
-            ? "Commits"
-            : sortBy === "repositories"
-            ? "Repositories"
-            : sortBy === "stars"
-            ? "Stars"
-            : sortBy === "followers"
-            ? "Followers"
-            : sortBy === "pullRequests"
-            ? "Pull Requests"
-            : sortBy === "activeHours"
-            ? "Active Hours"
-            : "Sort By"}
+          {sortBy === 'score'
+            ? 'Overall Score'
+            : sortBy === 'commits'
+            ? 'Commits'
+            : sortBy === 'repositories'
+            ? 'Repositories'
+            : sortBy === 'stars'
+            ? 'Stars'
+            : sortBy === 'followers'
+            ? 'Followers'
+            : sortBy === 'pullRequests'
+            ? 'Pull Requests'
+            : sortBy === 'activeHours'
+            ? 'Active Hours'
+            : 'Sort By'}
         </span>
         <ChevronDown
           className={`w-4 h-4 transition-transform ${
-            isDropdownOpen ? "rotate-180" : ""
+            isDropdownOpen ? 'rotate-180' : ''
           }`}
         />
       </button>
@@ -263,17 +263,17 @@ export default function RankingsPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10"
+            className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10'
             onClick={(e) => e.stopPropagation()}
           >
             {[
-              "score",
-              "commits",
-              "repositories",
-              "stars",
-              "followers",
-              "pullRequests",
-              "activeHours",
+              'score',
+              'commits',
+              'repositories',
+              'stars',
+              'followers',
+              'pullRequests',
+              'activeHours',
             ].map((option) => (
               <button
                 key={option}
@@ -283,25 +283,25 @@ export default function RankingsPage() {
                 }}
                 className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
                   sortBy === option
-                    ? "bg-gray-700 text-emerald-400"
-                    : "text-gray-300 hover:bg-gray-700"
+                    ? 'bg-gray-700 text-emerald-400'
+                    : 'text-gray-300 hover:bg-gray-700'
                 }`}
               >
                 <MetricIcon metric={option as MetricType} />
-                {option === "score"
-                  ? "Overall Score"
-                  : option === "commits"
-                  ? "Commits"
-                  : option === "repositories"
-                  ? "Repositories"
-                  : option === "stars"
-                  ? "Stars"
-                  : option === "followers"
-                  ? "Followers"
-                  : option === "pullRequests"
-                  ? "Pull Requests"
-                  : option === "activeHours"
-                  ? "Active Hours"
+                {option === 'score'
+                  ? 'Overall Score'
+                  : option === 'commits'
+                  ? 'Commits'
+                  : option === 'repositories'
+                  ? 'Repositories'
+                  : option === 'stars'
+                  ? 'Stars'
+                  : option === 'followers'
+                  ? 'Followers'
+                  : option === 'pullRequests'
+                  ? 'Pull Requests'
+                  : option === 'activeHours'
+                  ? 'Active Hours'
                   : option}
               </button>
             ))}
@@ -319,23 +319,23 @@ export default function RankingsPage() {
       }
     };
 
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, [isDropdownOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8">
+    <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
       {/* Animated Header */}
       <motion.header
         initial={{ y: -50 }}
         animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 100 }}
-        className="mb-8"
+        transition={{ type: 'spring', stiffness: 100 }}
+        className='mb-8'
       >
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <div className="flex items-center space-x-3">
-            <Github className="w-6 h-6 text-emerald-400" />
-            <h1 className="text-2xl font-bold text-gray-100 flex items-center gap-2">
+        <div className='flex justify-between items-center flex-wrap gap-4'>
+          <div className='flex items-center space-x-3'>
+            <Github className='w-6 h-6 text-emerald-400' />
+            <h1 className='text-2xl font-bold text-gray-100 flex items-center gap-2'>
               GitHub Leaderboard
               <motion.div
                 animate={{
@@ -347,22 +347,22 @@ export default function RankingsPage() {
                   repeat: Infinity,
                 }}
               >
-                <Trophy className="w-5 h-5 text-amber-400" />
+                <Trophy className='w-5 h-5 text-amber-400' />
               </motion.div>
             </h1>
           </div>
 
-          <div className="flex gap-3">
+          <div className='flex gap-3'>
             <motion.div whileHover={{ scale: 1.05 }}>
               <button
                 onClick={() =>
-                  setTimeframe(timeframe === "weekly" ? "monthly" : "weekly")
+                  setTimeframe(timeframe === 'weekly' ? 'monthly' : 'weekly')
                 }
-                className="bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center gap-2"
+                className='bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center gap-2'
               >
-                <Calendar className="w-4 h-4" />
-                <span>{timeframe === "weekly" ? "Weekly" : "Monthly"}</span>
-                <ChevronDown className="w-4 h-4" />
+                <Calendar className='w-4 h-4' />
+                <span>{timeframe === 'weekly' ? 'Weekly' : 'Monthly'}</span>
+                <ChevronDown className='w-4 h-4' />
               </button>
             </motion.div>
 
@@ -373,18 +373,18 @@ export default function RankingsPage() {
 
       {/* Loading state */}
       {isLoading && (
-        <div className="flex justify-center items-center h-64">
+        <div className='flex justify-center items-center h-64'>
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full"
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            className='w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full'
           />
         </div>
       )}
 
       {/* Leaderboard */}
       {!isLoading && (
-        <div className="space-y-4">
+        <div className='space-y-4'>
           <AnimatePresence>
             {sortedRankings.map((user, index) => (
               <motion.article
@@ -395,16 +395,16 @@ export default function RankingsPage() {
                   opacity: 1,
                   y: 0,
                   borderColor: user.pulse
-                    ? "rgba(16, 185, 129, 0.5)"
-                    : "rgba(55, 65, 81, 0.5)",
+                    ? 'rgba(16, 185, 129, 0.5)'
+                    : 'rgba(55, 65, 81, 0.5)',
                 }}
                 transition={{
-                  type: "spring",
+                  type: 'spring',
                   stiffness: 300,
                   damping: 25,
                 }}
                 className={`bg-gray-800/50 border rounded-xl p-4 relative overflow-hidden ${
-                  user.isLive ? "border-emerald-400/30" : "border-gray-700"
+                  user.isLive ? 'border-emerald-400/30' : 'border-gray-700'
                 }`}
               >
                 {/* Live indicator ribbon */}
@@ -412,25 +412,25 @@ export default function RankingsPage() {
                   <motion.div
                     initial={{ x: -40 }}
                     animate={{ x: 0 }}
-                    className="absolute top-0 left-0 bg-emerald-500/90 text-white text-xs px-2 py-1 rounded-br-lg"
+                    className='absolute top-0 left-0 bg-emerald-500/90 text-white text-xs px-2 py-1 rounded-br-lg'
                   >
                     <LivePulse />
                   </motion.div>
                 )}
 
-                <div className="grid grid-cols-12 items-center gap-4">
+                <div className='grid grid-cols-12 items-center gap-4'>
                   {/* Rank */}
-                  <div className="col-span-1">
+                  <div className='col-span-1'>
                     <motion.div
                       whileHover={{ scale: 1.1 }}
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
                         index === 0
-                          ? "bg-amber-900/50 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]"
+                          ? 'bg-amber-900/50 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
                           : index === 1
-                          ? "bg-gray-700/50 text-gray-300"
+                          ? 'bg-gray-700/50 text-gray-300'
                           : index === 2
-                          ? "bg-amber-800/50 text-amber-500"
-                          : "bg-gray-900/30 text-gray-500"
+                          ? 'bg-amber-800/50 text-amber-500'
+                          : 'bg-gray-900/30 text-gray-500'
                       }`}
                     >
                       {index + 1}
@@ -438,19 +438,19 @@ export default function RankingsPage() {
                   </div>
 
                   {/* User Info */}
-                  <div className="col-span-4">
+                  <div className='col-span-4'>
                     <motion.div
-                      className="flex items-center gap-3"
+                      className='flex items-center gap-3'
                       whileHover={{ x: 5 }}
                     >
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="relative"
+                        className='relative'
                       >
                         <img
                           src={user.avatar}
                           alt={`${user.name}'s avatar`}
-                          className="w-10 h-10 rounded-full border-2 border-gray-700"
+                          className='w-10 h-10 rounded-full border-2 border-gray-700'
                           width={40}
                           height={40}
                         />
@@ -458,19 +458,19 @@ export default function RankingsPage() {
                           <motion.div
                             animate={{ scale: [1, 1.2, 1] }}
                             transition={{ duration: 1.5, repeat: Infinity }}
-                            className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-gray-900"
+                            className='absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-gray-900'
                           />
                         )}
                       </motion.div>
                       <div>
-                        <h2 className="font-medium text-gray-100">
+                        <h2 className='font-medium text-gray-100'>
                           {user.name}
                         </h2>
                         <a
                           href={`https://github.com/${user.username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-gray-400 hover:text-emerald-400"
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='text-xs text-gray-400 hover:text-emerald-400'
                         >
                           @{user.username}
                         </a>
@@ -479,70 +479,70 @@ export default function RankingsPage() {
                   </div>
 
                   {/* Score */}
-                  <div className="col-span-2">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-emerald-400" />
-                      <AnimatePresence mode="wait">
+                  <div className='col-span-2'>
+                    <div className='flex items-center gap-2'>
+                      <TrendingUp className='w-5 h-5 text-emerald-400' />
+                      <AnimatePresence mode='wait'>
                         <ScoreChange value={user.score} />
                       </AnimatePresence>
-                      <span className="text-xs text-gray-500">pts</span>
+                      <span className='text-xs text-gray-500'>pts</span>
                     </div>
                   </div>
 
                   {/* Metrics */}
-                  <div className="col-span-5">
-                    <div className="grid grid-cols-6 gap-2 text-center">
+                  <div className='col-span-5'>
+                    <div className='grid grid-cols-6 gap-2 text-center'>
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="flex flex-col items-center"
-                        title="Commits"
+                        className='flex flex-col items-center'
+                        title='Commits'
                       >
-                        <GitCommit className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs mt-1">{user.commits}</span>
+                        <GitCommit className='w-4 h-4 text-gray-400' />
+                        <span className='text-xs mt-1'>{user.commits}</span>
                       </motion.div>
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="flex flex-col items-center"
-                        title="Repositories"
+                        className='flex flex-col items-center'
+                        title='Repositories'
                       >
-                        <Code className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs mt-1">
+                        <Code className='w-4 h-4 text-gray-400' />
+                        <span className='text-xs mt-1'>
                           {user.repositories}
                         </span>
                       </motion.div>
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="flex flex-col items-center"
-                        title="Stars"
+                        className='flex flex-col items-center'
+                        title='Stars'
                       >
-                        <Star className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs mt-1">{user.stars}</span>
+                        <Star className='w-4 h-4 text-gray-400' />
+                        <span className='text-xs mt-1'>{user.stars}</span>
                       </motion.div>
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="flex flex-col items-center"
-                        title="Followers"
+                        className='flex flex-col items-center'
+                        title='Followers'
                       >
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs mt-1">{user.followers}</span>
+                        <Users className='w-4 h-4 text-gray-400' />
+                        <span className='text-xs mt-1'>{user.followers}</span>
                       </motion.div>
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="flex flex-col items-center"
-                        title="Pull Requests"
+                        className='flex flex-col items-center'
+                        title='Pull Requests'
                       >
-                        <GitPullRequest className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs mt-1">
+                        <GitPullRequest className='w-4 h-4 text-gray-400' />
+                        <span className='text-xs mt-1'>
                           {user.pullRequests}
                         </span>
                       </motion.div>
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="flex flex-col items-center"
-                        title="Active Hours"
+                        className='flex flex-col items-center'
+                        title='Active Hours'
                       >
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs mt-1">{user.activeHours}</span>
+                        <Clock className='w-4 h-4 text-gray-400' />
+                        <span className='text-xs mt-1'>{user.activeHours}</span>
                       </motion.div>
                     </div>
                   </div>
@@ -552,9 +552,9 @@ export default function RankingsPage() {
                 {user.isLive && (
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: "100%" }}
+                    animate={{ width: '100%' }}
                     transition={{ duration: 3, repeat: Infinity }}
-                    className="absolute bottom-0 left-0 h-0.5 bg-emerald-400/50"
+                    className='absolute bottom-0 left-0 h-0.5 bg-emerald-400/50'
                   />
                 )}
               </motion.article>
@@ -572,12 +572,12 @@ export default function RankingsPage() {
         transition={{
           duration: 2,
           repeat: Infinity,
-          ease: "easeInOut",
+          ease: 'easeInOut',
         }}
-        className="fixed bottom-6 right-6 bg-gray-800 border border-emerald-400/30 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg"
+        className='fixed bottom-6 right-6 bg-gray-800 border border-emerald-400/30 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg'
       >
-        <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
-        <span className="text-sm text-gray-100">Live Updates</span>
+        <Activity className='w-4 h-4 text-emerald-400 animate-pulse' />
+        <span className='text-sm text-gray-100'>Live Updates</span>
       </motion.aside>
     </div>
   );

@@ -36,6 +36,7 @@ export default function ProfilePage() {
   const [allCommits, setAllCommits] = useState<any>(null);
 
   const githubUsername = session?.user?.login;
+  ////
 
   useEffect(() => {
     const fetchData = async () => {

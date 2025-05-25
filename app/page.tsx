@@ -254,7 +254,10 @@ export default function Home() {
               className='mt-16 grid grid-cols-3 gap-4 max-w-md mx-auto'
             >
               {[
-                { value: allProjects.length + '+', label: 'Active Projects' },
+                {
+                  value: allProjects ? allProjects.length + '+' : '100+',
+                  label: 'Active Projects',
+                },
                 { value: allUsers.length + '+', label: 'Developers' },
                 { value: '98%', label: 'Satisfaction' },
               ].map((stat, index) => (
