@@ -127,6 +127,7 @@ export default function ProjectTasksPage() {
               <ArrowLeft className='w-5 h-5 mr-2' />
               Back to Project
             </Link>
+            {/* {project.creator_id === '1883ec53-96c6-4911-877c-5168e35a7a6d' && ( */}
             {session && (
               <button
                 onClick={() => setShowTaskModal(true)}

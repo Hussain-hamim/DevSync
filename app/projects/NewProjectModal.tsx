@@ -152,7 +152,7 @@ export function NewProjectModal({
                   {/* Description */}
                   <div>
                     <label className='block text-gray-300 text-sm font-medium mb-2'>
-                      Description
+                      Description*
                     </label>
                     <div className='relative'>
                       <div className='absolute inset-y-0 left-0 pl-3 pt-3 pointer-events-none'>
@@ -176,7 +176,7 @@ export function NewProjectModal({
                   {/* GitHub Repo */}
                   <div>
                     <label className='block text-gray-300 text-sm font-medium mb-2'>
-                      GitHub Repository (Optional)
+                      GitHub Repository*
                     </label>
                     <div className='relative'>
                       <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
@@ -249,7 +249,7 @@ export function NewProjectModal({
                   {/* Roles Needed */}
                   <div>
                     <label className='block text-gray-300 text-sm font-medium mb-2'>
-                      Roles Needed
+                      Roles Needed*
                     </label>
                     <div className='flex flex-wrap gap-2 mb-2'>
                       {formData.roles_needed.map((role, index) => (

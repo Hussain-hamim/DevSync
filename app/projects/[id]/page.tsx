@@ -27,7 +27,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { AddTaskModal } from './AddTaskModal';
-import { saveTask } from '@/app/actions/saveTask';
+import { div } from 'framer-motion/client';
 
 // Extend dayjs with plugins
 dayjs.extend(relativeTime);
@@ -46,6 +46,42 @@ export default function ProjectDetails() {
 
   const [availableRoles, setAvailableRoles] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
+
+  // At the top of your component
+  const [tasks, setTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+
+  // Fetch tasks when project loads
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setLoadingTasks(true);
+      try {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select(
+            `
+          *,
+           assigned_to:assigned_to(id, name, avatar_url),
+            created_by:created_by(id, name, avatar_url)
+        `
+          )
+          .eq('project_id', project.id)
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+        setTasks(data || []);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
+
+    if (project?.id) {
+      fetchTasks();
+    }
+  }, [project?.id]);
 
   // And update handleJoinSubmit to use it
   const handleJoinSubmit = async (role: string, message: string) => {
@@ -73,13 +109,8 @@ export default function ProjectDetails() {
     }
   };
 
-  const onAddTask = async (taskData) => {
-    if (!taskData) {
-      alert('Missing task data or user info');
-      return;
-    }
-
-    alert('task saved to db');
+  const onAddTask = async () => {
+    // refresh page to get new tasks
   };
 
   // Fetch project data and roles
@@ -526,6 +557,7 @@ export default function ProjectDetails() {
           </div>
 
           {/* Project Tasks Card */}
+
           <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
             <div className='flex justify-between items-center mb-4'>
               <h2 className='text-xl font-semibold text-gray-100'>
@@ -539,146 +571,119 @@ export default function ProjectDetails() {
               </Link>
             </div>
 
-            <div className='space-y-4'>
-              {[
-                {
-                  id: 1,
-                  title: 'Implement user authentication',
-                  status: 'In Progress',
-                  priority: 'High',
-                  assignee: 'Alex Johnson',
-                  due_date: '2023-06-15',
-                },
-                {
-                  id: 2,
-                  title: 'Design dashboard UI',
-                  status: 'Completed',
-                  priority: 'Medium',
-                  assignee: 'Sam Wilson',
-                  due_date: '2023-05-28',
-                },
-                {
-                  id: 3,
-                  title: 'Database schema design',
-                  status: 'Not Started',
-                  priority: 'High',
-                  assignee: 'Jordan Chen',
-                  due_date: '2023-06-01',
-                },
-                {
-                  id: 4,
-                  title: 'API documentation',
-                  status: 'In Review',
-                  priority: 'Low',
-                  assignee: 'Taylor Smith',
-                  due_date: '2023-06-10',
-                },
-              ].map((task) => (
-                <Link href={`${project.id}/tasks/${task.id}`} key={task.id}>
-                  <div className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors'>
-                    <div className='flex justify-between items-start'>
-                      <div className='flex items-center gap-3'>
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            task.status === 'Completed'
-                              ? 'bg-green-500'
-                              : task.status === 'In Progress'
-                              ? 'bg-amber-500'
-                              : task.status === 'In Review'
-                              ? 'bg-blue-500'
-                              : 'bg-gray-500'
+            {loadingTasks ? (
+              <div className='space-y-4'>
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 animate-pulse h-16'
+                  />
+                ))}
+              </div>
+            ) : (
+              // Your tasks list here
+
+              <div className='space-y-4'>
+                {tasks?.slice(0, 4).map((task) => (
+                  <Link
+                    href={`/projects/${project.id}/tasks/${task.id}`}
+                    key={task.id}
+                  >
+                    <div className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors'>
+                      <div className='flex justify-between items-start'>
+                        <div className='flex items-center gap-3'>
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              task.status === 'Completed'
+                                ? 'bg-green-500'
+                                : task.status === 'In Progress'
+                                ? 'bg-amber-500'
+                                : task.status === 'In Review'
+                                ? 'bg-blue-500'
+                                : 'bg-gray-500'
+                            }`}
+                          ></div>
+                          <h3 className='text-gray-100 font-medium'>
+                            {task.title}
+                          </h3>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            task.priority === 'High'
+                              ? 'bg-red-900/50 text-red-300'
+                              : task.priority === 'Medium'
+                              ? 'bg-amber-900/50 text-amber-300'
+                              : 'bg-gray-700 text-gray-300'
                           }`}
-                        ></div>
-                        <h3 className='text-gray-100 font-medium'>
-                          {task.title}
-                        </h3>
-                      </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${
-                          task.priority === 'High'
-                            ? 'bg-red-900/50 text-red-300'
-                            : task.priority === 'Medium'
-                            ? 'bg-amber-900/50 text-amber-300'
-                            : 'bg-gray-700 text-gray-300'
-                        }`}
-                      >
-                        {task.priority}
-                      </span>
-                    </div>
-
-                    <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
-                      <div className='flex items-center gap-2 text-gray-400'>
-                        <svg
-                          className='w-4 h-4'
-                          fill='none'
-                          stroke='currentColor'
-                          viewBox='0 0 24 24'
                         >
-                          <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth={2}
-                            d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-                          />
-                        </svg>
-                        <span>{task.assignee}</span>
-                      </div>
-
-                      <div className='flex items-center gap-2 text-gray-400'>
-                        <svg
-                          className='w-4 h-4'
-                          fill='none'
-                          stroke='currentColor'
-                          viewBox='0 0 24 24'
-                        >
-                          <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth={2}
-                            d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                          />
-                        </svg>
-                        <span>
-                          {new Date(task.due_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
+                          {task.priority}
                         </span>
                       </div>
+
+                      <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
+                        <div className='flex items-center gap-2 text-gray-400'>
+                          <div className='w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center text-xs'>
+                            {task.assigned_to?.name?.charAt(0) || 'U'}
+                          </div>
+                          <span>{task.assigned_to?.name || 'Unassigned'}</span>
+                        </div>
+
+                        {task.due_date && (
+                          <div className='flex items-center gap-2 text-gray-400'>
+                            <svg
+                              className='w-4 h-4'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                              />
+                            </svg>
+                            <span>
+                              {new Date(task.due_date).toLocaleDateString(
+                                'en-US',
+                                {
+                                  month: 'short',
+                                  day: 'numeric',
+                                }
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  </Link>
+                ))}
+
+                {tasks?.length === 0 && (
+                  <div className='text-center py-4 text-gray-400'>
+                    No tasks created yet
                   </div>
-                </Link>
-              ))}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Add Task Button */}
-            {projectMembers.map((member) => {
-              const isCurrentUserOwner =
-                member.isOwner && member.name === session?.user?.name;
-
-              return (
-                isCurrentUserOwner && (
-                  <div
-                    key={member.id}
-                    className='flex items-center justify-between mt-4'
-                  >
-                    <span className='text-sm text-gray-400'>
-                      You can add tasks to this project.
-                    </span>
-                    <button
-                      onClick={() => setShowTaskModal(true)}
-                      className='text-emerald-400 hover:underline text-md inline-flex items-center'
-                    >
-                      <Plus className='w-5 h-5 mr-1' />
-                      Add Task
-                    </button>
-                  </div>
-                )
-              );
-            })}
-            {/* <button className='mt-6 w-full py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors'>
-              + Create New Task
-            </button> */}
+            {projectMembers.some(
+              (member) => member.isOwner && member.name === session?.user?.name
+            ) && (
+              <div className='flex items-center justify-between mt-4'>
+                <span className='text-sm text-gray-400'>
+                  You can add tasks to this project.
+                </span>
+                <button
+                  onClick={() => setShowTaskModal(true)}
+                  className='text-emerald-400 hover:underline text-md inline-flex items-center'
+                >
+                  <Plus className='w-5 h-5 mr-1' />
+                  Add Task
+                </button>
+              </div>
+            )}
           </div>
 
           {/* GitHub Repo */}
@@ -717,6 +722,7 @@ export default function ProjectDetails() {
         projectId={project.id}
         onTaskCreated={() => {
           // Refresh task list or perform other actions
+          onAddTask();
         }}
       />
     </div>
