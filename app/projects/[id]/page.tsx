@@ -27,6 +27,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { AddTaskModal } from './AddTaskModal';
+import { saveTask } from '@/app/actions/saveTask';
 
 // Extend dayjs with plugins
 dayjs.extend(relativeTime);
@@ -45,6 +46,41 @@ export default function ProjectDetails() {
 
   const [availableRoles, setAvailableRoles] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
+
+  // And update handleJoinSubmit to use it
+  const handleJoinSubmit = async (role: string, message: string) => {
+    console.log('Join request submitted:', { role, message });
+
+    if (!project || !userId) {
+      alert('Missing project or user info');
+      return;
+    }
+
+    try {
+      await joinProjectRole({
+        filled_by: userId,
+        project_id: project.id,
+        title: role,
+      });
+
+      // Refresh members and available roles
+      await fetchProjectMembers();
+      setAvailableRoles((prev) => prev.filter((r) => r !== role));
+      setShowJoinModal(false);
+    } catch (error) {
+      console.error('Error joining project:', error);
+      alert('Failed to join project');
+    }
+  };
+
+  const onAddTask = async (taskData) => {
+    if (!taskData) {
+      alert('Missing task data or user info');
+      return;
+    }
+
+    alert('task saved to db');
+  };
 
   // Fetch project data and roles
   useEffect(() => {
@@ -162,32 +198,6 @@ export default function ProjectDetails() {
   useEffect(() => {
     fetchProjectMembers();
   }, [params.id]);
-
-  // And update handleJoinSubmit to use it
-  const handleJoinSubmit = async (role: string, message: string) => {
-    console.log('Join request submitted:', { role, message });
-
-    if (!project || !userId) {
-      alert('Missing project or user info');
-      return;
-    }
-
-    try {
-      await joinProjectRole({
-        filled_by: userId,
-        project_id: project.id,
-        title: role,
-      });
-
-      // Refresh members and available roles
-      await fetchProjectMembers();
-      setAvailableRoles((prev) => prev.filter((r) => r !== role));
-      setShowJoinModal(false);
-    } catch (error) {
-      console.error('Error joining project:', error);
-      alert('Failed to join project');
-    }
-  };
 
   // 2. Fetch user ID from your Supabase `users` table using NextAuth session email
   useEffect(() => {
@@ -700,14 +710,14 @@ export default function ProjectDetails() {
       />
 
       <AddTaskModal
-        show={showTaskModal}
-        onClose={() => setShowTaskModal(false)}
-        onSubmit={(taskData) => {
-          // Handle task creation
-          console.log('New task:', taskData);
-        }}
         projectName={project.title}
         projectMembers={projectMembers}
+        show={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        projectId={project.id}
+        onTaskCreated={() => {
+          // Refresh task list or perform other actions
+        }}
       />
     </div>
   );
