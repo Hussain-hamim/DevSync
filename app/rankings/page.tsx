@@ -100,14 +100,14 @@ async function fetchGitHubData(githubId: string): Promise<Partial<User>> {
     if (!token) throw new Error("GitHub token not configured");
 
     const headers = {
-      Authorization: `Bearer ${token}`,
+      Authorization: Bearer ${token},
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
     };
 
     // Get user details by GitHub ID
     const userResponse = await fetch(
-      `https://api.github.com/user/${githubId}`,
+      https://api.github.com/user/${githubId},
       {
         headers,
       }
@@ -116,7 +116,7 @@ async function fetchGitHubData(githubId: string): Promise<Partial<User>> {
     if (!userResponse.ok) {
       const errorData = await userResponse.json();
       throw new Error(
-        `GitHub API error: ${errorData.message || "Unknown error"}`
+        GitHub API error: ${errorData.message || "Unknown error"}
       );
     }
 
@@ -126,10 +126,10 @@ async function fetchGitHubData(githubId: string): Promise<Partial<User>> {
 
     // Get detailed stats using the username
     const [reposResponse, eventsResponse] = await Promise.all([
-      fetch(`https://api.github.com/users/${username}/repos?per_page=100`, {
+      fetch(https://api.github.com/users/${username}/repos?per_page=100, {
         headers,
       }),
-      fetch(`https://api.github.com/users/${username}/events`, { headers }),
+      fetch(https://api.github.com/users/${username}/events, { headers }),
     ]);
 
     if (!reposResponse.ok || !eventsResponse.ok) {
@@ -163,9 +163,9 @@ async function fetchGitHubData(githubId: string): Promise<Partial<User>> {
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
-    console.error(`Error fetching GitHub data for user ${githubId}:`, error);
+    console.error(Error fetching GitHub data for user ${githubId}:, error);
     return {
-      github_username: `user_${githubId}`,
+      github_username: user_${githubId},
       commits: 0,
       repositories: 0,
       stars: 0,
@@ -229,7 +229,7 @@ export default function RankingsPage() {
             score: Math.round(calculateScore({ ...user, ...githubData })),
           });
         } catch (userError) {
-          console.error(`Error processing user ${user.id}:`, userError);
+          console.error(Error processing user ${user.id}:, userError);
           continue;
         }
       }
@@ -524,7 +524,7 @@ export default function RankingsPage() {
                         >
                           <img
                             src={user.avatar_url}
-                            alt={`${user.name}'s avatar`}
+                            alt={${user.name}'s avatar}
                             className="w-10 h-10 rounded-full border-2 border-gray-700"
                             width={40}
                             height={40}
@@ -543,7 +543,7 @@ export default function RankingsPage() {
                           </h2>
                           {user.github_username && (
                             <a
-                              href={`https://github.com/${user.github_username}`}
+                              href={https://github.com/${user.github_username}}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-gray-400 hover:text-emerald-400"
