@@ -71,8 +71,29 @@ export async function saveTask(formData: TaskData) {
     new_value: formData.title,
   });
 
+  // After successfully creating a task:
+  await logActivity(formData.projectId, creator_id, 'task_created', {
+    task_title: taskData.title,
+    task_id: data.id,
+  });
+
   revalidatePath(`/projects/${formData.projectId}/tasks`);
   revalidatePath(`/projects/${formData.projectId}`);
 
   return data;
 }
+
+const logActivity = async (projectId, userId, type, data) => {
+  try {
+    await supabase.from('activities2').insert([
+      {
+        project_id: projectId,
+        user_id: userId,
+        activity_type: type,
+        activity_data: data,
+      },
+    ]);
+  } catch (error) {
+    console.error('Error logging activity:', error);
+  }
+};

@@ -366,6 +366,32 @@ export default function TaskDetailsPage() {
               </div>
 
               {/* Task Actions */}
+
+              {/*               
+            TODO: Implement task actions
+                    ////When a task is completed (you'll need to implement this):
+                    const logActivity = async (projectId, userId, type, data) => {
+                      try {
+                        await supabase
+                          .from('activities')
+                          .insert([
+                            {
+                              project_id: projectId,
+                              user_id: userId,
+                              activity_type: type,
+                              activity_data: data,
+                            },
+                          ]);
+                      } catch (error) {
+                        console.error('Error logging activity:', error);
+                      }
+                    };
+                    //////
+                    await logActivity(project.id, userId, 'task_completed', {
+                      task_title: task.title,
+                      task_id: task.id,
+                    });
+              */}
               <div className='flex flex-wrap gap-2'>
                 <button className='px-4 py-2 bg-emerald-600/30 text-emerald-400 rounded-lg hover:bg-emerald-600/40 transition-colors'>
                   Start Task

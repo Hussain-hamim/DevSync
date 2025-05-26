@@ -65,6 +65,100 @@ export default function ProjectDetails() {
   const [showDiscussionForm, setShowDiscussionForm] = useState(false);
   const [loadingDiscussions, setLoadingDiscussions] = useState(true);
 
+  // Add these state variables
+  const [activities, setActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+
+  // Fetch activities when project loads
+  useEffect(() => {
+    const fetchActivities = async () => {
+      setLoadingActivities(true);
+      try {
+        const { data, error } = await supabase
+          .from('activities2')
+          .select(
+            `
+          *,
+          user:user_id (
+            id,
+            name,
+            avatar_url
+          )
+        `
+          )
+          .eq('project_id', project.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+        setActivities(data || []);
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+      } finally {
+        setLoadingActivities(false);
+      }
+    };
+
+    if (project?.id) {
+      fetchActivities();
+    }
+  }, [project?.id]);
+
+  // Helper function to format activity messages
+  const formatActivity = (activity) => {
+    const user = activity.user || { name: 'Unknown User' };
+    const type = activity.activity_type;
+    const data = activity.activity_data || {};
+
+    switch (type) {
+      case 'task_created':
+        return `${user.name} created task "${data.task_title}"`;
+      case 'task_completed':
+        return `${user.name} completed task "${data.task_title}"`;
+      case 'role_assigned':
+        return `${user.name} joined as ${data.role}`;
+      case 'discussion_created':
+        return `${user.name} started a discussion`;
+      case 'project_updated':
+        return `${user.name} updated project details`;
+      default:
+        return `${user.name} performed an action`;
+    }
+  };
+
+  // Helper function to get activity icon and color
+  const getActivityStyle = (activity) => {
+    const type = activity.activity_type;
+
+    if (type === 'task_completed') {
+      return {
+        bg: 'bg-emerald-900/50',
+        text: 'text-emerald-400',
+        icon: <Sparkles className='w-4 h-4' />,
+      };
+    } else if (type === 'task_created') {
+      return {
+        bg: 'bg-blue-900/50',
+        text: 'text-blue-400',
+        icon: <span>{activity.user?.name?.charAt(0) || 'U'}</span>,
+      };
+    } else if (type === 'role_assigned') {
+      return {
+        bg: 'bg-purple-900/50',
+        text: 'text-purple-400',
+        icon: <span>{activity.user?.name?.charAt(0) || 'U'}</span>,
+      };
+    } else {
+      return {
+        bg: 'bg-gray-700',
+        text: 'text-gray-300',
+        icon: <span>{activity.user?.name?.charAt(0) || 'U'}</span>,
+      };
+    }
+  };
+
+  //////////////////////////////
+
   // Initialize the form
   const {
     register,
@@ -469,67 +563,46 @@ export default function ProjectDetails() {
                 </h2>
 
                 <div className='space-y-4'>
-                  {[
-                    {
-                      id: 1,
-                      user: 'Hamim',
-                      action: 'added login page',
-                      time: '2 hours ago',
-                      type: 'development',
-                    },
-                    {
-                      id: 2,
-                      user: 'Sara',
-                      action: 'fixed API bug in authentication',
-                      time: '4 hours ago',
-                      type: 'bugfix',
-                    },
-                    {
-                      id: 3,
-                      user: 'AI Summary',
-                      action:
-                        'Team completed 3 tasks today. 2 PRs merged. 1 new feature added.',
-                      time: '1 day ago',
-                      type: 'summary',
-                    },
-                    {
-                      id: 4,
-                      user: 'Alex',
-                      action: 'joined the project as Frontend Developer',
-                      time: '2 days ago',
-                      type: 'team',
-                    },
-                  ].map((activity) => (
-                    <div
-                      key={activity.id}
-                      className='flex items-start pb-4 border-b border-gray-700 last:border-0 last:pb-0'
-                    >
+                  {loadingActivities ? (
+                    [...Array(3)].map((_, i) => (
                       <div
-                        className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center mr-3 ${
-                          activity.type === 'summary'
-                            ? 'bg-emerald-900/50 text-emerald-400'
-                            : activity.type === 'bugfix'
-                            ? 'bg-amber-900/50 text-amber-400'
-                            : 'bg-blue-900/50 text-blue-400'
-                        }`}
+                        key={i}
+                        className='flex items-start pb-4 border-b border-gray-700 last:border-0 last:pb-0'
                       >
-                        {activity.type === 'summary' ? (
-                          <Sparkles className='w-4 h-4' />
-                        ) : (
-                          <span>{activity.user.charAt(0)}</span>
-                        )}
+                        <div className='flex-shrink-0 h-8 w-8 rounded-full bg-gray-700 animate-pulse mr-3'></div>
+                        <div className='flex-grow'>
+                          <div className='h-4 bg-gray-700 rounded w-3/4 animate-pulse'></div>
+                          <div className='h-3 bg-gray-700 rounded w-1/2 mt-2 animate-pulse'></div>
+                        </div>
                       </div>
-                      <div className='flex-grow'>
-                        <p className='text-gray-300'>
-                          <span className='font-medium'>{activity.user}</span>{' '}
-                          {activity.action}
-                        </p>
-                        <p className='text-xs text-gray-500 mt-1'>
-                          {activity.time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : activities.length > 0 ? (
+                    activities.map((activity) => {
+                      const style = getActivityStyle(activity);
+                      return (
+                        <div
+                          key={activity.id}
+                          className='flex items-start pb-4 border-b border-gray-700 last:border-0 last:pb-0'
+                        >
+                          <div
+                            className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center mr-3 ${style.bg} ${style.text}`}
+                          >
+                            {style.icon}
+                          </div>
+                          <div className='flex-grow'>
+                            <p className='text-gray-300'>
+                              {formatActivity(activity)}
+                            </p>
+                            <p className='text-xs text-gray-500 mt-1'>
+                              {dayjs(activity.created_at).fromNow()}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className='text-gray-500 text-sm'>No activity yet</p>
+                  )}
                 </div>
               </div>
 
