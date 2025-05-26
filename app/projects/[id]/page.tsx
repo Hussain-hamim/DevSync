@@ -27,7 +27,11 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { AddTaskModal } from './AddTaskModal';
-import { div } from 'framer-motion/client';
+
+// Add these imports at the top
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 // Extend dayjs with plugins
 dayjs.extend(relativeTime);
@@ -50,6 +54,99 @@ export default function ProjectDetails() {
   // At the top of your component
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
+
+  // Define a schema for discussion form validation
+  const discussionSchema = z.object({
+    content: z.string().min(1, 'Message cannot be empty'),
+  });
+
+  // Add these state variables to your component
+  const [discussions, setDiscussions] = useState([]);
+  const [showDiscussionForm, setShowDiscussionForm] = useState(false);
+  const [loadingDiscussions, setLoadingDiscussions] = useState(true);
+
+  // Initialize the form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(discussionSchema),
+  });
+
+  // Fetch discussions when project loads
+  useEffect(() => {
+    const fetchDiscussions = async () => {
+      setLoadingDiscussions(true);
+      try {
+        const { data, error } = await supabase
+          .from('discussions')
+          .select(
+            `
+          *,
+          user:user_id (
+            id,
+            name,
+            avatar_url
+          )
+        `
+          )
+          .eq('project_id', project.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setDiscussions(data || []);
+      } catch (error) {
+        console.error('Error fetching discussions:', error);
+      } finally {
+        setLoadingDiscussions(false);
+      }
+    };
+
+    if (project?.id) {
+      fetchDiscussions();
+    }
+  }, [project?.id]);
+
+  // Handle new discussion submission
+  const onSubmitDiscussion = async (formData) => {
+    if (!userId || !project?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('discussions')
+        .insert([
+          {
+            project_id: project.id,
+            user_id: userId,
+            content: formData.content,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+
+      // Add the new discussion to the state
+      setDiscussions((prev) => [
+        {
+          ...data[0],
+          user: {
+            id: userId,
+            name: session?.user?.name,
+            avatar_url: session?.user?.image,
+          },
+        },
+        ...prev,
+      ]);
+
+      // Reset form and hide it
+      reset();
+      setShowDiscussionForm(false);
+    } catch (error) {
+      console.error('Error creating discussion:', error);
+    }
+  };
 
   // Fetch tasks when project loads
   useEffect(() => {
@@ -348,10 +445,10 @@ export default function ProjectDetails() {
             </div>
           </div>
 
-          {/* Discussions */}
+          {/* Activity Feed & Discussions */}
           <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
-            {/* Activity Feed & Discussions */}
             <div className='lg:col-span-2 space-y-8'>
+              {/* /// */}
               {/* Activity Feed */}
               <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
                 <h2 className='text-xl font-semibold text-gray-100 mb-4 flex items-center'>
@@ -436,22 +533,106 @@ export default function ProjectDetails() {
                 </div>
               </div>
 
-              {/* Discussions Section (keep your existing code) */}
+              {/* Discussions Section */}
               <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
-                {/* ... existing discussions code ... */}
-
                 <div className='flex items-center justify-between mb-4'>
                   <h2 className='text-xl font-semibold text-gray-100'>
                     Discussions
                   </h2>
-                  <button className='text-emerald-400 hover:underline text-sm flex items-center'>
+                  <button
+                    onClick={() => setShowDiscussionForm(!showDiscussionForm)}
+                    className='text-emerald-400 hover:underline text-sm flex items-center'
+                  >
                     <MessageSquare className='w-4 h-4 mr-1' />
-                    New Discussion
+                    {showDiscussionForm ? 'Cancel' : 'New Discussion'}
                   </button>
                 </div>
-                <p className='text-gray-500 text-sm'>
-                  No discussions yet. Start the conversation!
-                </p>
+
+                {/* New Discussion Form */}
+                {showDiscussionForm && (
+                  <form
+                    onSubmit={handleSubmit(onSubmitDiscussion)}
+                    className='mb-6'
+                  >
+                    <div className='mb-3'>
+                      <textarea
+                        {...register('content')}
+                        rows={3}
+                        className='w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-gray-100 focus:border-emerald-500 focus:ring-emerald-500'
+                        placeholder='Write your message here...'
+                      />
+                      {errors.content && (
+                        <p className='mt-1 text-sm text-red-400'>
+                          {errors.content.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className='flex justify-end'>
+                      <button
+                        type='submit'
+                        className='bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors'
+                      >
+                        Post Message
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Discussions List */}
+                {loadingDiscussions ? (
+                  <div className='space-y-4'>
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 animate-pulse h-20'
+                      />
+                    ))}
+                  </div>
+                ) : discussions.length > 0 ? (
+                  <div className='space-y-4'>
+                    {discussions.map((discussion) => (
+                      <div
+                        key={discussion.id}
+                        className='p-4 bg-gray-800/30 rounded-lg border border-gray-700'
+                      >
+                        <div className='flex items-start gap-3'>
+                          <div className='flex-shrink-0'>
+                            <div className='w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden'>
+                              {discussion.user?.avatar_url ? (
+                                <img
+                                  src={discussion.user.avatar_url}
+                                  alt={discussion.user.name}
+                                  className='w-full h-full object-cover'
+                                />
+                              ) : (
+                                <span className='text-gray-300'>
+                                  {discussion.user?.name?.charAt(0) || 'U'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <div className='flex items-baseline gap-2'>
+                              <h3 className='text-gray-100 font-medium'>
+                                {discussion.user?.name || 'Unknown User'}
+                              </h3>
+                              <span className='text-xs text-gray-500'>
+                                {dayjs(discussion.created_at).fromNow()}
+                              </span>
+                            </div>
+                            <p className='mt-1 text-gray-300 whitespace-pre-wrap'>
+                              {discussion.content}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className='text-gray-500 text-sm'>
+                    No discussions yet. Start the conversation!
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -623,7 +804,7 @@ export default function ProjectDetails() {
                       <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
                         <div className='flex items-center gap-2 text-gray-400'>
                           <div className='w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center text-xs'>
-                            {task.assigned_to?.name?.charAt(0) || 'U'}
+                            {task.assigned_to?.name?.charAt(0) || 'H'}
                           </div>
                           <span>{task.assigned_to?.name || 'Unassigned'}</span>
                         </div>
