@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { motion } from 'framer-motion';
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const [allCommits, setAllCommits] = useState<any>(null);
 
   const githubUsername = session?.user?.login;
+  ////
 
   useEffect(() => {
     const fetchData = async () => {
@@ -153,7 +155,8 @@ export default function ProfilePage() {
     };
 
     fetchData();
-  }, [session, sessionStatus]);
+  }, [githubUsername]);
+
   // Social media data
   const socialLinks = [
     {
@@ -365,10 +368,10 @@ export default function ProfilePage() {
                       <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
                         {project.title}
                       </h3>
-                      <p className='text-sm text-gray-400 mt-1'>
+                      <p className='text-sm text-gray-400 mt-1 max-h-16 line-clamp-2'>
                         {project.description}
                       </p>
-                      <div className='flex justify-between items-center mt-2'>
+                      <div className='flex justify-between items-center mt-2 '>
                         <span className='flex items-center gap-1 text-xs text-gray-400'>
                           <Users className='w-3 h-3' />
                           {+1} members
@@ -412,7 +415,7 @@ export default function ProfilePage() {
                           {project.roleTitle}
                         </span>
                       </div>
-                      <p className='text-sm text-gray-400 mt-1'>
+                      <p className='text-sm text-gray-400 mt-1 max-h-16 line-clamp-2'>
                         {project.description}
                       </p>
                       <div className='flex justify-between items-center mt-2'>

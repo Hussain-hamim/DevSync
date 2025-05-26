@@ -12,7 +12,6 @@ import {
   ChevronDown,
   Plus,
   Code,
-  Code2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -33,24 +32,12 @@ const TechTag = ({ tech }) => (
   </motion.span>
 );
 
-const projectsData = [
-  {
-    id: 1,
-    name: 'AI Code Review',
-    description: 'Automated code quality analysis using machine learning',
-    techStack: ['Python', 'TensorFlow', 'React'],
-    teamSize: 4,
-    views: 128,
-    category: 'ai',
-  },
-];
-
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -94,35 +81,6 @@ export default function ProjectsPage() {
   };
 
   useEffect(() => {
-    async function fetchProjects() {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      setLoading(false);
-
-      if (error) {
-        console.error('Failed to fetch projects:', error.message);
-        return;
-      }
-
-      // Map Supabase data to your frontend format
-      const mapped = data.map((proj) => ({
-        id: proj.id,
-        name: proj.title,
-        description: proj.description,
-        techStack: proj.tech_stack || [],
-        teamSize: 4, // Optional: default or calculated
-        views: 0, // Optional: if you don’t track views yet
-        category: 'general', // You can infer or set this
-      }));
-
-      setProjects(mapped);
-    }
-
     fetchProjects();
   }, []);
 
@@ -131,19 +89,6 @@ export default function ProjectsPage() {
     activeFilter === 'all'
       ? projects
       : projects.filter((p) => p.category === activeFilter);
-
-  // Simulate view increments
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProjects((prev) =>
-        prev.map((p) => ({
-          ...p,
-          views: p.views + Math.floor(Math.random() * 3),
-        }))
-      );
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
   if (loading) {
     return (
@@ -337,14 +282,25 @@ export default function ProjectsPage() {
                   </motion.button>
                 </div>
 
-                {/* Project Image Placeholder */}
+                {/* Project Image */}
+
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className='relative w-full h-40 mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800'
+                  className='relative w-full h-40 mb-4 rounded-lg overflow-hidden'
                 >
-                  <div className='absolute inset-0 flex items-center justify-center'>
-                    <Code className='w-12 h-12 text-gray-700' />
-                  </div>
+                  <img
+                    src={
+                      techImages[project.id.charCodeAt(0) % techImages.length]
+                    }
+                    alt={project.title}
+                    className='w-full h-full object-cover'
+                    loading='lazy'
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://picsum.photos/seed/${project.id}/400/300?grayscale`;
+                    }}
+                  />
+                  <div className='absolute inset-0 bg-gradient-to-t from-gray-900/70 to-transparent' />
                 </motion.div>
 
                 {/* Description */}
@@ -403,3 +359,25 @@ export default function ProjectsPage() {
     </div>
   );
 }
+
+const techImages = [
+  // Original working images
+  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Code
+  'https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer
+  'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React
+  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Coding
+  'https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Node.js
+  'https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // JavaScript
+
+  // 10 New reliable additions
+  'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Macbook Code
+  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer Workspace
+  'https://images.unsplash.com/photo-1581094271901-8022df4466f9?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Dual Monitor Setup
+  'https://images.unsplash.com/photo-1581092921461-39b2f2a8b4dc?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Professional Workstation
+  'https://images.unsplash.com/photo-1621839673705-6617adf9e890?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Terminal Commands
+  'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Blockchain Code
+  'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React Components
+  'https://images.unsplash.com/photo-1629904853893-c2c8981a1dc5?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Kubernetes Dashboard
+  'https://images.unsplash.com/photo-1620196242056-49f2ade6f643?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // CI/CD Pipeline
+  'https://images.unsplash.com/photo-1640562348018-ed96b9a84f1d?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // AI/ML Visualization
+];
