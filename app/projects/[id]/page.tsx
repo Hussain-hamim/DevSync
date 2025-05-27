@@ -69,15 +69,13 @@ export default function ProjectDetails() {
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
 
-  // Fetch activities when project loads
-  useEffect(() => {
-    const fetchActivities = async () => {
-      setLoadingActivities(true);
-      try {
-        const { data, error } = await supabase
-          .from('activities2')
-          .select(
-            `
+  const fetchActivities = async () => {
+    setLoadingActivities(true);
+    try {
+      const { data, error } = await supabase
+        .from('activities2')
+        .select(
+          `
           *,
           user:user_id (
             id,
@@ -85,20 +83,22 @@ export default function ProjectDetails() {
             avatar_url
           )
         `
-          )
-          .eq('project_id', project.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
+        )
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-        if (error) throw error;
-        setActivities(data || []);
-      } catch (error) {
-        console.error('Error fetching activities:', error);
-      } finally {
-        setLoadingActivities(false);
-      }
-    };
+      if (error) throw error;
+      setActivities(data || []);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
 
+  // Fetch activities when project loads
+  useEffect(() => {
     if (project?.id) {
       fetchActivities();
     }
@@ -242,33 +242,33 @@ export default function ProjectDetails() {
     }
   };
 
-  // Fetch tasks when project loads
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setLoadingTasks(true);
-      try {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select(
-            `
+  const fetchTasks = async () => {
+    setLoadingTasks(true);
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(
+          `
           *,
            assigned_to:assigned_to(id, name, avatar_url),
             created_by:created_by(id, name, avatar_url)
         `
-          )
-          .eq('project_id', project.id)
-          .order('created_at', { ascending: false })
-          .limit(4);
+        )
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false })
+        .limit(4);
 
-        if (error) throw error;
-        setTasks(data || []);
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-      } finally {
-        setLoadingTasks(false);
-      }
-    };
+      if (error) throw error;
+      setTasks(data || []);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
 
+  // Fetch tasks when project loads
+  useEffect(() => {
     if (project?.id) {
       fetchTasks();
     }
@@ -302,6 +302,8 @@ export default function ProjectDetails() {
 
   const onAddTask = async () => {
     // refresh page to get new tasks
+    fetchTasks();
+    fetchActivities();
   };
 
   // Fetch project data and roles
@@ -990,10 +992,7 @@ export default function ProjectDetails() {
         show={showTaskModal}
         onClose={() => setShowTaskModal(false)}
         projectId={project.id}
-        onTaskCreated={() => {
-          // Refresh task list or perform other actions
-          onAddTask();
-        }}
+        onTaskCreated={onAddTask}
       />
     </div>
   );
