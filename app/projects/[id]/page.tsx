@@ -362,7 +362,7 @@ export default function ProjectDetails() {
     };
 
     fetchAllData();
-  }, [params.id, session]); // Re-run when project ID or session changes;
+  }, [params.id, session?.user?.email]); // Re-run when project ID or session changes;
 
   // Add this function near your other utility functions
   const fetchProjectMembers = async () => {

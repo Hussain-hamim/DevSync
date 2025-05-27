@@ -19,6 +19,7 @@ import { supabase } from '../lib/supabase';
 import Header from '@/components/Header';
 import { NewProjectModal } from './NewProjectModal';
 import { toast } from 'sonner';
+import { div } from 'framer-motion/client';
 
 const TechTag = ({ tech }) => (
   <motion.span
@@ -106,7 +107,6 @@ export default function ProjectsPage() {
   return (
     <div className='min-h-screen  bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
       {/* <Header /> */}
-
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
@@ -130,7 +130,6 @@ export default function ProjectsPage() {
           </motion.button>
         </div>
       </motion.header>
-
       {/* Search and Filter */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -204,6 +203,107 @@ export default function ProjectsPage() {
           )}
         </div>
       </motion.div>
+      {/* Featured Projects Section */}
+      {projects.length > 0 && (
+        <>
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className='mb-16'
+          >
+            <div className='flex items-center justify-between mb-6'>
+              <h2 className='text-xl font-bold text-gray-100 flex items-center gap-2'>
+                <Star className='w-5 h-5 text-amber-400 fill-amber-400/20' />
+                Featured Projects
+              </h2>
+              <div className='text-sm text-gray-400'>Latest &amp; Greatest</div>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+              {projects.slice(0, 3).map((project, index) => {
+                return project.id === '1ccf98f1-dacc-48d4-83c1-db56d7f57801' ? (
+                  <motion.div
+                    key={`featured-${project.id}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ y: -2 }}
+                    className='relative group'
+                  >
+                    {/* Glow effect */}
+                    <div className='absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 rounded-xl blur-md group-hover:blur-lg transition-all duration-300 opacity-0 group-hover:opacity-70' />
+
+                    <Link href={`/projects/${project.id}`}>
+                      <div className='relative h-full bg-gray-800 border border-gray-700 rounded-xl overflow-hidden transition-all duration-300 group-hover:border-emerald-400/50'>
+                        {/* Featured badge */}
+                        <div className='absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-gray-900 text-xs font-bold px-2 py-1 rounded-full z-10'>
+                          Featured
+                        </div>
+
+                        {/* Project image */}
+                        <div className='relative h-40 overflow-hidden'>
+                          <img
+                            src={techImages[index % techImages.length]}
+                            alt={project.name}
+                            className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
+                            loading='lazy'
+                          />
+                          <div className='absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent' />
+                        </div>
+
+                        {/* Project content */}
+                        <div className='p-6'>
+                          <div className='mb-4'>
+                            <GitBranch className='w-6 h-6 text-emerald-400 mb-2' />
+                            <h3 className='text-lg font-bold text-gray-100 mb-1'>
+                              {project.name}
+                            </h3>
+                            <p className='text-gray-400 text-sm line-clamp-2'>
+                              {project.description}
+                            </p>
+                          </div>
+
+                          <div className='mt-auto'>
+                            <div className='flex flex-wrap gap-2 mb-4'>
+                              {project.techStack.slice(0, 3).map((tech) => (
+                                <TechTag key={tech} tech={tech} />
+                              ))}
+                            </div>
+
+                            <div className='flex justify-between items-center text-sm text-gray-400'>
+                              <div className='flex items-center gap-1'>
+                                <Users className='w-4 h-4' />
+                                <span>{project.teamSize}</span>
+                              </div>
+                              <div className='flex items-center gap-1'>
+                                <Eye className='w-4 h-4' />
+                                <span>{project.views}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ) : null;
+              })}
+            </div>
+
+            {/* Sleek separator */}
+            <div className='relative mb-16'>
+              <div className='absolute inset-0 flex items-center'>
+                <div className='w-full border-t border-gray-700'></div>
+              </div>
+              <div className='relative flex justify-center'>
+                <span className='bg-gray-800 px-4 text-sm text-gray-400 flex items-center gap-2'>
+                  <Code className='w-4 h-4 text-emerald-400' />
+                  All Projects
+                </span>
+              </div>
+            </div>
+          </motion.section>
+        </>
+      )}
 
       {/*  */}
       {filteredProjects.length === 0 && (
@@ -230,7 +330,6 @@ export default function ProjectsPage() {
           </motion.button>
         </motion.div>
       )}
-
       {/* Projects Grid */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -338,14 +437,12 @@ export default function ProjectsPage() {
           ))}
         </AnimatePresence>
       </motion.div>
-
       {/* New Project Modal */}
       <NewProjectModal
         show={showNewProjectModal}
         onClose={() => setShowNewProjectModal(false)}
         onProjectCreated={handleProjectCreated}
       />
-
       {/* Floating Create Button */}
       <Link href='/projects/new'>
         <motion.div
@@ -362,22 +459,15 @@ export default function ProjectsPage() {
 
 const techImages = [
   // Original working images
-  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Code
-  'https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer
-  'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React
   'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Coding
-  'https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Node.js
+  'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React
+  'https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer
+
   'https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // JavaScript
+  'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Macbook Code
 
   // 10 New reliable additions
-  'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Macbook Code
-  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer Workspace
-  'https://images.unsplash.com/photo-1581094271901-8022df4466f9?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Dual Monitor Setup
-  'https://images.unsplash.com/photo-1581092921461-39b2f2a8b4dc?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Professional Workstation
-  'https://images.unsplash.com/photo-1621839673705-6617adf9e890?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Terminal Commands
-  'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Blockchain Code
-  'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React Components
-  'https://images.unsplash.com/photo-1629904853893-c2c8981a1dc5?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Kubernetes Dashboard
-  'https://images.unsplash.com/photo-1620196242056-49f2ade6f643?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // CI/CD Pipeline
-  'https://images.unsplash.com/photo-1640562348018-ed96b9a84f1d?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // AI/ML Visualization
+  // 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer Workspace
+  // 'https://images.unsplash.com/photo-1621839673705-6617adf9e890?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Terminal Commands
+  // 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React Components
 ];
