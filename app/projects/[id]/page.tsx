@@ -306,45 +306,61 @@ export default function ProjectDetails() {
 
   // Fetch project data and roles
   useEffect(() => {
-    const fetchProjectAndRoles = async () => {
-      // 1. Fetch project data
+    const fetchAllData = async () => {
       setLoading(true);
+
+      // 1. Get project data first
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', params.id)
         .single();
 
-      setLoading(false);
-      if (!projectError && projectData) {
-        setProject(projectData);
+      if (projectError || !projectData) {
+        console.error('Project not found:', projectError);
+        setLoading(false);
+        return;
+      }
 
-        // 2. Fetch project roles (already taken roles)
-        const { data: rolesData, error: rolesError } = await supabase
-          .from('project_roles')
-          .select('title')
-          .eq('project_id', params.id);
+      setProject(projectData);
+      const allRoles = projectData.roles_needed || [];
 
-        if (!rolesError) {
-          // 3. Filter out taken roles
-          const takenRoles = rolesData.map((role) => role.title);
-          const filteredRoles = projectData.roles_needed.filter(
-            (role) => !takenRoles.includes(role)
+      // 2. If user is logged in, check their taken roles
+      if (session?.user?.email) {
+        // Get user ID first
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
+
+        if (userData?.id) {
+          // Get roles this user already took
+          const { data: takenRoles } = await supabase
+            .from('project_roles')
+            .select('title')
+            .eq('project_id', params.id)
+            .eq('filled_by', userData.id);
+
+          // Filter out only roles THIS USER took
+          const userTakenRoles = takenRoles?.map((r) => r.title) || [];
+          setAvailableRoles(
+            allRoles.filter((role) => !userTakenRoles.includes(role))
           );
-
-          setAvailableRoles(filteredRoles);
         } else {
-          console.error('Error fetching roles:', rolesError);
-          // If error, show all roles as available
-          setAvailableRoles(projectData.roles_needed || []);
+          // User not found in DB - show all roles
+          setAvailableRoles(allRoles);
         }
       } else {
-        console.error('Project not found:', projectError);
+        // No user logged in - show all roles
+        setAvailableRoles(allRoles);
       }
+
+      setLoading(false);
     };
 
-    fetchProjectAndRoles();
-  }, [params.id]);
+    fetchAllData();
+  }, [params.id, session]); // Re-run when project ID or session changes;
 
   // Add this function near your other utility functions
   const fetchProjectMembers = async () => {
