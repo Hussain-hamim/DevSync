@@ -19,7 +19,6 @@ import { supabase } from '../lib/supabase';
 import Header from '@/components/Header';
 import { NewProjectModal } from './NewProjectModal';
 import { toast } from 'sonner';
-import { div } from 'framer-motion/client';
 
 const TechTag = ({ tech }) => (
   <motion.span
