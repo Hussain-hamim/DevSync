@@ -462,14 +462,10 @@ export default function RankingsPage() {
             <AnimatePresence>
               {sortedRankings.map((user, index) => (
                 <Link
-                  href={{
-                    pathname: `/profile/[id]`,
-                    query: { id: user.id },
-                  }}
-                  as={`/profile/${encodeURIComponent(user.id)}`}
+                  href={`/profile/${user.id}`}
+                  key={user.id}
                   passHref
                   legacyBehavior
-                  key={user.id}
                 >
                   <motion.article
                     layout
