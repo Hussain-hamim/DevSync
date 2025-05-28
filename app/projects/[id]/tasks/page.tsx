@@ -24,12 +24,10 @@ export default function ProjectTasksPage() {
   const [loading, setLoading] = useState(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [projectMembers, setProjectMembers] = useState([]);
-
-  // Fetch project and tasks
   const [isOwner, setIsOwner] = useState(false);
   const [supabaseUserId, setSupabaseUserId] = useState(null);
 
-  // First, fetch the Supabase user ID for the current session user
+  // Fetch Supabase user ID
   useEffect(() => {
     const fetchSupabaseUserId = async () => {
       if (session?.user?.email) {
@@ -108,7 +106,7 @@ export default function ProjectTasksPage() {
     if (supabaseUserId || !session?.user?.email) {
       fetchData();
     }
-  }, [params.id, session?.user?.email, showTaskModal, supabaseUserId]);
+  }, [params.id, session?.user?.email, supabaseUserId]);
 
   if (loading) {
     return (
@@ -149,7 +147,6 @@ export default function ProjectTasksPage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Header */}
-      {/* Header */}
       <div className='border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm'>
         <div className='container mx-auto px-6 py-4'>
           <div className='flex items-center justify-between'>
@@ -160,7 +157,6 @@ export default function ProjectTasksPage() {
               <ArrowLeft className='w-5 h-5 mr-2' />
               Back to Project
             </Link>
-            {/* Only show the button if the user is the owner */}
             {isOwner && (
               <button
                 onClick={() => setShowTaskModal(true)}
@@ -204,29 +200,49 @@ export default function ProjectTasksPage() {
               <Link
                 href={`/projects/${params.id}/tasks/${task.id}`}
                 key={task.id}
-                className='block'
+                className={`block ${
+                  task.status === 'Completed' ? 'opacity-80' : ''
+                }`}
               >
-                <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-colors'>
+                <div
+                  className={`bg-gray-800/60 border rounded-xl p-6 transition-colors ${
+                    task.status === 'Completed'
+                      ? 'border-gray-700/50 hover:border-gray-700'
+                      : 'border-gray-700 hover:border-gray-600'
+                  }`}
+                >
                   <div className='flex justify-between items-start'>
                     <div className='flex items-center gap-3'>
                       <div className='flex-shrink-0'>
                         {getStatusIcon(task.status)}
                       </div>
-                      <h3 className='text-gray-100 font-medium'>
+                      <h3
+                        className={`font-medium ${
+                          task.status === 'Completed'
+                            ? 'text-gray-400 line-through'
+                            : 'text-gray-100'
+                        }`}
+                      >
                         {task.title}
                       </h3>
                     </div>
                     <span
                       className={`text-xs px-2 py-1 rounded ${getPriorityColor(
                         task.priority
-                      )}`}
+                      )} ${task.status === 'Completed' ? 'opacity-70' : ''}`}
                     >
                       {task.priority}
                     </span>
                   </div>
 
                   {task.description && (
-                    <p className='text-gray-400 text-sm mt-2 ml-7'>
+                    <p
+                      className={`text-sm mt-2 ml-7 ${
+                        task.status === 'Completed'
+                          ? 'text-gray-500'
+                          : 'text-gray-400'
+                      }`}
+                    >
                       {task.description.length > 100
                         ? `${task.description.substring(0, 100)}...`
                         : task.description}
@@ -234,8 +250,20 @@ export default function ProjectTasksPage() {
                   )}
 
                   <div className='mt-4 flex flex-wrap items-center gap-4 text-sm ml-7'>
-                    <div className='flex items-center gap-2 text-gray-400'>
-                      <div className='w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs'>
+                    <div
+                      className={`flex items-center gap-2 ${
+                        task.status === 'Completed'
+                          ? 'text-gray-500'
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                          task.status === 'Completed'
+                            ? 'bg-gray-700/50'
+                            : 'bg-gray-700'
+                        }`}
+                      >
                         {task.assigned_to?.avatar_url ? (
                           <img
                             src={task.assigned_to.avatar_url}
@@ -250,7 +278,13 @@ export default function ProjectTasksPage() {
                     </div>
 
                     {task.due_date && (
-                      <div className='flex items-center gap-2 text-gray-400'>
+                      <div
+                        className={`flex items-center gap-2 ${
+                          task.status === 'Completed'
+                            ? 'text-gray-500'
+                            : 'text-gray-400'
+                        }`}
+                      >
                         <span>
                           Due:{' '}
                           {new Date(task.due_date).toLocaleDateString('en-US', {
@@ -258,10 +292,20 @@ export default function ProjectTasksPage() {
                             day: 'numeric',
                             year: 'numeric',
                           })}
+                          {task.status === 'Completed' && (
+                            <span className='ml-1 text-green-400'>✓</span>
+                          )}
                         </span>
                       </div>
                     )}
                   </div>
+
+                  {task.status === 'Completed' && (
+                    <div className='mt-2 flex items-center gap-1 text-xs text-green-400 ml-7'>
+                      <Check className='w-3 h-3' />
+                      <span>Completed</span>
+                    </div>
+                  )}
                 </div>
               </Link>
             ))

@@ -12,6 +12,8 @@ import {
   Sparkles,
   Crown,
   Plus,
+  Check,
+  CalendarIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -519,11 +521,7 @@ export default function ProjectDetails() {
             <div className='flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-6'>
               <div className='flex items-center space-x-1'>
                 <Users className='w-4 h-4' />
-                <span>
-                  {project.roles_needed?.length - availableRoles.length + 1 ||
-                    ''}{' '}
-                  members
-                </span>
+                <span>{projectMembers.length} members</span>
               </div>
 
               <div className='flex items-center space-x-1'>
@@ -818,26 +816,7 @@ export default function ProjectDetails() {
             ))}
           </div>
 
-          {/* Roles Needed */}
-          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
-            <h2 className='text-xl font-semibold text-gray-100 mb-4'>
-              Roles Needed
-            </h2>
-            <ul className='space-y-3'>
-              {project.roles_needed?.map((role, index) => (
-                <li key={index} className='flex items-center'>
-                  <span className='w-2 h-2 bg-cyan-400 rounded-full mr-3'></span>
-                  <span className='text-gray-300'>{role}</span>
-                </li>
-              ))}
-            </ul>
-            <button className='mt-4 text-emerald-400 hover:underline text-sm'>
-              View all roles
-            </button>
-          </div>
-
           {/* Project Tasks Card */}
-
           <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
             <div className='flex justify-between items-center mb-4'>
               <h2 className='text-xl font-semibold text-gray-100'>
@@ -868,25 +847,50 @@ export default function ProjectDetails() {
                   <Link
                     href={`/projects/${project.id}/tasks/${task.id}`}
                     key={task.id}
+                    className={`block ${
+                      task.status === 'Completed' ? 'opacity-80' : ''
+                    }`}
                   >
-                    <div className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors'>
+                    <div
+                      className={`p-4 rounded-lg border transition-colors ${
+                        task.status === 'Completed'
+                          ? 'bg-gray-800/20 border-gray-700/50 hover:border-gray-700'
+                          : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+                      }`}
+                    >
+                      {/* Task Header */}
                       <div className='flex justify-between items-start'>
                         <div className='flex items-center gap-3'>
+                          {/* Status Indicator */}
                           <div
-                            className={`w-3 h-3 rounded-full ${
+                            className={`w-3 h-3 rounded-full flex items-center justify-center ${
                               task.status === 'Completed'
                                 ? 'bg-green-500'
                                 : task.status === 'In Progress'
-                                ? 'bg-amber-500'
+                                ? 'bg-amber-500 animate-pulse'
                                 : task.status === 'In Review'
                                 ? 'bg-blue-500'
                                 : 'bg-gray-500'
                             }`}
-                          ></div>
-                          <h3 className='text-gray-100 font-medium'>
+                          >
+                            {task.status === 'Completed' && (
+                              <Check className='w-2 h-2 text-gray-900' />
+                            )}
+                          </div>
+
+                          {/* Task Title */}
+                          <h3
+                            className={`font-medium ${
+                              task.status === 'Completed'
+                                ? 'text-gray-400 line-through'
+                                : 'text-gray-100'
+                            }`}
+                          >
                             {task.title}
                           </h3>
                         </div>
+
+                        {/* Priority Badge */}
                         <span
                           className={`text-xs px-2 py-1 rounded ${
                             task.priority === 'High'
@@ -894,35 +898,44 @@ export default function ProjectDetails() {
                               : task.priority === 'Medium'
                               ? 'bg-amber-900/50 text-amber-300'
                               : 'bg-gray-700 text-gray-300'
-                          }`}
+                          } ${task.status === 'Completed' ? 'opacity-70' : ''}`}
                         >
                           {task.priority}
                         </span>
                       </div>
 
+                      {/* Task Meta */}
                       <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
-                        <div className='flex items-center gap-2 text-gray-400'>
-                          <div className='w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center text-xs'>
+                        {/* Assignee */}
+                        <div
+                          className={`flex items-center gap-2 ${
+                            task.status === 'Completed'
+                              ? 'text-gray-500'
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-full flex items-center justify-center text-xs ${
+                              task.status === 'Completed'
+                                ? 'bg-gray-700/50'
+                                : 'bg-gray-700'
+                            }`}
+                          >
                             {task.assigned_to?.name?.charAt(0) || 'H'}
                           </div>
                           <span>{task.assigned_to?.name || 'Unassigned'}</span>
                         </div>
 
+                        {/* Due Date */}
                         {task.due_date && (
-                          <div className='flex items-center gap-2 text-gray-400'>
-                            <svg
-                              className='w-4 h-4'
-                              fill='none'
-                              stroke='currentColor'
-                              viewBox='0 0 24 24'
-                            >
-                              <path
-                                strokeLinecap='round'
-                                strokeLinejoin='round'
-                                strokeWidth={2}
-                                d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                              />
-                            </svg>
+                          <div
+                            className={`flex items-center gap-2 ${
+                              task.status === 'Completed'
+                                ? 'text-gray-500'
+                                : 'text-gray-400'
+                            }`}
+                          >
+                            <CalendarIcon className='w-4 h-4' />
                             <span>
                               {new Date(task.due_date).toLocaleDateString(
                                 'en-US',
@@ -931,10 +944,21 @@ export default function ProjectDetails() {
                                   day: 'numeric',
                                 }
                               )}
+                              {task.status === 'Completed' && (
+                                <span className='ml-1 text-green-400'>✓</span>
+                              )}
                             </span>
                           </div>
                         )}
                       </div>
+
+                      {/* Completed Badge */}
+                      {task.status === 'Completed' && (
+                        <div className='mt-2 flex items-center gap-1 text-xs text-green-400'>
+                          <Check className='w-3 h-3' />
+                          <span>Completed</span>
+                        </div>
+                      )}
                     </div>
                   </Link>
                 ))}
@@ -964,6 +988,21 @@ export default function ProjectDetails() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Roles Needed */}
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <h2 className='text-xl font-semibold text-gray-100 mb-4'>
+              Roles Needed
+            </h2>
+            <ul className='space-y-3'>
+              {project.roles_needed?.map((role, index) => (
+                <li key={index} className='flex items-center'>
+                  <span className='w-2 h-2 bg-cyan-400 rounded-full mr-3'></span>
+                  <span className='text-gray-300'>{role}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* GitHub Repo */}
