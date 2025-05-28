@@ -26,6 +26,29 @@ export default function ProjectTasksPage() {
   const [projectMembers, setProjectMembers] = useState([]);
 
   // Fetch project and tasks
+  const [isOwner, setIsOwner] = useState(false);
+  const [supabaseUserId, setSupabaseUserId] = useState(null);
+
+  // First, fetch the Supabase user ID for the current session user
+  useEffect(() => {
+    const fetchSupabaseUserId = async () => {
+      if (session?.user?.email) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
+
+        if (!error && data) {
+          setSupabaseUserId(data.id);
+        }
+      }
+    };
+
+    fetchSupabaseUserId();
+  }, [session?.user?.email]);
+
+  // Fetch project and tasks
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -33,11 +56,18 @@ export default function ProjectTasksPage() {
         // Fetch project details
         const { data: projectData } = await supabase
           .from('projects')
-          .select('*')
+          .select('*, creator_id')
           .eq('id', params.id)
           .single();
 
         setProject(projectData);
+
+        // Check if current user is the owner
+        if (supabaseUserId && projectData?.creator_id === supabaseUserId) {
+          setIsOwner(true);
+        } else {
+          setIsOwner(false);
+        }
 
         // Fetch tasks
         const { data: tasksData } = await supabase
@@ -75,8 +105,10 @@ export default function ProjectTasksPage() {
       }
     };
 
-    fetchData();
-  }, [params.id, showTaskModal]);
+    if (supabaseUserId || !session?.user?.email) {
+      fetchData();
+    }
+  }, [params.id, session?.user?.email, showTaskModal, supabaseUserId]);
 
   if (loading) {
     return (
@@ -117,6 +149,7 @@ export default function ProjectTasksPage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Header */}
+      {/* Header */}
       <div className='border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm'>
         <div className='container mx-auto px-6 py-4'>
           <div className='flex items-center justify-between'>
@@ -127,8 +160,8 @@ export default function ProjectTasksPage() {
               <ArrowLeft className='w-5 h-5 mr-2' />
               Back to Project
             </Link>
-            {/* {project.creator_id === '1883ec53-96c6-4911-877c-5168e35a7a6d' && ( */}
-            {session && (
+            {/* Only show the button if the user is the owner */}
+            {isOwner && (
               <button
                 onClick={() => setShowTaskModal(true)}
                 className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center'
@@ -157,7 +190,7 @@ export default function ProjectTasksPage() {
           {tasks.length === 0 ? (
             <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-8 text-center'>
               <p className='text-gray-400'>No tasks yet for this project</p>
-              {session && (
+              {isOwner && (
                 <button
                   onClick={() => setShowTaskModal(true)}
                   className='mt-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'
