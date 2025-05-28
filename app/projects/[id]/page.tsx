@@ -115,6 +115,8 @@ export default function ProjectDetails() {
         return `${user.name} created task "${data.task_title}"`;
       case 'task_completed':
         return `${user.name} completed task "${data.task_title}"`;
+      case 'task_started':
+        return `${user.name} start task "${data.task_title}"`;
       case 'role_assigned':
         return `${user.name} joined as ${data.role}`;
       case 'discussion_created':
@@ -135,6 +137,12 @@ export default function ProjectDetails() {
         bg: 'bg-emerald-900/50',
         text: 'text-emerald-400',
         icon: <Sparkles className='w-4 h-4' />,
+      };
+    } else if (type === 'task_started') {
+      return {
+        bg: 'bg-yellow-900/50',
+        text: 'text-yellow-400',
+        icon: <Plus className='w-4 h-4' />,
       };
     } else if (type === 'task_created') {
       return {
