@@ -9,8 +9,10 @@ import React from "react";
 //   BarChart2,
 //   Cpu,
 // } from "lucide-react";
+import {ArrowLeft} from "lucide-react"
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 
 const teamData = [
   {
@@ -58,9 +60,21 @@ const teamData = [
 ];
 
 const TeamPage = () => {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100">
       <Header />
+
+      <div className='container mx-auto px-3 py-8'>
+        {/* Back button */}
+        <motion.button
+          onClick={() => router.back()}
+          whileHover={{ x: -4 }}
+          className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
+        >
+          <ArrowLeft className='w-5 h-5' />
+          <span>Back</span>
+        </motion.button>
 
       <section className="pt-30 py-20 px-6 bg-gray-800/50 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
@@ -116,6 +130,7 @@ const TeamPage = () => {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 };
