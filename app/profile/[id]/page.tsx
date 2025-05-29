@@ -21,6 +21,8 @@ import {
   Clock,
   Activity,
   Folder,
+  UserPlus,
+  UserCheck,
 } from "lucide-react";
 
 const supabase = createClient(
@@ -50,6 +52,7 @@ type GitHubData = {
     language: string;
     updated_at: string;
   }[];
+  isFollowing: boolean;
 };
 
 export default function ProfilePage() {
@@ -64,6 +67,8 @@ export default function ProfilePage() {
   const [createdProjects, setCreatedProjects] = useState([]);
   const [joinedProjects, setJoinedProjects] = useState([]);
   const [allCommits, setAllCommits] = useState<any>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const fetchGitHubData = async (username: string, token?: string) => {
     try {
@@ -74,16 +79,23 @@ export default function ProfilePage() {
       };
 
       // Fetch all data in parallel
-      const [commitsRes, profileRes, reposRes] = await Promise.all([
-        fetch(`https://api.github.com/search/commits?q=author:${username}`, {
-          headers,
-        }),
-        fetch(`https://api.github.com/users/${username}`, { headers }),
-        fetch(
-          `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
-          { headers }
-        ),
-      ]);
+      const [commitsRes, profileRes, reposRes, followingRes] =
+        await Promise.all([
+          fetch(`https://api.github.com/search/commits?q=author:${username}`, {
+            headers,
+          }),
+          fetch(`https://api.github.com/users/${username}`, { headers }),
+          fetch(
+            `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
+            { headers }
+          ),
+          token
+            ? fetch(`https://api.github.com/user/following/${username}`, {
+                headers,
+                method: "GET",
+              })
+            : Promise.resolve({ ok: false }),
+        ]);
 
       if (!commitsRes.ok) throw new Error("Failed to fetch commits");
       if (!profileRes.ok) throw new Error("Failed to fetch profile");
@@ -94,6 +106,12 @@ export default function ProfilePage() {
         profileRes.json(),
         reposRes.json(),
       ]);
+
+      // Check if current user is following this profile
+      let followingStatus = false;
+      if (token && followingRes.ok) {
+        followingStatus = followingRes.status === 204; // 204 means following
+      }
 
       // Calculate statistics
       const stats = {
@@ -140,10 +158,58 @@ export default function ProfilePage() {
         stats,
         skills,
         recentRepos,
+        isFollowing: followingStatus,
       };
     } catch (error) {
       console.error("GitHub API error:", error);
       throw error;
+    }
+  };
+
+  const toggleFollow = async () => {
+    if (!githubData?.profile?.login || !userData.github_token) return;
+
+    setFollowLoading(true);
+    try {
+      const headers = {
+        Authorization: `Bearer ${userData.github_token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      };
+
+      const method = isFollowing ? "DELETE" : "PUT";
+      const url = `https://api.github.com/user/following/${githubData.profile.login}`;
+
+      const response = await fetch(url, {
+        method,
+        headers,
+      });
+
+      if (response.ok) {
+        setIsFollowing(!isFollowing);
+        // Update followers count locally
+        if (githubData) {
+          setGithubData({
+            ...githubData,
+            stats: {
+              ...githubData.stats,
+              followers: isFollowing
+                ? githubData.stats.followers - 1
+                : githubData.stats.followers + 1,
+            },
+            isFollowing: !isFollowing,
+          });
+        }
+      } else {
+        throw new Error(
+          `Failed to ${isFollowing ? "unfollow" : "follow"} user`
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling follow status:", error);
+      setError("Failed to update follow status");
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -199,6 +265,7 @@ export default function ProfilePage() {
             const data = await fetchGitHubData(githubUsername, token);
             setGithubData(data);
             setAllCommits({ total_count: data.stats.contributions });
+            setIsFollowing(data.isFollowing);
           } catch (err) {
             console.warn("Failed to fetch GitHub data:", err);
             // Set partial data if available
@@ -220,8 +287,10 @@ export default function ProfilePage() {
               },
               skills: [],
               recentRepos: [],
+              isFollowing: false,
             });
             setAllCommits({ total_count: 0 });
+            setIsFollowing(false);
           }
         }
 
@@ -506,6 +575,31 @@ export default function ProfilePage() {
                   <Globe className="w-4 h-4" />
                   <span>Website</span>
                 </motion.a>
+              )}
+              {userData.github_token && githubData?.profile?.login && (
+                <motion.button
+                  onClick={toggleFollow}
+                  disabled={followLoading}
+                  whileHover={{ y: -2 }}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-sm transition-colors ${
+                    isFollowing
+                      ? "bg-gray-800/50 border-gray-700 text-gray-300 hover:text-rose-400 hover:border-rose-400/30"
+                      : "bg-purple-900/50 border-purple-700 text-purple-300 hover:text-purple-400 hover:border-purple-400/30"
+                  }`}
+                >
+                  {followLoading ? (
+                    <span>...</span>
+                  ) : (
+                    <>
+                      {isFollowing ? (
+                        <UserCheck className="w-4 h-4" />
+                      ) : (
+                        <UserPlus className="w-4 h-4" />
+                      )}
+                      <span>{isFollowing ? "Following" : "Follow"}</span>
+                    </>
+                  )}
+                </motion.button>
               )}
             </div>
           </div>
