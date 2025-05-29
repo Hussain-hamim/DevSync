@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Plus,
   Code,
+  ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -19,6 +20,7 @@ import { supabase } from '../lib/supabase';
 import Header from '@/components/Header';
 import { NewProjectModal } from './NewProjectModal';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 const TechTag = ({ tech }) => (
   <motion.span
@@ -33,6 +35,7 @@ const TechTag = ({ tech }) => (
 );
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
@@ -93,7 +96,7 @@ export default function ProjectsPage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
-        <Header />
+        {/* <Header /> */}
         <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
           <div className='animate-pulse text-gray-400'>
             Loading projects data...
@@ -105,8 +108,19 @@ export default function ProjectsPage() {
 
   return (
     <div className='min-h-screen  bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
-      {/* <Header /> */}
+      <Header />
       {/* Header */}
+
+    <div className='container mx-auto px-4'>
+      <motion.button
+        onClick={() => router.back()}
+        whileHover={{ x: -4 }}
+        className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
+      >
+          <ArrowLeft className='w-5 h-5' />
+          <span>Back</span>
+      </motion.button>
+
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -452,6 +466,7 @@ export default function ProjectsPage() {
           <Plus className='w-6 h-6' />
         </motion.div>
       </Link>
+      </div>
     </div>
   );
 }
