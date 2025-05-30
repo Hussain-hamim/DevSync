@@ -85,24 +85,30 @@ const ProfileDropdown = () => {
           </motion.div>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className='px-2 py-1.5 text-sm rounded-md focus:bg-gray-700/50 focus:text-emerald-400 outline-none cursor-pointer transition-colors'>
+        <DropdownMenuItem className='px-2 py-1.5 text-sm rounded-md focus:bg-gray-700/50 focus:text-emerald-400 outline-none cursor-pointer transition-colors'
+        onClick={() => router.push('/projects')}
+        >
           <motion.div whileHover={{ x: 2 }} className='flex items-center gap-2'>
             <CreditCard className='w-4 h-4 text-gray-400' />
-            Billing
+            Projects
           </motion.div>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className='px-2 py-1.5 text-sm rounded-md focus:bg-gray-700/50 focus:text-emerald-400 outline-none cursor-pointer transition-colors'>
+        <DropdownMenuItem className='px-2 py-1.5 text-sm rounded-md focus:bg-gray-700/50 focus:text-emerald-400 outline-none cursor-pointer transition-colors'
+        onClick={() => router.push('/teams')}
+        >
           <motion.div whileHover={{ x: 2 }} className='flex items-center gap-2'>
             <Users className='w-4 h-4 text-gray-400' />
-            Team
+            Teams
           </motion.div>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className='px-2 py-1.5 text-sm rounded-md focus:bg-gray-700/50 focus:text-emerald-400 outline-none cursor-pointer transition-colors'>
+        <DropdownMenuItem className='px-2 py-1.5 text-sm rounded-md focus:bg-gray-700/50 focus:text-emerald-400 outline-none cursor-pointer transition-colors'
+        onClick={() => router.push('/rankings')}
+        >
           <motion.div whileHover={{ x: 2 }} className='flex items-center gap-2'>
             <Zap className='w-4 h-4 text-gray-400' />
-            Subscription
+            Rankings
           </motion.div>
         </DropdownMenuItem>
 

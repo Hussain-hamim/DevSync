@@ -70,6 +70,126 @@ export default function TaskDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showStatusButtons, setShowStatusButtons] = useState(false);
+
+  const isUserOwnerOrAssignee = async () => {
+    if (!session?.user?.email) return false;
+
+    // Get current user from Supabase
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', session.user.email)
+      .single();
+
+    if (userError || !userData) return false;
+
+    // Check if user is owner or assignee
+    return (
+      task?.created_by.id === userData.id ||
+      task?.assigned_to?.id === userData.id
+    );
+  };
+
+  // Add this useEffect to check permissions when task or session changes
+  useEffect(() => {
+    const checkPermissions = async () => {
+      const hasPermission = await isUserOwnerOrAssignee();
+      setShowStatusButtons(hasPermission);
+    };
+
+    if (task && session) {
+      checkPermissions();
+    } else {
+      setShowStatusButtons(false);
+    }
+  }, [task, isUserOwnerOrAssignee]);
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!task || !session?.user?.email) return;
+
+    try {
+      // Get current user from Supabase
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id, name')
+        .eq('email', session.user.email)
+        .single();
+
+      if (userError || !userData) {
+        throw userError || new Error('User not found');
+      }
+
+      // Update task status in database
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', task.id);
+
+      if (updateError) throw updateError;
+
+      // Log activity in task_activities table
+      const { error: taskActivityError } = await supabase
+        .from('task_activities')
+        .insert({
+          task_id: task.id,
+          user_id: userData.id,
+          activity_type: 'status_changed',
+          old_value: task.status,
+          new_value: newStatus,
+        });
+
+      if (taskActivityError) throw taskActivityError;
+
+      // Log activity in team activities table (activities2)
+      const { error: teamActivityError } = await supabase
+        .from('activities2')
+        .insert({
+          project_id: params.id,
+          user_id: userData.id,
+          activity_type:
+            newStatus === 'Completed' ? 'task_completed' : 'task_started',
+          activity_data: {
+            task_id: task.id,
+            task_title: task.title,
+            old_status: task.status,
+            new_status: newStatus,
+          },
+        });
+
+      if (teamActivityError) throw teamActivityError;
+
+      // Update local state
+      setTask((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: newStatus,
+              activities: [
+                {
+                  id: Date.now().toString(),
+                  user: {
+                    id: userData.id,
+                    name: userData.name,
+                    avatar_url: null,
+                  },
+                  activity_type: 'status_changed',
+                  old_value: task.status,
+                  new_value: newStatus,
+                  created_at: new Date().toISOString(),
+                },
+                ...prev.activities,
+              ],
+            }
+          : null
+      );
+
+      toast.success(`Task marked as ${newStatus}`);
+    } catch (error) {
+      console.error('Error changing task status:', error);
+      toast.error('Failed to update task status');
+    }
+  };
 
   useEffect(() => {
     const fetchTaskDetails = async () => {
@@ -366,17 +486,27 @@ export default function TaskDetailsPage() {
               </div>
 
               {/* Task Actions */}
-              <div className='flex flex-wrap gap-2'>
-                <button className='px-4 py-2 bg-emerald-600/30 text-emerald-400 rounded-lg hover:bg-emerald-600/40 transition-colors'>
-                  Start Task
-                </button>
-                <button className='px-4 py-2 bg-blue-600/30 text-blue-400 rounded-lg hover:bg-blue-600/40 transition-colors'>
-                  Mark for Review
-                </button>
-                <button className='px-4 py-2 bg-green-600/30 text-green-400 rounded-lg hover:bg-green-600/40 transition-colors'>
-                  Complete Task
-                </button>
-              </div>
+
+              {showStatusButtons && (
+                <div className='flex flex-wrap gap-2'>
+                  {task.status !== 'In Progress' && (
+                    <button
+                      onClick={() => handleStatusChange('In Progress')}
+                      className='px-4 py-2 bg-blue-600/30 text-blue-400 rounded-lg hover:bg-blue-600/40 transition-colors'
+                    >
+                      Start Task
+                    </button>
+                  )}
+                  {task.status !== 'Completed' && (
+                    <button
+                      onClick={() => handleStatusChange('Completed')}
+                      className='px-4 py-2 bg-green-600/30 text-green-400 rounded-lg hover:bg-green-600/40 transition-colors'
+                    >
+                      Complete Task
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Comments Section */}

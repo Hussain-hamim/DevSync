@@ -15,9 +15,12 @@ import {
   Star,
   Users,
   Code,
+  ArrowLeft
 } from "lucide-react";
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Header from "@/components/Header";
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -212,6 +215,7 @@ const calculateScore = (user: User): number => {
 };
 
 export default function RankingsPage() {
+  const router = useRouter();
   const [timeframe, setTimeframe] = useState<"weekly" | "monthly">("weekly");
   const [sortBy, setSortBy] = useState<MetricType>("score");
   const [rankings, setRankings] = useState<User[]>([]);
@@ -429,6 +433,19 @@ export default function RankingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8">
       {/* Header */}
+      <Header />
+
+      <div className='container mx-auto px-4'>
+          {/* Back button */}
+          <motion.button
+            onClick={() => router.back()}
+            whileHover={{ x: -4 }}
+            className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
+      >
+            <ArrowLeft className='w-5 h-5' />
+            <span>Back</span>
+          </motion.button>
+
       <motion.header
         initial={{ y: -50 }}
         animate={{ y: 0 }}
@@ -707,6 +724,7 @@ export default function RankingsPage() {
         <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
         <span className="text-sm text-gray-100">Live Updates</span>
       </motion.aside>
+      </div>
     </div>
   );
 }

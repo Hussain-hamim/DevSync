@@ -138,13 +138,13 @@ export function AddTaskModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className='fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+          className='fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto'
         >
           <motion.div
             initial={{ scale: 0.95, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.95, y: 20 }}
-            className='bg-gray-800 border border-gray-700 rounded-xl w-full max-w-lg relative'
+            className='bg-gray-800 border border-gray-700 rounded-xl w-full max-w-lg relative max-h-[90vh] overflow-y-auto'
           >
             <button
               onClick={onClose}
