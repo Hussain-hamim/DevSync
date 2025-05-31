@@ -1,5 +1,6 @@
 // app/projects/[id]/page.jsx
 'use client';
+
 import {
   GitBranch,
   Users,
@@ -16,7 +17,6 @@ import {
   CalendarIcon,
 } from 'lucide-react';
 import Link from 'next/link';
-
 import { useParams } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
 import { joinProjectRole } from '@/app/actions/joinProject';
@@ -24,13 +24,12 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from './JoinProjectModal';
 import Header from '@/components/Header';
-
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { AddTaskModal } from './AddTaskModal';
 
-// Add these imports at the top
+// Form validation imports (unchanged)
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -42,60 +41,59 @@ dayjs.extend(calendar);
 export default function ProjectDetails() {
   const { data: session } = useSession();
   const params = useParams();
+
+  // Loading / project state
   const [loading, setLoading] = useState(false);
+  const [project, setProject] = useState<any>(null);
 
-  const [project, setProject] = useState({});
-  const [userId, setUserId] = useState<string | null>(null);
-
-  const [showJoinModal, setShowJoinModal] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-
-  const [availableRoles, setAvailableRoles] = useState([]);
-  const [projectMembers, setProjectMembers] = useState([]);
-
-  // At the top of your component
-  const [tasks, setTasks] = useState([]);
+  // ─── TASKS STATE & SORTING ─────────────────────────────────────────────
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
 
-  // Define a schema for discussion form validation
-  const discussionSchema = z.object({
-    content: z.string().min(1, 'Message cannot be empty'),
-  });
+  // Map “status string → numeric priority”
+  const statusPriority: Record<string, number> = {
+    'In Progress': 1,
+    'In Review':   2,
+    'Completed':   3,
+  };
 
-  // Add these state variables to your component
-  const [discussions, setDiscussions] = useState([]);
-  const [showDiscussionForm, setShowDiscussionForm] = useState(false);
-  const [loadingDiscussions, setLoadingDiscussions] = useState(true);
-
-  // Add these state variables
-  const [activities, setActivities] = useState([]);
-  const [loadingActivities, setLoadingActivities] = useState(true);
-
-  const fetchActivities = async () => {
-    setLoadingActivities(true);
+  // Fetch + sort tasks client-side, then slice the top 4
+  const fetchTasks = async () => {
+    setLoadingTasks(true);
     try {
-      const { data, error } = await supabase
-        .from('activities2')
-        .select(
-          `
+      // 1) Fetch ALL tasks for this project (no order, no limit)
+      const { data: rawTasks, error } = await supabase
+        .from('tasks')
+        .select(`
           *,
-          user:user_id (
-            id,
-            name,
-            avatar_url
-          )
-        `
-        )
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+          assigned_to:assigned_to(id, name, avatar_url),
+          created_by:created_by(id, name, avatar_url)
+        `)
+        .eq('project_id', project.id);
 
       if (error) throw error;
-      setActivities(data || []);
-    } catch (error) {
-      console.error('Error fetching activities:', error);
+
+      // 2) Sort by statusPriority; tie-break by created_at descending
+      const sorted = (rawTasks || []).slice().sort((a, b) => {
+        const pa = statusPriority[a.status] ?? Number.MAX_SAFE_INTEGER;
+        const pb = statusPriority[b.status] ?? Number.MAX_SAFE_INTEGER;
+        if (pa === pb) {
+          // Tie-breaker: newer created_at first
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        }
+        return pa - pb;
+      });
+
+      // 3) Keep only the first 4 items
+      const topFour = sorted.slice(0, 4);
+      setTasks(topFour);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+      setTasks([]); // fallback to empty list
     } finally {
-      setLoadingActivities(false);
+      setLoadingTasks(false);
     }
   };
 
@@ -166,10 +164,32 @@ export default function ProjectDetails() {
       };
     }
   };
+  // ────────────────────────────────────────────────────────────────────────
 
-  //////////////////////////////
+  // Discussion form validation schema
+  const discussionSchema = z.object({
+    content: z.string().min(1, 'Message cannot be empty'),
+  });
 
-  // Initialize the form
+  // State for Discussions
+  const [discussions, setDiscussions] = useState<any[]>([]);
+  const [showDiscussionForm, setShowDiscussionForm] = useState(false);
+  const [loadingDiscussions, setLoadingDiscussions] = useState(true);
+
+  // Activities state
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+
+  // Project Members + Roles
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [projectMembers, setProjectMembers] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Modals
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+
+  // React Hook Form setup for Discussions
   const {
     register,
     handleSubmit,
@@ -179,214 +199,75 @@ export default function ProjectDetails() {
     resolver: zodResolver(discussionSchema),
   });
 
-  // Fetch discussions when project loads
-  useEffect(() => {
-    const fetchDiscussions = async () => {
-      setLoadingDiscussions(true);
-      try {
-        const { data, error } = await supabase
-          .from('discussions')
-          .select(
-            `
-          *,
-          user:user_id (
-            id,
-            name,
-            avatar_url
-          )
-        `
-          )
-          .eq('project_id', project.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setDiscussions(data || []);
-      } catch (error) {
-        console.error('Error fetching discussions:', error);
-      } finally {
-        setLoadingDiscussions(false);
-      }
-    };
-
-    if (project?.id) {
-      fetchDiscussions();
-    }
-  }, [project?.id]);
-
-  // Handle new discussion submission
-  const onSubmitDiscussion = async (formData) => {
-    if (!userId || !project?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('discussions')
-        .insert([
-          {
-            project_id: project.id,
-            user_id: userId,
-            content: formData.content,
-          },
-        ])
-        .select();
-
-      if (error) throw error;
-
-      // Add the new discussion to the state
-      setDiscussions((prev) => [
-        {
-          ...data[0],
-          user: {
-            id: userId,
-            name: session?.user?.name,
-            avatar_url: session?.user?.image,
-          },
-        },
-        ...prev,
-      ]);
-
-      // Reset form and hide it
-      reset();
-      setShowDiscussionForm(false);
-    } catch (error) {
-      console.error('Error creating discussion:', error);
-    }
-  };
-
-  const fetchTasks = async () => {
-    setLoadingTasks(true);
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select(
-          `
-          *,
-           assigned_to:assigned_to(id, name, avatar_url),
-            created_by:created_by(id, name, avatar_url)
-        `
-        )
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      if (error) throw error;
-      setTasks(data || []);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    } finally {
-      setLoadingTasks(false);
-    }
-  };
-
-  // Fetch tasks when project loads
-  useEffect(() => {
-    if (project?.id) {
-      fetchTasks();
-    }
-  }, [project?.id]);
-
-  // And update handleJoinSubmit to use it
-  const handleJoinSubmit = async (role: string, message: string) => {
-    console.log('Join request submitted:', { role, message });
-
-    if (!project || !userId) {
-      alert('Missing project or user info');
-      return;
-    }
-
-    try {
-      await joinProjectRole({
-        filled_by: userId,
-        project_id: project.id,
-        title: role,
-      });
-
-      // Refresh members and available roles
-      await fetchProjectMembers();
-      setAvailableRoles((prev) => prev.filter((r) => r !== role));
-      setShowJoinModal(false);
-    } catch (error) {
-      console.error('Error joining project:', error);
-      alert('Failed to join project');
-    }
-  };
-
-  const onAddTask = async () => {
-    // refresh page to get new tasks
-    fetchTasks();
-    fetchActivities();
-  };
-
-  // Fetch project data and roles
+  // ─── FETCH PROJECT DATA ────────────────────────────────────────────────
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
-
-      // 1. Get project data first
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', params.id)
-        .single();
-
-      if (projectError || !projectData) {
-        console.error('Project not found:', projectError);
-        setLoading(false);
-        return;
-      }
-
-      setProject(projectData);
-      const allRoles = projectData.roles_needed || [];
-
-      // 2. If user is logged in, check their taken roles
-      if (session?.user?.email) {
-        // Get user ID first
-        const { data: userData } = await supabase
-          .from('users')
-          .select('id')
-          .eq('email', session.user.email)
+      try {
+        // 1) Get project row
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', params.id)
           .single();
 
-        if (userData?.id) {
-          // Get roles this user already took
-          const { data: takenRoles } = await supabase
-            .from('project_roles')
-            .select('title')
-            .eq('project_id', params.id)
-            .eq('filled_by', userData.id);
+        if (projectError || !projectData) {
+          console.error('Project not found:', projectError);
+          return;
+        }
+        setProject(projectData);
 
-          // Filter out only roles THIS USER took
-          const userTakenRoles = takenRoles?.map((r) => r.title) || [];
-          setAvailableRoles(
-            allRoles.filter((role) => !userTakenRoles.includes(role))
-          );
+        // Prepare availableRoles based on roles_needed & roles already taken
+        const allRoles = projectData.roles_needed || [];
+        if (session?.user?.email) {
+          // 2) Get current user’s ID
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', session.user.email)
+            .single();
+
+          if (userData?.id) {
+            // 3) Find which roles this user has already taken
+            const { data: takenRoles } = await supabase
+              .from('project_roles')
+              .select('title')
+              .eq('project_id', params.id)
+              .eq('filled_by', userData.id);
+
+            const userTakenRoles = takenRoles?.map((r) => r.title) || [];
+            setAvailableRoles(
+              allRoles.filter((role) => !userTakenRoles.includes(role))
+            );
+          } else {
+            setAvailableRoles(allRoles);
+          }
         } else {
-          // User not found in DB - show all roles
           setAvailableRoles(allRoles);
         }
-      } else {
-        // No user logged in - show all roles
-        setAvailableRoles(allRoles);
+      } catch (e) {
+        console.error('Error fetching project details:', e);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchAllData();
-  }, [params.id, session?.user?.email]); // Re-run when project ID or session changes;
+  }, [params.id, session?.user?.email]);
 
-  // Add this function near your other utility functions
+  // ─── FETCH PROJECT MEMBERS ───────────────────────────────────────────────
   const fetchProjectMembers = async () => {
     if (!params.id) return;
 
-    // First get the project to access creator_id
+    // 1) Get creator_id to mark “Owner”
     const { data: projectData } = await supabase
       .from('projects')
       .select('creator_id')
       .eq('id', params.id)
       .single();
 
-    // Then get all members including their roles
-    const { data: rolesData, error } = await supabase
+    // 2) Fetch all taken roles + user info
+    const { data: rolesData, error: rolesError } = await supabase
       .from('project_roles')
       .select(
         `
@@ -401,10 +282,10 @@ export default function ProjectDetails() {
       .eq('project_id', params.id)
       .not('filled_by', 'is', null);
 
-    if (!error) {
-      const membersMap = new Map();
+    if (!rolesError && rolesData) {
+      const membersMap = new Map<string, any>();
 
-      // Add the creator first if they haven't taken a role yet
+      // Add creator first (if not already in project_roles)
       if (projectData?.creator_id) {
         const { data: creator } = await supabase
           .from('users')
@@ -421,20 +302,21 @@ export default function ProjectDetails() {
         }
       }
 
-      // Add other members with their roles
-      rolesData.forEach((role) => {
-        if (role.users) {
-          if (!membersMap.has(role.users.id)) {
-            membersMap.set(role.users.id, {
-              ...role.users,
-              roles: [role.title],
-              isOwner: role.users.id === projectData?.creator_id,
+      // Add each role’s user
+      rolesData.forEach((roleRow) => {
+        const u = (roleRow as any).users;
+        if (u) {
+          if (!membersMap.has(u.id)) {
+            membersMap.set(u.id, {
+              ...u,
+              roles: [roleRow.title],
+              isOwner: u.id === projectData?.creator_id,
             });
           } else {
-            const existingMember = membersMap.get(role.users.id);
-            membersMap.set(role.users.id, {
-              ...existingMember,
-              roles: [...existingMember.roles, role.title],
+            const existing = membersMap.get(u.id);
+            membersMap.set(u.id, {
+              ...existing,
+              roles: [...existing.roles, roleRow.title],
             });
           }
         }
@@ -444,39 +326,171 @@ export default function ProjectDetails() {
     }
   };
 
-  // Then update your useEffect to use this function
-  useEffect(() => {
-    fetchProjectMembers();
-  }, [params.id]);
+  // ─── FETCH ACTIVITIES ─────────────────────────────────────────────────
+  const fetchActivities = async () => {
+    setLoadingActivities(true);
+    try {
+      const { data, error } = await supabase
+        .from('activities2')
+        .select(
+          `
+          *,
+          user:user_id (
+            id,
+            name,
+            avatar_url
+          )
+        `
+        )
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-  // 2. Fetch user ID from your Supabase `users` table using NextAuth session email
+      if (error) throw error;
+      setActivities(data || []);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  // ─── FETCH DISCUSSIONS ─────────────────────────────────────────────────
+  const fetchDiscussions = async () => {
+    setLoadingDiscussions(true);
+    try {
+      const { data, error } = await supabase
+        .from('discussions')
+        .select(
+          `
+          *,
+          user:user_id (
+            id,
+            name,
+            avatar_url
+          )
+        `
+        )
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDiscussions(data || []);
+    } catch (error) {
+      console.error('Error fetching discussions:', error);
+    } finally {
+      setLoadingDiscussions(false);
+    }
+  };
+
+  // ─── FETCH USER ID (NextAuth → Supabase) ───────────────────────────────
   useEffect(() => {
     const fetchUserId = async () => {
       if (!session?.user?.email) return;
-
       const { data, error } = await supabase
         .from('users')
         .select('id')
         .eq('email', session.user.email)
         .single();
-
       if (!error && data) {
         setUserId(data.id);
       } else {
         console.error('User not found in Supabase:', error);
       }
     };
-
     fetchUserId();
   }, [session]);
 
-  if (loading) {
+  // ─── USE-EFFECT: AFTER project.id IS SET, FIRE ALL FETCHES ─────────────
+  useEffect(() => {
+    if (!project?.id) return;
+
+    fetchTasks();
+    fetchProjectMembers();
+    fetchActivities();
+    fetchDiscussions();
+  }, [project?.id]);
+
+  // ─── POST A NEW DISCUSSION ───────────────────────────────────────────────
+  const onSubmitDiscussion = async (formData: { content: string }) => {
+    if (!userId || !project?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('discussions')
+        .insert([
+          {
+            project_id: project.id,
+            user_id: userId,
+            content: formData.content,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+
+      // Add to top of local state
+      setDiscussions((prev) => [
+        {
+          ...data[0],
+          user: {
+            id: userId,
+            name: session?.user?.name,
+            avatar_url: session?.user?.image,
+          },
+        },
+        ...prev,
+      ]);
+
+      reset();
+      setShowDiscussionForm(false);
+    } catch (error) {
+      console.error('Error creating discussion:', error);
+    }
+  };
+
+  // ─── JOIN PROJECT (assign role) ────────────────────────────────────────
+  const handleJoinSubmit = async (role: string, message: string) => {
+    if (!project || !userId) {
+      alert('Missing project or user info');
+      return;
+    }
+
+    try {
+      await joinProjectRole({
+        filled_by: userId,
+        project_id: project.id,
+        title: role,
+      });
+
+      // 1) Refresh member list
+      await fetchProjectMembers();
+
+      // 2) Remove that role from availableRoles
+      setAvailableRoles((prev) => prev.filter((r) => r !== role));
+
+      setShowJoinModal(false);
+    } catch (error) {
+      console.error('Error joining project:', error);
+      alert('Failed to join project');
+    }
+  };
+
+  // ─── AFTER A NEW TASK IS ADDED, RE-FETCH TASK LIST ─────────────────────
+  const onAddTask = async () => {
+    await fetchTasks();
+    await fetchActivities();
+  };
+
+  // ────────────────────────────────────────────────────────────────────────
+
+  if (loading || !project) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
         <Header />
         <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
           <div className='animate-pulse text-gray-400'>
-            Loading project details data...
+            Loading project details…
           </div>
         </div>
       </div>
@@ -536,14 +550,12 @@ export default function ProjectDetails() {
             </div>
           </div>
 
-          {/* <Link href={`/projects/${project.id}/team`}> */}
           <button
             onClick={() => setShowJoinModal(true)}
             className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'
           >
             Join Project
           </button>
-          {/* </Link> */}
         </div>
       </div>
 
@@ -565,24 +577,11 @@ export default function ProjectDetails() {
 
           {/* Activity Feed & Discussions */}
           <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
-            <div className='lg:col-span-2 space-y-8'>
-              {/* /// */}
+            <div className='space-y-8'>
               {/* Activity Feed */}
               <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
                 <h2 className='text-xl font-semibold text-gray-100 mb-4 flex items-center'>
-                  <svg
-                    className='w-5 h-5 mr-2 text-emerald-400'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
-                    />
-                  </svg>
+                  <Sparkles className='w-5 h-5 mr-2 text-emerald-400' />
                   Team Activity
                 </h2>
 
@@ -637,7 +636,9 @@ export default function ProjectDetails() {
                     Discussions
                   </h2>
                   <button
-                    onClick={() => setShowDiscussionForm(!showDiscussionForm)}
+                    onClick={() =>
+                      setShowDiscussionForm((prev) => !prev)
+                    }
                     className='text-emerald-400 hover:underline text-sm flex items-center'
                   >
                     <MessageSquare className='w-4 h-4 mr-1' />
@@ -743,7 +744,7 @@ export default function ProjectDetails() {
               Tech Stack
             </h2>
             <div className='flex flex-wrap gap-2'>
-              {project.tech_stack?.map((tech, index) => (
+              {project.tech_stack?.map((tech: string, index: number) => (
                 <span
                   key={index}
                   className='text-xs bg-gray-900/80 text-emerald-400 px-3 py-1.5 rounded-full'
@@ -754,7 +755,7 @@ export default function ProjectDetails() {
             </div>
           </div>
 
-          {/* Team Members with Assigned Roles */}
+          {/* Team Members */}
           <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
             <div className='flex justify-between items-center mb-4'>
               <h2 className='text-xl font-semibold text-gray-100'>
@@ -791,14 +792,13 @@ export default function ProjectDetails() {
                     <h3 className='text-gray-100 font-medium truncate'>
                       {member.name}
                     </h3>
-
                     <span className='text-xs text-gray-400'>
                       @{member.name.toLowerCase().replace(/\s+/g, '')}
                     </span>
                   </div>
 
                   <div className='mt-1 flex flex-wrap gap-2'>
-                    {member.roles.map((role) => (
+                    {member.roles.map((role: string) => (
                       <span
                         key={role}
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -814,6 +814,24 @@ export default function ProjectDetails() {
                 </div>
               </li>
             ))}
+          </div>
+
+          {/* Roles Needed */}
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <h2 className='text-xl font-semibold text-gray-100 mb-4'>
+              Roles Needed
+            </h2>
+            <ul className='space-y-3'>
+              {project.roles_needed?.map((role: string, index: number) => (
+                <li key={index} className='flex items-center'>
+                  <span className='w-2 h-2 bg-cyan-400 rounded-full mr-3'></span>
+                  <span className='text-gray-300'>{role}</span>
+                </li>
+              ))}
+            </ul>
+            <button className='mt-4 text-emerald-400 hover:underline text-sm'>
+              View all roles
+            </button>
           </div>
 
           {/* Project Tasks Card */}
@@ -840,8 +858,6 @@ export default function ProjectDetails() {
                 ))}
               </div>
             ) : (
-              // Your tasks list here
-
               <div className='space-y-4'>
                 {tasks?.slice(0, 4).map((task) => (
                   <Link
@@ -903,6 +919,42 @@ export default function ProjectDetails() {
                           {task.priority}
                         </span>
                       </div>
+                {tasks.length > 0 ? (
+                  tasks.map((task) => (
+                    <Link
+                      href={`/projects/${project.id}/tasks/${task.id}`}
+                      key={task.id}
+                    >
+                      <div className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors'>
+                        <div className='flex justify-between items-start'>
+                          <div className='flex items-center gap-3'>
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                task.status === 'Completed'
+                                  ? 'bg-green-500'
+                                  : task.status === 'In Progress'
+                                  ? 'bg-amber-500'
+                                  : task.status === 'In Review'
+                                  ? 'bg-blue-500'
+                                  : 'bg-gray-500'
+                              }`}
+                            ></div>
+                            <h3 className='text-gray-100 font-medium'>
+                              {task.title}
+                            </h3>
+                          </div>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              task.priority === 'High'
+                                ? 'bg-red-900/50 text-red-300'
+                                : task.priority === 'Medium'
+                                ? 'bg-amber-900/50 text-amber-300'
+                                : 'bg-gray-700 text-gray-300'
+                            }`}
+                          >
+                            {task.priority}
+                          </span>
+                        </div>
 
                       {/* Task Meta */}
                       <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
@@ -925,6 +977,15 @@ export default function ProjectDetails() {
                           </div>
                           <span>{task.assigned_to?.name || 'Unassigned'}</span>
                         </div>
+                        <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
+                          <div className='flex items-center gap-2 text-gray-400'>
+                            <div className='w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center text-xs'>
+                              {task.assigned_to?.name?.charAt(0) || 'H'}
+                            </div>
+                            <span>
+                              {task.assigned_to?.name || 'Unassigned'}
+                            </span>
+                          </div>
 
                         {/* Due Date */}
                         {task.due_date && (
@@ -964,6 +1025,25 @@ export default function ProjectDetails() {
                 ))}
 
                 {tasks?.length === 0 && (
+                          {task.due_date && (
+                            <div className='flex items-center gap-2 text-gray-400'>
+                              <Calendar className='w-4 h-4' />
+                              <span>
+                                {new Date(task.due_date).toLocaleDateString(
+                                  'en-US',
+                                  {
+                                    month: 'short',
+                                    day: 'numeric',
+                                  }
+                                )}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
                   <div className='text-center py-4 text-gray-400'>
                     No tasks created yet
                   </div>
@@ -971,9 +1051,10 @@ export default function ProjectDetails() {
               </div>
             )}
 
-            {/* Add Task Button */}
+            {/* Add Task Button (Owners only) */}
             {projectMembers.some(
-              (member) => member.isOwner && member.name === session?.user?.name
+              (member) =>
+                member.isOwner && member.name === session?.user?.name
             ) && (
               <div className='flex items-center justify-between mt-4'>
                 <span className='text-sm text-gray-400'>
@@ -1024,6 +1105,7 @@ export default function ProjectDetails() {
           )}
         </div>
       </div>
+
       {/* Join Project Modal */}
       <JoinProjectModal
         projectName={project.title}
@@ -1033,6 +1115,7 @@ export default function ProjectDetails() {
         onSubmit={handleJoinSubmit}
       />
 
+      {/* Add Task Modal */}
       <AddTaskModal
         projectName={project.title}
         projectMembers={projectMembers}
@@ -1044,3 +1127,54 @@ export default function ProjectDetails() {
     </div>
   );
 }
+
+// Helper: Format an activity message
+const formatActivity = (activity: any) => {
+  const user = activity.user || { name: 'Unknown User' };
+  const type = activity.activity_type;
+  const data = activity.activity_data || {};
+  switch (type) {
+    case 'task_created':
+      return `${user.name} created task "${data.task_title}"`;
+    case 'task_completed':
+      return `${user.name} completed task "${data.task_title}"`;
+    case 'role_assigned':
+      return `${user.name} joined as ${data.role}`;
+    case 'discussion_created':
+      return `${user.name} started a discussion`;
+    case 'project_updated':
+      return `${user.name} updated project details`;
+    default:
+      return `${user.name} performed an action`;
+  }
+};
+
+// Helper: Determine icon + colors for an activity row
+const getActivityStyle = (activity: any) => {
+  const type = activity.activity_type;
+  if (type === 'task_completed') {
+    return {
+      bg: 'bg-emerald-900/50',
+      text: 'text-emerald-400',
+      icon: <Sparkles className='w-4 h-4' />,
+    };
+  } else if (type === 'task_created') {
+    return {
+      bg: 'bg-blue-900/50',
+      text: 'text-blue-400',
+      icon: <span>{activity.user?.name?.charAt(0) || 'U'}</span>,
+    };
+  } else if (type === 'role_assigned') {
+    return {
+      bg: 'bg-purple-900/50',
+      text: 'text-purple-400',
+      icon: <span>{activity.user?.name?.charAt(0) || 'U'}</span>,
+    };
+  } else {
+    return {
+      bg: 'bg-gray-700',
+      text: 'text-gray-300',
+      icon: <span>{activity.user?.name?.charAt(0) || 'U'}</span>,
+    };
+  }
+};
