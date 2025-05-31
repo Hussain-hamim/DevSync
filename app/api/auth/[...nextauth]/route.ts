@@ -25,6 +25,7 @@ interface GithubProfile extends Profile {
   avatar_url: string;
   name?: string;
   email?: string;
+  username: string;
 }
 
 const authOptions: NextAuthOptions = {
@@ -44,6 +45,7 @@ const authOptions: NextAuthOptions = {
           email: profile.email,
           image: profile.avatar_url,
           login: profile.login,
+          username: profile.login,
         };
       },
     }),
@@ -79,6 +81,7 @@ const authOptions: NextAuthOptions = {
       const name = user.name || githubProfile.login || '';
       const avatar_url = githubProfile.avatar_url;
       const github_token = account.access_token as string;
+      const github_username = githubProfile.username || githubProfile.login;
 
       const { error } = await supabase.from('users').upsert(
         {
@@ -87,6 +90,7 @@ const authOptions: NextAuthOptions = {
           name,
           avatar_url,
           github_token,
+          github_username,
         },
         { onConflict: 'github_id' }
       );

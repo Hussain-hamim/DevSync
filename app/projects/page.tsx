@@ -216,6 +216,7 @@ export default function ProjectsPage() {
           )}
         </div>
       </motion.div>
+
       {/* Featured Projects Section */}
       {projects.length > 0 && (
         <>
@@ -234,7 +235,7 @@ export default function ProjectsPage() {
 
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
               {projects.slice(0, 3).map((project, index) => {
-                return project.id === '1ccf98f1-dacc-48d4-83c1-db56d7f57801' ? (
+                return project ? (
                   <motion.div
                     key={`featured-${project.id}`}
                     initial={{ opacity: 0, y: 10 }}

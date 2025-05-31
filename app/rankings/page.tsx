@@ -31,18 +31,20 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 type User = {
   id: string;
   github_id: string;
+  github_token: string;
   name: string;
-  avatar_url: string;
+  email: string;
+  avatar_url?: string;
   github_username?: string;
   commits?: number;
   repositories?: number;
   stars?: number;
   followers?: number;
-  pullRequests?: number;
+  pull_requests?: number;
   isLive?: boolean;
   pulse?: boolean;
   score?: number;
-  lastUpdated?: string;
+  last_updated?: string;
 };
 
 type MetricType =
@@ -51,7 +53,7 @@ type MetricType =
   | "repositories"
   | "stars"
   | "followers"
-  | "pullRequests";
+  | "pull_requests";
 
 // Animated components
 const LivePulse = () => (
@@ -91,31 +93,34 @@ const MetricIcon = ({ metric }: { metric: MetricType }) => {
     repositories: <Code className="w-4 h-4" />,
     stars: <Star className="w-4 h-4" />,
     followers: <Users className="w-4 h-4" />,
-    pullRequests: <GitPullRequest className="w-4 h-4" />,
+    pull_requests: <GitPullRequest className="w-4 h-4" />,
     score: <TrendingUp className="w-4 h-4" />,
   };
   return icons[metric] || <Activity className="w-4 h-4" />;
 };
 
-// Fetch GitHub data with proper authentication and real metrics
-async function fetchGitHubData(githubId: string): Promise<Partial<User>> {
+// Enhanced GitHub data fetcher using user's own token
+async function fetchGitHubData(user: User): Promise<Partial<User>> {
   try {
-    const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-    if (!token) throw new Error("GitHub token not configured");
+    if (!user.github_token) {
+      throw new Error("No GitHub token available for this user");
+    }
 
     const headers = {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${user.github_token}`,
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
     };
 
-    // Get user details by GitHub ID
-    const userResponse = await fetch(
-      `https://api.github.com/user/${githubId}`,
-      { headers }
-    );
+    // Get authenticated user details
+    const userResponse = await fetch("https://api.github.com/user", {
+      headers,
+    });
 
     if (!userResponse.ok) {
+      if (userResponse.status === 401) {
+        throw new Error("GitHub token is invalid or expired");
+      }
       const errorData = await userResponse.json();
       throw new Error(
         `GitHub API error: ${errorData.message || "Unknown error"}`
@@ -126,68 +131,86 @@ async function fetchGitHubData(githubId: string): Promise<Partial<User>> {
     const username = userData.login;
     if (!username) throw new Error("GitHub username not found");
 
-    // Get detailed stats using the username
-    const [reposResponse, eventsResponse] = await Promise.all([
-      fetch(`https://api.github.com/users/${username}/repos?per_page=100`, {
-        headers,
-      }),
-      fetch(`https://api.github.com/users/${username}/events`, { headers }),
-    ]);
+    // Get avatar URL if not already set
+    const avatar_url =
+      userData.avatar_url || `https://github.com/${username}.png`;
 
-    if (!reposResponse.ok || !eventsResponse.ok) {
-      throw new Error("Failed to fetch GitHub user details");
+    // Get repositories (only need basic info for count and stars)
+    const reposResponse = await fetch(
+      `https://api.github.com/user/repos?per_page=100&affiliation=owner`,
+      { headers }
+    );
+
+    if (!reposResponse.ok) {
+      throw new Error("Failed to fetch repositories");
     }
 
     const reposData = await reposResponse.json();
-    const eventsData = await eventsResponse.json();
 
-    // Calculate real metrics
-    const commits = eventsData.filter(
-      (e: any) => e.type === "PushEvent"
-    ).length;
+    // Calculate stars from repositories
     const stars = reposData.reduce(
       (acc: number, repo: any) => acc + (repo.stargazers_count || 0),
       0
     );
-    const pullRequests = eventsData.filter(
-      (e: any) => e.type === "PullRequestEvent"
-    ).length;
+
+    // Get commit count (approximate using the API)
+    const eventsResponse = await fetch(
+      `https://api.github.com/users/${username}/events?per_page=100`,
+      { headers }
+    );
+
+    let commits = 0;
+    let pullRequests = 0;
+
+    if (eventsResponse.ok) {
+      const eventsData = await eventsResponse.json();
+      commits = eventsData.filter((e: any) => e.type === "PushEvent").length;
+      pullRequests = eventsData.filter(
+        (e: any) =>
+          e.type === "PullRequestEvent" && e.payload.action === "opened"
+      ).length;
+    }
 
     return {
       github_username: username,
+      avatar_url,
       commits,
       repositories: reposData.length || 0,
       stars,
       followers: userData.followers || 0,
-      pullRequests,
+      pull_requests: pullRequests,
       isLive: Math.random() > 0.7,
-      pulse: false,
-      lastUpdated: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
     };
   } catch (error) {
-    console.error(`Error fetching GitHub data for user ${githubId}:`, error);
+    console.error(
+      `Error fetching GitHub data for user ${user.github_id}:`,
+      error
+    );
     return {
-      github_username: `user_${githubId}`,
+      github_username: `user_${user.github_id}`,
+      avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        user.name
+      )}&background=random`,
       commits: 0,
       repositories: 0,
       stars: 0,
       followers: 0,
-      pullRequests: 0,
+      pull_requests: 0,
       isLive: false,
-      pulse: false,
-      lastUpdated: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
     };
   }
 }
 
-// Calculate score based on all metrics
+// Improved score calculation
 const calculateScore = (user: User): number => {
-  return (
-    (user.commits || 0) * 0.3 +
-    (user.repositories || 0) * 5 +
-    (user.stars || 0) * 0.1 +
-    (user.followers || 0) * 0.2 +
-    (user.pullRequests || 0) * 0.5
+  return Math.round(
+    (user.commits || 0) * 0.5 +
+      (user.repositories || 0) * 3 +
+      (user.stars || 0) * 0.2 +
+      (user.followers || 0) * 0.3 +
+      (user.pull_requests || 0) * 0.7
   );
 };
 
@@ -207,12 +230,12 @@ export default function RankingsPage() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch users from Supabase
+      // Fetch users from Supabase with github_token
       const { data: supabaseUsers, error: supabaseError } = await supabase
         .from("users")
-        .select("id, github_id, name, avatar_url")
-        .not("github_id", "is", null)
-        .limit(10);
+        .select("id, github_id, github_token, name, email")
+        .not("github_token", "is", null)
+        .limit(20);
 
       if (supabaseError) throw supabaseError;
       if (!supabaseUsers || supabaseUsers.length === 0) {
@@ -221,21 +244,34 @@ export default function RankingsPage() {
         return;
       }
 
-      // Process users sequentially with real GitHub data
-      const enrichedUsers: User[] = [];
-      for (const user of supabaseUsers) {
-        try {
-          const githubData = await fetchGitHubData(user.github_id);
-          enrichedUsers.push({
-            ...user,
-            ...githubData,
-            score: Math.round(calculateScore({ ...user, ...githubData })),
-          });
-        } catch (userError) {
-          console.error(`Error processing user ${user.id}:`, userError);
-          continue;
-        }
-      }
+      // Process users with their own GitHub tokens
+      const enrichedUsers = await Promise.all(
+        supabaseUsers.map(async (user) => {
+          try {
+            const githubData = await fetchGitHubData(user);
+            return {
+              ...user,
+              ...githubData,
+              score: calculateScore({ ...user, ...githubData }),
+            };
+          } catch (userError) {
+            console.error(`Error processing user ${user.id}:`, userError);
+            return {
+              ...user,
+              github_username: `user_${user.github_id}`,
+              avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                user.name
+              )}&background=random`,
+              commits: 0,
+              repositories: 0,
+              stars: 0,
+              followers: 0,
+              pull_requests: 0,
+              score: 0,
+            };
+          }
+        })
+      );
 
       setRankings(enrichedUsers);
     } catch (mainError) {
@@ -249,42 +285,44 @@ export default function RankingsPage() {
   useEffect(() => {
     fetchUsers();
 
-    // Set up refresh interval (5 minutes)
+    // Set up refresh interval (10 minutes to avoid rate limiting)
     const refreshInterval = setInterval(() => {
       fetchUsers();
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
 
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Set up live updates interval (small random changes)
+  // Set up live updates interval
   useEffect(() => {
     const interval = setInterval(() => {
       setRankings((prev) =>
         prev.map((user) => {
-          const randomChange = Math.floor(Math.random() * 3);
-          const shouldUpdate = Math.random() > 0.7;
+          // Only update some users randomly (30% chance)
+          if (Math.random() > 0.3) return user;
 
+          const randomChange = Math.floor(Math.random() * 3);
           const updatedUser = {
             ...user,
-            commits: shouldUpdate
-              ? (user.commits || 0) + randomChange
-              : user.commits,
-            stars: shouldUpdate ? (user.stars || 0) + randomChange : user.stars,
-            followers: shouldUpdate
-              ? (user.followers || 0) + randomChange
-              : user.followers,
-            isLive: Math.random() > 0.7,
-            pulse: Math.random() > 0.8,
+            commits: user.commits ? user.commits + randomChange : randomChange,
+            stars: user.stars ? user.stars + (randomChange > 1 ? 1 : 0) : 0,
+            followers: user.followers
+              ? user.followers + (randomChange > 2 ? 1 : 0)
+              : 0,
+            pull_requests: user.pull_requests
+              ? user.pull_requests + (randomChange > 1 ? 1 : 0)
+              : 0,
+            isLive: Math.random() > 0.8,
+            pulse: Math.random() > 0.9,
           };
 
           return {
             ...updatedUser,
-            score: Math.round(calculateScore(updatedUser)),
+            score: calculateScore(updatedUser),
           };
         })
       );
-    }, 10000);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, []);
@@ -311,7 +349,7 @@ export default function RankingsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter dropdown component with working toggle
+  // Filter dropdown component
   const FilterDropdown = () => (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -330,7 +368,7 @@ export default function RankingsPage() {
             ? "Stars"
             : sortBy === "followers"
             ? "Followers"
-            : sortBy === "pullRequests"
+            : sortBy === "pull_requests"
             ? "Pull Requests"
             : "Sort By"}
         </span>
@@ -356,7 +394,7 @@ export default function RankingsPage() {
               "repositories",
               "stars",
               "followers",
-              "pullRequests",
+              "pull_requests",
             ].map((option) => (
               <button
                 key={option}
@@ -381,7 +419,7 @@ export default function RankingsPage() {
                   ? "Stars"
                   : option === "followers"
                   ? "Followers"
-                  : option === "pullRequests"
+                  : option === "pull_requests"
                   ? "Pull Requests"
                   : option}
               </button>
@@ -544,7 +582,12 @@ export default function RankingsPage() {
                             className="relative"
                           >
                             <img
-                              src={user.avatar_url}
+                              src={
+                                user.avatar_url ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  user.name
+                                )}&background=random`
+                              }
                               alt={`${user.name}'s avatar`}
                               className="w-10 h-10 rounded-full border-2 border-gray-700"
                               width={40}
@@ -637,7 +680,7 @@ export default function RankingsPage() {
                           >
                             <GitPullRequest className="w-4 h-4 text-gray-400" />
                             <span className="text-xs mt-1">
-                              {user.pullRequests || 0}
+                              {user.pull_requests || 0}
                             </span>
                           </motion.div>
                         </div>

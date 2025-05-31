@@ -1,655 +1,829 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
+  ArrowLeft,
   Github,
-  MapPin,
-  Building,
-  Link as LinkIcon,
-  Twitter,
-  Calendar,
-  Activity,
-  GitCommit,
+  Code2,
+  Cpu,
   Star,
+  GitFork,
+  Zap,
+  ArrowRight,
   Users,
-  Code,
-  GitPullRequest,
-  ExternalLink,
+  Globe,
   Circle,
+  GitCommit,
+  GitPullRequest,
+  Clock,
+  Activity,
+  Folder,
+  UserPlus,
+  UserCheck,
 } from "lucide-react";
-import Link from "next/link";
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-// Helper functions
-async function fetchGitHubData(githubId) {
-  try {
-    const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-    const headers = token
-      ? {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        }
-      : {
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        };
-
-    // Get user details by GitHub ID
-    const userResponse = await fetch(
-      `https://api.github.com/user/${githubId}`,
-      { headers }
-    );
-
-    if (!userResponse.ok) {
-      throw new Error("Failed to fetch GitHub user data");
-    }
-
-    const userData = await userResponse.json();
-    const username = userData.login;
-    if (!username) throw new Error("GitHub username not found");
-
-    // Get detailed stats using the username
-    const [reposResponse, eventsResponse] = await Promise.all([
-      fetch(`https://api.github.com/users/${username}/repos?per_page=100`, {
-        headers,
-      }),
-      fetch(`https://api.github.com/users/${username}/events`, { headers }),
-    ]);
-
-    if (!reposResponse.ok || !eventsResponse.ok) {
-      throw new Error("Failed to fetch GitHub user details");
-    }
-
-    const reposData = await reposResponse.json();
-    const eventsData = await eventsResponse.json();
-
-    // Calculate metrics
-    const commits = eventsData.filter((e) => e.type === "PushEvent").length;
-    const stars = reposData.reduce(
-      (acc, repo) => acc + (repo.stargazers_count || 0),
-      0
-    );
-    const pullRequests = eventsData.filter(
-      (e) => e.type === "PullRequestEvent"
-    ).length;
-
-    return {
-      github_username: username,
-      commits,
-      repositories: reposData.length || 0,
-      stars,
-      followers: userData.followers || 0,
-      pullRequests,
-      bio: userData.bio,
-      location: userData.location,
-      company: userData.company,
-      blog: userData.blog,
-      twitter_username: userData.twitter_username,
-      public_gists: userData.public_gists,
-      created_at: userData.created_at,
-      updated_at: userData.updated_at,
-      html_url: userData.html_url,
-      isLive: Math.random() > 0.7,
-      pulse: false,
-    };
-  } catch (error) {
-    console.error(`Error fetching GitHub data:`, error);
-    return {
-      github_username: `user_${githubId}`,
-      commits: 0,
-      repositories: 0,
-      stars: 0,
-      followers: 0,
-      pullRequests: 0,
-      isLive: false,
-      pulse: false,
-    };
-  }
-}
-
-async function fetchRepositories(username) {
-  try {
-    const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-    const headers = token
-      ? {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        }
-      : {
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        };
-
-    const response = await fetch(
-      `https://api.github.com/users/${username}/repos?sort=updated&per_page=10`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch repositories");
-    }
-
-    const repos = await response.json();
-    return repos.map((repo) => ({
-      id: repo.id,
-      name: repo.name,
-      description: repo.description,
-      html_url: repo.html_url,
-      stargazers_count: repo.stargazers_count,
-      forks_count: repo.forks_count,
-      language: repo.language,
-      updated_at: repo.updated_at,
-      topics: repo.topics || [],
-      visibility: repo.visibility,
-    }));
-  } catch (error) {
-    console.error("Error fetching repositories:", error);
-    return [];
-  }
-}
-
-async function fetchActivity(username) {
-  try {
-    const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-    const headers = token
-      ? {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        }
-      : {
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        };
-
-    const response = await fetch(
-      `https://api.github.com/users/${username}/events?per_page=10`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch activity");
-    }
-
-    const events = await response.json();
-    return events.map((event) => ({
-      id: event.id,
-      type: event.type,
-      repo: event.repo,
-      actor: event.actor,
-      created_at: event.created_at,
-      payload: event.payload,
-    }));
-  } catch (error) {
-    console.error("Error fetching activity:", error);
-    return [];
-  }
-}
-
-function calculateScore(user) {
-  return Math.round(
-    (user.commits || 0) * 0.3 +
-      (user.repositories || 0) * 5 +
-      (user.stars || 0) * 0.1 +
-      (user.followers || 0) * 0.2 +
-      (user.pullRequests || 0) * 0.5
-  );
-}
-
-// Profile Components
-function ProfileHeader({ user }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
-    >
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-        <motion.div whileHover={{ scale: 1.05 }} className="relative">
-          <img
-            src={user.avatar_url}
-            alt={`${user.name}'s avatar`}
-            className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-emerald-400/20"
-            width={128}
-            height={128}
-          />
-          {user.isLive && (
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-gray-900"
-            />
-          )}
-        </motion.div>
-
-        <div className="flex-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-100">{user.name}</h1>
-              <a
-                href={user.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-emerald-400 flex items-center gap-1 mt-1"
-              >
-                <Github className="w-4 h-4" />@{user.github_username}
-              </a>
-            </div>
-          </div>
-
-          {user.bio && <p className="text-gray-300 mb-4">{user.bio}</p>}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            {user.location && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <MapPin className="w-4 h-4" />
-                <span>{user.location}</span>
-              </div>
-            )}
-            {user.company && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <Building className="w-4 h-4" />
-                <span>{user.company}</span>
-              </div>
-            )}
-            {user.blog && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <LinkIcon className="w-4 h-4" />
-                <a
-                  href={
-                    user.blog.startsWith("http")
-                      ? user.blog
-                      : `https://${user.blog}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-400"
-                >
-                  {user.blog}
-                </a>
-              </div>
-            )}
-            {user.twitter_username && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <Twitter className="w-4 h-4" />
-                <a
-                  href={`https://twitter.com/${user.twitter_username}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-400"
-                >
-                  @{user.twitter_username}
-                </a>
-              </div>
-            )}
-            {user.created_at && (
-              <div className="flex items-center gap-2 text-gray-400">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  Joined {new Date(user.created_at).toLocaleDateString()}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function MetricsOverview({ user }) {
-  const metrics = [
-    { icon: GitCommit, label: "Commits", value: user.commits },
-    { icon: Code, label: "Repositories", value: user.repositories },
-    { icon: Star, label: "Stars", value: user.stars },
-    { icon: Users, label: "Followers", value: user.followers },
-    { icon: GitPullRequest, label: "Pull Requests", value: user.pullRequests },
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
-    >
-      <h2 className="text-xl font-semibold text-gray-100 mb-6">
-        Activity Overview
-      </h2>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {metrics.map(({ icon: Icon, label, value }) => (
-          <motion.div
-            key={label}
-            whileHover={{ scale: 1.05 }}
-            className="bg-gray-900/50 rounded-lg p-4 text-center"
-          >
-            <Icon className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-100">{value || 0}</div>
-            <div className="text-sm text-gray-400">{label}</div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-function ActivityTimeline({ activities }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
-    >
-      <h2 className="text-xl font-semibold text-gray-100 mb-6">
-        Recent Activity
-      </h2>
-      <div className="space-y-4">
-        {activities.map((activity) => (
-          <motion.div
-            key={activity.id}
-            whileHover={{ x: 5 }}
-            className="flex items-start gap-4 p-4 bg-gray-900/30 rounded-lg"
-          >
-            <div className="bg-emerald-400/10 rounded-full p-2">
-              <Activity className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-gray-300">
-                  {activity.type.replace("Event", "")}
-                </span>
-                <span className="text-gray-500">•</span>
-                <a
-                  href={`https://github.com/${activity.repo.name}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-400 hover:underline"
-                >
-                  {activity.repo.name}
-                </a>
-              </div>
-              <time className="text-sm text-gray-500">
-                {new Date(activity.created_at).toLocaleDateString()}
-              </time>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-function RepositoryList({ repositories, username }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-100">
-          Top Repositories
-        </h2>
-        <a
-          href={`https://github.com/${username}?tab=repositories`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-emerald-400 hover:underline flex items-center gap-1"
-        >
-          View all
-          <ExternalLink className="w-4 h-4" />
-        </a>
-      </div>
-      <div className="space-y-4">
-        {repositories.map((repo) => (
-          <motion.div
-            key={repo.id}
-            whileHover={{ x: 5 }}
-            className="p-4 bg-gray-900/30 rounded-lg"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <a
-                  href={repo.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-400 hover:underline font-medium"
-                >
-                  {repo.name}
-                </a>
-                {repo.description && (
-                  <p className="text-sm text-gray-400 mt-1">
-                    {repo.description}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-4 mt-3 text-sm">
-              {repo.language && (
-                <div className="flex items-center gap-1 text-gray-400">
-                  <Circle className="w-3 h-3 fill-current" />
-                  {repo.language}
-                </div>
-              )}
-              <div className="flex items-center gap-1 text-gray-400">
-                <Star className="w-4 h-4" />
-                {repo.stargazers_count}
-              </div>
-              <time className="text-gray-500">
-                Updated {new Date(repo.updated_at).toLocaleDateString()}
-              </time>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-function ProfileSkeleton() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
-          <div className="flex gap-6">
-            <div className="w-32 h-32 bg-gray-700 rounded-full" />
-            <div className="flex-1">
-              <div className="h-8 bg-gray-700 rounded w-64 mb-4" />
-              <div className="h-4 bg-gray-700 rounded w-full max-w-md mb-6" />
-              <div className="grid grid-cols-2 gap-4">
-                <div className="h-4 bg-gray-700 rounded w-32" />
-                <div className="h-4 bg-gray-700 rounded w-32" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-              <div className="grid grid-cols-5 gap-4">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-24 bg-gray-700 rounded animate-pulse"
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-16 bg-gray-700 rounded animate-pulse"
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-24 bg-gray-700 rounded animate-pulse"
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+type GitHubData = {
+  profile: any;
+  stats: {
+    commits: number;
+    stars: number;
+    pullRequests: number;
+    forks: number;
+    followers: number;
+    following: number;
+    repositories: number;
+    contributions: number;
+  };
+  skills: string[];
+  recentRepos: {
+    name: string;
+    url: string;
+    description: string;
+    stars: number;
+    forks: number;
+    language: string;
+    updated_at: string;
+  }[];
+  isFollowing: boolean;
+};
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { id } = useParams();
-  const [user, setUser] = useState(null);
-  const [repositories, setRepositories] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [githubData, setGithubData] = useState<GitHubData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [isLive, setIsLive] = useState(false);
+  const [createdProjects, setCreatedProjects] = useState([]);
+  const [joinedProjects, setJoinedProjects] = useState([]);
+  const [allCommits, setAllCommits] = useState<any>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  const fetchGitHubData = async (username: string, token?: string) => {
+    try {
+      const headers = {
+        Authorization: token ? `Bearer ${token}` : "",
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      };
+
+      // Fetch all data in parallel
+      const [commitsRes, profileRes, reposRes, followingRes] =
+        await Promise.all([
+          fetch(`https://api.github.com/search/commits?q=author:${username}`, {
+            headers,
+          }),
+          fetch(`https://api.github.com/users/${username}`, { headers }),
+          fetch(
+            `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
+            { headers }
+          ),
+          token
+            ? fetch(`https://api.github.com/user/following/${username}`, {
+                headers,
+                method: "GET",
+              })
+            : Promise.resolve({ ok: false }),
+        ]);
+
+      if (!commitsRes.ok) throw new Error("Failed to fetch commits");
+      if (!profileRes.ok) throw new Error("Failed to fetch profile");
+      if (!reposRes.ok) throw new Error("Failed to fetch repositories");
+
+      const [commitsData, profileData, reposData] = await Promise.all([
+        commitsRes.json(),
+        profileRes.json(),
+        reposRes.json(),
+      ]);
+
+      // Check if current user is following this profile
+      let followingStatus = false;
+      if (token && followingRes.ok) {
+        followingStatus = followingRes.status === 204; // 204 means following
+      }
+
+      // Calculate statistics
+      const stats = {
+        commits: commitsData.total_count || 0,
+        stars: reposData.reduce(
+          (acc, repo) => acc + (repo.stargazers_count || 0),
+          0
+        ),
+        pullRequests: 0, // This would require additional API calls
+        forks: reposData.reduce(
+          (acc, repo) => acc + (repo.forks_count || 0),
+          0
+        ),
+        followers: profileData.followers,
+        following: profileData.following,
+        repositories: reposData.length,
+        contributions: commitsData.total_count || 0,
+      };
+
+      // Get recent repositories
+      const recentRepos = reposData
+        .sort(
+          (a, b) =>
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        )
+        .slice(0, 6)
+        .map((repo) => ({
+          name: repo.name,
+          url: repo.html_url,
+          description: repo.description,
+          stars: repo.stargazers_count,
+          forks: repo.forks_count,
+          language: repo.language,
+          updated_at: repo.updated_at,
+        }));
+
+      // Get unique languages
+      const skills = Array.from(
+        new Set(reposData.map((repo) => repo.language).filter(Boolean))
+      );
+
+      return {
+        profile: profileData,
+        stats,
+        skills,
+        recentRepos,
+        isFollowing: followingStatus,
+      };
+    } catch (error) {
+      console.error("GitHub API error:", error);
+      throw error;
+    }
+  };
+
+  const toggleFollow = async () => {
+    if (!githubData?.profile?.login || !userData.github_token) return;
+
+    setFollowLoading(true);
+    try {
+      const headers = {
+        Authorization: `Bearer ${userData.github_token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      };
+
+      const method = isFollowing ? "DELETE" : "PUT";
+      const url = `https://api.github.com/user/following/${githubData.profile.login}`;
+
+      const response = await fetch(url, {
+        method,
+        headers,
+      });
+
+      if (response.ok) {
+        setIsFollowing(!isFollowing);
+        // Update followers count locally
+        if (githubData) {
+          setGithubData({
+            ...githubData,
+            stats: {
+              ...githubData.stats,
+              followers: isFollowing
+                ? githubData.stats.followers - 1
+                : githubData.stats.followers + 1,
+            },
+            isFollowing: !isFollowing,
+          });
+        }
+      } else {
+        throw new Error(
+          `Failed to ${isFollowing ? "unfollow" : "follow"} user`
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling follow status:", error);
+      setError("Failed to update follow status");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
+        setLoading(true);
+        setIsLive(true);
 
-        const { data: userData, error: userError } = await supabase
+        // 1. Get user from Supabase
+        const { data: user, error: userError } = await supabase
           .from("users")
           .select("*")
           .eq("id", id)
           .single();
 
-        if (userError) throw new Error("Failed to fetch user data");
-        if (!userData) throw new Error("User not found");
+        if (userError || !user) throw new Error("User not found");
+        setUserData(user);
 
-        const githubData = await fetchGitHubData(userData.github_id);
-        const repos = await fetchRepositories(githubData.github_username);
-        const activity = await fetchActivity(githubData.github_username);
+        // 2. Fetch projects data
+        await fetchProjectsData(user);
 
-        const score = calculateScore({
-          ...userData,
-          ...githubData,
-        });
+        // 3. Determine GitHub credentials
+        let githubUsername = user.github_username;
+        let token = user.github_token || process.env.NEXT_PUBLIC_GITHUB_TOKEN;
 
-        setUser({ ...userData, ...githubData, score });
-        setRepositories(repos);
-        setActivities(activity);
+        // If we have github_id but no username, try to get it
+        if (!githubUsername && user.github_id) {
+          try {
+            const headers = {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/vnd.github+json",
+            };
+            const res = await fetch(
+              `https://api.github.com/user/${user.github_id}`,
+              { headers }
+            );
+            const data = await res.json();
+            githubUsername = data.login;
+          } catch (err) {
+            console.warn("Failed to fetch GitHub username from ID:", err);
+          }
+        }
+
+        // Fallback to email prefix if no GitHub username yet
+        if (!githubUsername && user.email) {
+          githubUsername = user.email.split("@")[0];
+        }
+
+        // 4. Fetch GitHub data if we have a username
+        if (githubUsername) {
+          try {
+            const data = await fetchGitHubData(githubUsername, token);
+            setGithubData(data);
+            setAllCommits({ total_count: data.stats.contributions });
+            setIsFollowing(data.isFollowing);
+          } catch (err) {
+            console.warn("Failed to fetch GitHub data:", err);
+            // Set partial data if available
+            setGithubData({
+              profile: {
+                login: githubUsername,
+                avatar_url: "/default-avatar.png",
+                name: user.name || githubUsername,
+              },
+              stats: {
+                commits: 0,
+                stars: 0,
+                pullRequests: 0,
+                forks: 0,
+                followers: 0,
+                following: 0,
+                repositories: 0,
+                contributions: 0,
+              },
+              skills: [],
+              recentRepos: [],
+              isFollowing: false,
+            });
+            setAllCommits({ total_count: 0 });
+            setIsFollowing(false);
+          }
+        }
+
+        setLastUpdated(new Date().toLocaleTimeString());
       } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load profile");
         console.error("Error fetching profile data:", err);
-        setError(err.message);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
+        setTimeout(() => setIsLive(false), 3000);
       }
     };
 
-    if (id) {
-      fetchUserData();
-    }
+    const fetchProjectsData = async (user: any) => {
+      try {
+        // Fetch created projects
+        const { data: createdProjects, error: projectsError } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("creator_id", user.id)
+          .limit(4)
+          .order("created_at", { ascending: false });
 
-    const refreshInterval = setInterval(() => {
-      if (id) fetchUserData();
-    }, 2 * 60 * 1000);
+        if (projectsError) throw projectsError;
+        setCreatedProjects(createdProjects || []);
 
-    return () => clearInterval(refreshInterval);
+        // Fetch joined projects
+        const { data: projectRoles, error: rolesError } = await supabase
+          .from("project_roles")
+          .select("project_id, title")
+          .eq("filled_by", user.id);
+
+        if (rolesError) throw rolesError;
+
+        if (projectRoles && projectRoles.length > 0) {
+          const projectIds = projectRoles.map((role) => role.project_id);
+          const { data: joinedProjects, error: joinedProjectsError } =
+            await supabase
+              .from("projects")
+              .select("*")
+              .in("id", projectIds)
+              .limit(4)
+              .order("created_at", { ascending: false });
+
+          if (joinedProjectsError) throw joinedProjectsError;
+
+          const projectsWithRoles = joinedProjects.map((project) => {
+            const role = projectRoles.find((r) => r.project_id === project.id);
+            return { ...project, roleTitle: role?.title || "Member" };
+          });
+
+          setJoinedProjects(projectsWithRoles || []);
+        } else {
+          setJoinedProjects([]);
+        }
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setCreatedProjects([]);
+        setJoinedProjects([]);
+      }
+    };
+
+    fetchData();
+
+    const interval = setInterval(fetchData, 60000);
+    return () => clearInterval(interval);
   }, [id]);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      setUser((prev) => {
-        if (!prev) return prev;
-
-        const randomChange = Math.floor(Math.random() * 2);
-        const shouldUpdate = Math.random() > 0.7;
-
-        const updatedUser = {
-          ...prev,
-          commits: shouldUpdate ? prev.commits + randomChange : prev.commits,
-          stars: shouldUpdate ? prev.stars + randomChange : prev.stars,
-          isLive: Math.random() > 0.7,
-          pulse: Math.random() > 0.8,
-        };
-
-        return {
-          ...updatedUser,
-          score: calculateScore(updatedUser),
-        };
-      });
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, [user]);
-
-  if (isLoading) {
-    return <ProfileSkeleton />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+        <div className="animate-pulse text-gray-400">
+          Loading {userData?.name || "user"} data...
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8 flex items-center justify-center">
-        <div className="bg-gray-800/50 border border-red-500/30 rounded-xl p-8 max-w-lg text-center">
-          <h2 className="text-xl font-semibold text-red-400 mb-4">
-            Error Loading Profile
-          </h2>
-          <p className="text-gray-300">{error}</p>
-          <button
-            onClick={() => window.history.back()}
-            className="mt-6 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Return to Leaderboard
-          </button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center p-4">
+        <h1 className="text-2xl font-bold text-rose-500 mb-4">Error</h1>
+        <p className="text-gray-300 mb-6 max-w-md text-center">{error}</p>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+        >
+          Back to Leaderboard
+        </button>
       </div>
     );
   }
 
-  if (!user) {
+  if (!userData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8 flex items-center justify-center">
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-8 max-w-lg text-center">
-          <h2 className="text-xl font-semibold text-gray-300 mb-4">
-            User Not Found
-          </h2>
-          <p className="text-gray-400">
-            The user you're looking for doesn't exist or has been removed.
-          </p>
-          <button
-            onClick={() => window.history.back()}
-            className="mt-6 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Return to Leaderboard
-          </button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+        <div className="text-rose-500">User not found</div>
       </div>
     );
   }
+
+  const joinDate = githubData?.profile?.created_at
+    ? new Date(githubData.profile.created_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "Unknown";
+
+  const LiveIndicator = () => (
+    <motion.div
+      animate={{
+        scale: [1, 1.1, 1],
+        opacity: [0.8, 1, 0.8],
+      }}
+      transition={{
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      className="flex items-center"
+    >
+      <Circle className="w-2 h-2 text-emerald-400 fill-emerald-400" />
+      <span className="text-xs text-emerald-400 ml-1">LIVE</span>
+    </motion.div>
+  );
+
+  const StatsCard = ({
+    icon,
+    title,
+    value,
+    color,
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    value: string | number;
+    color: string;
+  }) => (
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      className="p-4 rounded-lg border bg-gray-800/50 border-gray-700"
+    >
+      <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+        {icon}
+        <span>{title}</span>
+      </div>
+      <div className={`text-2xl font-bold ${color}`}>{value || "N/A"}</div>
+    </motion.div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <ProfileHeader user={user} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <MetricsOverview user={user} />
-            <ActivityTimeline activities={activities} />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100">
+      <div className="container mx-auto px-4 py-8">
+        <motion.button
+          onClick={() => router.back()}
+          whileHover={{ x: -4 }}
+          className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back to Leaderboard</span>
+        </motion.button>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col md:flex-row gap-8 mb-12"
+        >
+          <div className="relative self-start">
+            <div className="relative w-32 h-32">
+              <img
+                src={
+                  userData.avatar_url ||
+                  githubData?.profile?.avatar_url ||
+                  "/default-avatar.png"
+                }
+                alt={userData.name}
+                className="w-full h-full rounded-full object-cover border-2 border-emerald-400/30"
+              />
+              {isLive && (
+                <motion.div
+                  className="absolute -bottom-1 -right-1 z-10"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                >
+                  <div className="w-5 h-5 rounded-full bg-emerald-500 border-2 border-gray-900 flex items-center justify-center">
+                    <LiveIndicator />
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
-          <div className="space-y-6">
-            <RepositoryList
-              repositories={repositories}
-              username={user.github_username}
-            />
+
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">
+                  {userData.name || githubData?.profile?.name || "GitHub User"}
+                </h1>
+                {githubData?.profile?.login && (
+                  <p className="text-gray-400 mb-4">
+                    @{githubData.profile.login}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Clock className="w-4 h-4" />
+                <span>Updated: {lastUpdated}</span>
+              </div>
+            </div>
+
+            <p className="text-gray-300 mb-6 max-w-2xl">
+              {githubData?.profile?.bio || "No bio available"}
+            </p>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <StatsCard
+                icon={<GitCommit className="w-4 h-4" />}
+                title="Commits"
+                value={githubData?.stats.commits || 0}
+                color="text-emerald-400"
+              />
+              <StatsCard
+                icon={<Star className="w-4 h-4" />}
+                title="Stars"
+                value={githubData?.stats.stars || 0}
+                color="text-purple-400"
+              />
+              <StatsCard
+                icon={<GitPullRequest className="w-4 h-4" />}
+                title="PRs"
+                value={githubData?.stats.pullRequests || 0}
+                color="text-cyan-400"
+              />
+              <StatsCard
+                icon={<Code2 className="w-4 h-4" />}
+                title="Repos"
+                value={githubData?.stats.repositories || 0}
+                color="text-yellow-400"
+              />
+              <StatsCard
+                icon={<GitCommit className="w-4 h-4" />}
+                title="Contributions"
+                value={allCommits?.total_count || 0}
+                color="text-cyan-400"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {githubData?.profile?.html_url && (
+                <motion.a
+                  href={githubData.profile.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -2 }}
+                  className="flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-purple-400 hover:border-purple-400/30 transition-colors"
+                >
+                  <Github className="w-4 h-4" />
+                  <span>GitHub Profile</span>
+                </motion.a>
+              )}
+              {userData.role_url && (
+                <motion.a
+                  href={userData.role_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -2 }}
+                  className="flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-blue-400 hover:border-blue-400/30 transition-colors"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Role Profile</span>
+                </motion.a>
+              )}
+              {githubData?.profile?.blog && (
+                <motion.a
+                  href={githubData.profile.blog}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -2 }}
+                  className="flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-emerald-400 hover:border-emerald-400/30 transition-colors"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>Website</span>
+                </motion.a>
+              )}
+              {userData.github_token && githubData?.profile?.login && (
+                <motion.button
+                  onClick={toggleFollow}
+                  disabled={followLoading}
+                  whileHover={{ y: -2 }}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-sm transition-colors ${
+                    isFollowing
+                      ? "bg-gray-800/50 border-gray-700 text-gray-300 hover:text-rose-400 hover:border-rose-400/30"
+                      : "bg-purple-900/50 border-purple-700 text-purple-300 hover:text-purple-400 hover:border-purple-400/30"
+                  }`}
+                >
+                  {followLoading ? (
+                    <span>...</span>
+                  ) : (
+                    <>
+                      {isFollowing ? (
+                        <UserCheck className="w-4 h-4" />
+                      ) : (
+                        <UserPlus className="w-4 h-4" />
+                      )}
+                      <span>{isFollowing ? "Following" : "Follow"}</span>
+                    </>
+                  )}
+                </motion.button>
+              )}
+            </div>
           </div>
+        </motion.div>
+
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="w-full md:w-80 space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
+            >
+              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <Folder className="w-5 h-5 text-emerald-400" />
+                Created Projects
+              </h2>
+              <div className="space-y-4">
+                {createdProjects.length > 0 ? (
+                  createdProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="group hover:bg-gray-700/50 p-3 rounded-lg transition-colors"
+                    >
+                      <h3 className="font-medium group-hover:text-emerald-400 transition-colors">
+                        {project.title}
+                      </h3>
+                      <p className="text-sm text-gray-400 mt-1 max-h-16 line-clamp-2">
+                        {project.description}
+                      </p>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                          <Users className="w-3 h-3" />
+                          {project.members || 1} members
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded bg-green-900/50 text-green-400">
+                          Active
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-sm">No projects created</p>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
+            >
+              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <Users className="w-5 h-5 text-emerald-400" />
+                Joined Projects
+              </h2>
+              <div className="space-y-4">
+                {joinedProjects.length > 0 ? (
+                  joinedProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="group hover:bg-gray-700/50 p-3 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center gap-2 justify-between">
+                        <h3 className="font-medium group-hover:text-emerald-400 transition-colors">
+                          {project.title}
+                        </h3>
+                        <span className="text-xs bg-gray-900 px-2 py-1 rounded">
+                          {project.roleTitle}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-400 mt-1 max-h-16 line-clamp-2">
+                        {project.description}
+                      </p>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                          <Users className="w-3 h-3" />
+                          {project.members || 1} members
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-sm">No joined projects</p>
+                )}
+              </div>
+            </motion.div>
+
+            {githubData?.skills && githubData.skills.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
+              >
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <Code2 className="w-5 h-5 text-emerald-400" />
+                  Top Languages
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {githubData.skills.map((skill, index) => (
+                    <motion.span
+                      key={index}
+                      whileHover={{ scale: 1.05 }}
+                      className="px-3 py-1.5 bg-gray-700 rounded-full text-sm flex items-center gap-1"
+                    >
+                      <Cpu className="w-3 h-3 text-emerald-400" />
+                      {skill}
+                    </motion.span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {githubData?.stats && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
+              >
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-emerald-400" />
+                  GitHub Stats
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Followers</span>
+                    <span className="font-medium">
+                      {githubData.stats.followers}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Following</span>
+                    <span className="font-medium">
+                      {githubData.stats.following}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Total Forks</span>
+                    <span className="font-medium">
+                      {githubData.stats.forks}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Total Contributions</span>
+                    <span className="font-medium">
+                      {allCommits?.total_count || 0}
+                    </span>
+                  </div>
+                  {userData.role_preferences && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Role Preferences</span>
+                      <span className="font-medium">
+                        {userData.role_preferences}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {githubData?.recentRepos && githubData.recentRepos.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="flex-1 bg-gray-800/50 p-6 rounded-xl border border-gray-700"
+            >
+              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-emerald-400" />
+                Recent Repositories
+              </h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {githubData.recentRepos.map((repo, index) => (
+                  <motion.div
+                    key={index}
+                    whileHover={{ y: -5 }}
+                    className="group"
+                  >
+                    <a
+                      href={repo.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block hover:bg-gray-700/50 p-4 rounded-lg transition-colors border border-gray-700"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium group-hover:text-emerald-400 transition-colors">
+                          {repo.name}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1 text-xs text-gray-400">
+                            <Star className="w-3 h-3" />
+                            {repo.stars}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-gray-400">
+                            <GitFork className="w-3 h-3" />
+                            {repo.forks}
+                          </span>
+                        </div>
+                      </div>
+                      {repo.description && (
+                        <p className="text-sm text-gray-400 mb-3 line-clamp-2">
+                          {repo.description}
+                        </p>
+                      )}
+                      <div className="flex justify-between items-center">
+                        {repo.language && (
+                          <span className="text-xs bg-gray-900 px-2 py-1 rounded">
+                            {repo.language}
+                          </span>
+                        )}
+                        <span className="text-xs text-gray-500">
+                          {new Date(repo.updated_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </a>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>

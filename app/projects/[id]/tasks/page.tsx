@@ -16,41 +16,77 @@ import { supabase } from '@/app/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { AddTaskModal } from '../AddTaskModal';
 
+const statusPriority: Record<string, number> = {
+  'In Progress': 1,
+  Blocked:      2,
+  Completed:    3,
+  // Add any other statuses you use, e.g. 'Pending': 0
+};
+
 export default function ProjectTasksPage() {
   const params = useParams();
   const { data: session } = useSession();
-
-  // — State for everything we need —
-  const [project, setProject] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [showTaskModal, setShowTaskModal] = useState(false);
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [showTaskModal, setShowTaskModal] = useState<boolean>(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
 
-  // 1) Define “status → priority” mapping
-  const statusPriority: Record<string, number> = {
-    'In Progress': 1,
-    'In Review':   2,
-    'Completed':   3,
-  };
+  
+  useEffect(() => {
+    const fetchSupabaseUserId = async () => {
+      if (session?.user?.email) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
 
-  // 2) Fetch project, tasks, and project members
+        if (error) {
+          console.error('Error fetching Supabase user ID:', error);
+        } else if (data) {
+          setSupabaseUserId(data.id);
+        }
+      }
+    };
+    fetchSupabaseUserId();
+  }, [session?.user?.email]);
+
+ 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-
       try {
-        // 2a) Fetch project details
+        // ────── Fetch project details ──────
         const { data: projectData, error: projectError } = await supabase
           .from('projects')
-          .select('*')
+          .select('*, creator_id')
           .eq('id', params.id)
           .single();
 
-        if (projectError) throw projectError;
+        if (projectError) {
+          console.error('Failed to load project:', projectError);
+          setLoading(false);
+          return;
+        }
+        if (!projectData) {
+          console.error('No project found with id', params.id);
+          setLoading(false);
+          return;
+        }
+
         setProject(projectData);
 
-        // 2b) Fetch all tasks for this project (no server-side ordering)
+        // ────── Check ownership ──────
+        if (supabaseUserId && projectData.creator_id === supabaseUserId) {
+          setIsOwner(true);
+        } else {
+          setIsOwner(false);
+        }
+
+        // ────── Fetch tasks ──────
         const { data: tasksData, error: tasksError } = await supabase
           .from('tasks')
           .select(
@@ -58,56 +94,62 @@ export default function ProjectTasksPage() {
             *,
             assigned_to:assigned_to(id, name, avatar_url),
             created_by:created_by(id, name, avatar_url)
-          `
+            `
           )
           .eq('project_id', params.id);
 
-        if (tasksError) throw tasksError;
+        if (tasksError) {
+          console.error('Failed to load tasks:', tasksError);
+        }
 
-        // 2c) Client‐side sort by statusPriority then by created_at desc
-        const sortedTasks = (tasksData || []).slice().sort((a, b) => {
+        // Even if tasksError happened, we’ll treat tasksData as [] so we don’t crash
+        const taskList: any[] = tasksData || [];
+
+        // Sort by statusPriority, then by created_at (newest first)
+        const sortedTasks = taskList.slice().sort((a, b) => {
           const pa = statusPriority[a.status] ?? Number.MAX_SAFE_INTEGER;
           const pb = statusPriority[b.status] ?? Number.MAX_SAFE_INTEGER;
-
           if (pa !== pb) {
             return pa - pb;
           }
-          // If same status, newer created first:
           return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
           );
         });
-
         setTasks(sortedTasks);
 
-        // 2d) Fetch project members (to pass into AddTaskModal, if needed)
+        // ────── Fetch project members ──────
         const { data: membersData, error: membersError } = await supabase
           .from('project_roles')
-          .select(
-            `
+          .select(`
             users(id, name, avatar_url)
-          `
-          )
+          `)
           .eq('project_id', params.id)
           .not('filled_by', 'is', null);
 
-        if (membersError) throw membersError;
+        if (membersError) {
+          console.error('Failed to load project members:', membersError);
+        }
 
-        // Flatten out the nested `users` field
-        setProjectMembers(
-          membersData?.map((m: any) => m.users).filter(Boolean) || []
-        );
+        const mappedMembers = membersData
+          ?.map((m: any) => m.users)
+          .filter(Boolean) as any[];
+        setProjectMembers(mappedMembers || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Unexpected error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [params.id, showTaskModal]);
+    // Only fetch once we either know supabaseUserId, or the user isn’t logged in at all
+    if (supabaseUserId || !session?.user?.email) {
+      fetchData();
+    }
+  }, [params.id, session?.user?.email, supabaseUserId]);
 
-  // 3) If still loading, display a spinner placeholder
+  // ────── Show a loading state while fetching ──────
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
@@ -118,7 +160,7 @@ export default function ProjectTasksPage() {
     );
   }
 
-  // 4) Helper: render a status icon
+  // ────── Helper to pick status icon ──────
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Completed':
@@ -132,7 +174,7 @@ export default function ProjectTasksPage() {
     }
   };
 
-  // 5) Helper: map priority → badge styling
+  // ────── Helper to pick priority badge color ──────
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High':
@@ -146,10 +188,10 @@ export default function ProjectTasksPage() {
     }
   };
 
-  // 6) Render the page
+  // ────── Render ──────
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
-      {/* — Header with “Back to Project” + “Add New Task” button — */}
+      {/* Header */}
       <div className='border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm'>
         <div className='container mx-auto px-6 py-4'>
           <div className='flex items-center justify-between'>
@@ -160,8 +202,7 @@ export default function ProjectTasksPage() {
               <ArrowLeft className='w-5 h-5 mr-2' />
               Back to Project
             </Link>
-
-            {session && (
+            {isOwner && (
               <button
                 onClick={() => setShowTaskModal(true)}
                 className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center'
@@ -174,70 +215,104 @@ export default function ProjectTasksPage() {
         </div>
       </div>
 
-      {/* — Main Content — */}
+      {/* Main Content */}
       <div className='container mx-auto px-6 py-8'>
-        {/* Project Title */}
-        <div className='flex items-center space-x-3 mb-8'>
-          <GitBranch className='w-6 h-6 text-emerald-400' />
-          <h1 className='text-2xl md:text-3xl font-bold text-gray-100'>
-            {project?.title} Tasks
-          </h1>
+        <div className='flex items-center justify-between mb-8'>
+          <div className='flex items-center space-x-3'>
+            <GitBranch className='w-6 h-6 text-emerald-400' />
+            <h1 className='text-2xl md:text-3xl font-bold text-gray-100'>
+              {project?.title || 'Untitled Project'} Tasks
+            </h1>
+          </div>
         </div>
 
-        {/* If no tasks, show a “no tasks” placeholder */}
-        {tasks.length === 0 ? (
-          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-8 text-center'>
-            <p className='text-gray-400'>No tasks yet for this project</p>
-            {session && (
-              <button
-                onClick={() => setShowTaskModal(true)}
-                className='mt-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'
-              >
-                Create First Task
-              </button>
-            )}
-          </div>
-        ) : (
-          /* Otherwise, map over sorted `tasks` */
-          <div className='space-y-4'>
-            {tasks.map((task: any) => (
+        {/* Tasks List */}
+        <div className='space-y-4'>
+          {tasks.length === 0 ? (
+            <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-8 text-center'>
+              <p className='text-gray-400'>No tasks yet for this project</p>
+              {isOwner && (
+                <button
+                  onClick={() => setShowTaskModal(true)}
+                  className='mt-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'
+                >
+                  Create First Task
+                </button>
+              )}
+            </div>
+          ) : (
+            tasks.map((task) => (
               <Link
                 href={`/projects/${params.id}/tasks/${task.id}`}
                 key={task.id}
-                className='block'
+                className={`block ${
+                  task.status === 'Completed' ? 'opacity-80' : ''
+                }`}
               >
-                <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-colors'>
+                <div
+                  className={`bg-gray-800/60 border rounded-xl p-6 transition-colors ${
+                    task.status === 'Completed'
+                      ? 'border-gray-700/50 hover:border-gray-700'
+                      : 'border-gray-700 hover:border-gray-600'
+                  }`}
+                >
                   <div className='flex justify-between items-start'>
-                    {/* Left: Status icon + Title */}
                     <div className='flex items-center gap-3'>
-                      <div>{getStatusIcon(task.status)}</div>
-                      <h3 className='text-gray-100 font-medium'>{task.title}</h3>
+                      <div className='flex-shrink-0'>
+                        {getStatusIcon(task.status)}
+                      </div>
+                      <h3
+                        className={`font-medium ${
+                          task.status === 'Completed'
+                            ? 'text-gray-400 line-through'
+                            : 'text-gray-100'
+                        }`}
+                      >
+                        {task.title}
+                      </h3>
                     </div>
-
-                    {/* Right: Priority Badge */}
                     <span
                       className={`text-xs px-2 py-1 rounded ${getPriorityColor(
                         task.priority
-                      )}`}
+                      )} ${
+                        task.status === 'Completed' ? 'opacity-70' : ''
+                      }`}
                     >
                       {task.priority}
                     </span>
                   </div>
 
-                  {/* Optional: show truncated description */}
                   {task.description && (
-                    <p className='text-gray-400 text-sm mt-2 ml-7'>
+                    <p
+                      className={`text-sm mt-2 ml-7 ${
+                        task.status === 'Completed'
+                          ? 'text-gray-500'
+                          : 'text-gray-400'
+                      }`}
+                    >
                       {task.description.length > 100
-                        ? `${task.description.substring(0, 100)}...`
+                        ? `${task.description.substring(0, 100)}…`
                         : task.description}
                     </p>
                   )}
 
-                  {/* Bottom row: Assignee + Due Date */}
                   <div className='mt-4 flex flex-wrap items-center gap-4 text-sm ml-7'>
-                    {/* Assignee */}
-                    <div className='flex items-center gap-2 text-gray-400'>
-                      <div className='w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs'>
+                    <div
+                      className={`flex items-center gap-2 ${
+                        task.status === 'Completed'
+                          ? 'text-gray-500'
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      <div
+                        role='img'
+                        aria-label={task.assigned_to?.name || 'Unassigned'}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                          task.status === 'Completed'
+                            ? 'bg-gray-700/50'
+                            : 'bg-gray-700'
+                        }`}
+                      >
                         {task.assigned_to?.avatar_url ? (
                           <img
                             src={task.assigned_to.avatar_url}
@@ -248,42 +323,58 @@ export default function ProjectTasksPage() {
                           task.assigned_to?.name?.charAt(0) || 'H'
                         )}
                       </div>
-                      <span>{task.assigned_to?.name || 'Unassigned'}</span>
+                      <span>{task.assigned_to?.name ?? 'Unassigned'}</span>
                     </div>
 
-                    {/* Due Date */}
                     {task.due_date && (
-                      <div className='flex items-center gap-2 text-gray-400'>
+                      <div
+                        className={`flex items-center gap-2 ${
+                          task.status === 'Completed'
+                            ? 'text-gray-500'
+                            : 'text-gray-400'
+                        }`}
+                      >
                         <span>
                           Due:{' '}
-                          {new Date(task.due_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
+                          {new Date(task.due_date).toLocaleDateString(
+                            'en-US',
+                            {
+                              month: 'short',
+                              day:   'numeric',
+                              year:  'numeric',
+                            }
+                          )}
+                          {task.status === 'Completed' && (
+                            <span className='ml-1 text-green-400'>✓</span>
+                          )}
                         </span>
                       </div>
                     )}
                   </div>
+
+                  {task.status === 'Completed' && (
+                    <div className='mt-2 flex items-center gap-1 text-xs text-green-400 ml-7'>
+                      <Check className='w-3 h-3' />
+                      <span>Completed</span>
+                    </div>
+                  )}
                 </div>
               </Link>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
 
-      {/* — Add Task Modal — */}
+      {/* Add Task Modal */}
       {showTaskModal && (
         <AddTaskModal
-          projectName={project?.title}
+          projectName={project?.title || ''}
           projectMembers={projectMembers}
           projectId={params.id}
           show={showTaskModal}
           onClose={() => setShowTaskModal(false)}
           onTaskCreated={() => {
-            /* When a new task is created, we rely on `showTaskModal` changing
-               to re-trigger the useEffect above (because it’s in the dependency array).
-               That will re-fetch & re-sort the tasks automatically. */
+            // when the modal closes, the above useEffect will refetch automatically
           }}
         />
       )}
