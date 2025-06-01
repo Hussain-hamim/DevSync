@@ -308,7 +308,7 @@ export default function TaskDetailsPage() {
 
       setNewComment('');
       toast.success('Comment added successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding comment:', error.message);
       toast.error('Failed to add comment');
     } finally {
