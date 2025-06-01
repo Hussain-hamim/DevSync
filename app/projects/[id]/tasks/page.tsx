@@ -16,13 +16,6 @@ import { supabase } from '@/app/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { AddTaskModal } from '../AddTaskModal';
 
-const statusPriority: Record<string, number> = {
-  'In Progress': 1,
-  Blocked:      2,
-  Completed:    3,
-  // Add any other statuses you use, e.g. 'Pending': 0
-};
-
 export default function ProjectTasksPage() {
   const params = useParams();
   const { data: session } = useSession();
@@ -104,19 +97,29 @@ export default function ProjectTasksPage() {
 
         // Even if tasksError happened, we’ll treat tasksData as [] so we don’t crash
         const taskList: any[] = tasksData || [];
-
-        // Sort by statusPriority, then by created_at (newest first)
         const sortedTasks = taskList.slice().sort((a, b) => {
-          const pa = statusPriority[a.status] ?? Number.MAX_SAFE_INTEGER;
-          const pb = statusPriority[b.status] ?? Number.MAX_SAFE_INTEGER;
-          if (pa !== pb) {
+            // Handle completed tasks last
+            if (a.status === 'Completed' && b.status !== 'Completed') return 1;
+            if (b.status === 'Completed' && a.status !== 'Completed') return -1;
+            if (a.status === 'Completed' && b.status === 'Completed') {
+              return new Date(b.completed_at || b.updated_at).getTime() - 
+                    new Date(a.completed_at || a.updated_at).getTime();
+            }
+            
+            // For non-completed tasks:
+            // Only "In Progress" gets special priority (1), all others same priority (2)
+            const pa = a.status === 'In Progress' ? 1 : 2;
+            const pb = b.status === 'In Progress' ? 1 : 2;
+            
+            // Same priority? Sort by creation date (newest first)
+            if (pa === pb) {
+              return new Date(b.created_at).getTime() - 
+                    new Date(a.created_at).getTime();
+            }
+            
+            // Different priorities
             return pa - pb;
-          }
-          return (
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
-          );
-        });
+          });
         setTasks(sortedTasks);
 
         // ────── Fetch project members ──────
