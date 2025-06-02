@@ -213,8 +213,8 @@ export default function Home() {
               transition={{ delay: 0.8 }}
               className='text-xl text-gray-400 mb-10 max-w-2xl mx-auto'
             >
-              The developer platform where technical teams form around projects,
-              not job postings.
+              The developer platform where coders connect, collaborate, and
+              create amazing projects as teams.
             </motion.p>
 
             <motion.div

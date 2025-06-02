@@ -64,20 +64,18 @@ const Header = () => {
             </motion.div>
 
             <nav className='hidden md:flex items-center space-x-6'>
-              {['Profile', 'Projects', 'Teams', 'Rankings'].map(
-                (item, index) => (
-                  <motion.a
-                    key={item}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                    href={'/' + item.toLowerCase()}
-                    className='text-gray-300 hover:text-emerald-400 transition-colors text-sm'
-                  >
-                    {item}
-                  </motion.a>
-                )
-              )}
+              {['Projects', 'Teams', 'Rankings'].map((item, index) => (
+                <motion.a
+                  key={item}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                  href={'/' + item.toLowerCase()}
+                  className='text-gray-300 hover:text-emerald-400 transition-colors text-sm'
+                >
+                  {item}
+                </motion.a>
+              ))}
             </nav>
 
             <motion.div
