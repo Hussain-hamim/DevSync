@@ -852,20 +852,20 @@ export default function ProjectDetails() {
                 ))}
               </div>
             ) : tasks.length > 0 ? (
-              <div className='space-y-4'>
+              <div className='space-y-2'>
                 {tasks.map((task) => (
                   <Link
                     href={`/projects/${project.id}/tasks/${task.id}`}
                     key={task.id}
-                    className={`block ${
+                    className={`block group rounded-lg transition-colors duration-200 p-2 -mx-2 hover:bg-gray-700/50 active:bg-gray-700/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
                       task.status === 'Completed' ? 'opacity-80' : ''
                     }`}
                   >
                     <div
                       className={`p-4 rounded-lg border transition-colors ${
                         task.status === 'Completed'
-                          ? 'bg-gray-800/20 border-gray-700/50 hover:border-gray-700'
-                          : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+                          ? 'bg-gray-800/20 border-gray-700/50 group-hover:border-gray-700'
+                          : 'bg-gray-800/30 border-gray-700 group-hover:border-gray-600'
                       }`}
                     >
                       {/* Task Header */}
@@ -893,7 +893,7 @@ export default function ProjectDetails() {
                             className={`font-medium ${
                               task.status === 'Completed'
                                 ? 'text-gray-400 line-through'
-                                : 'text-gray-100'
+                                : 'text-gray-100 group-hover:text-white'
                             }`}
                           >
                             {task.title}
@@ -921,14 +921,14 @@ export default function ProjectDetails() {
                           className={`flex items-center gap-2 ${
                             task.status === 'Completed'
                               ? 'text-gray-500'
-                              : 'text-gray-400'
+                              : 'text-gray-400 group-hover:text-gray-300'
                           }`}
                         >
                           <div
                             className={`w-4 h-4 rounded-full flex items-center justify-center text-xs ${
                               task.status === 'Completed'
                                 ? 'bg-gray-700/50'
-                                : 'bg-gray-700'
+                                : 'bg-gray-700 group-hover:bg-gray-600'
                             }`}
                           >
                             {task.assigned_to?.name?.charAt(0) || 'H'}
@@ -942,7 +942,7 @@ export default function ProjectDetails() {
                             className={`flex items-center gap-2 ${
                               task.status === 'Completed'
                                 ? 'text-gray-500'
-                                : 'text-gray-400'
+                                : 'text-gray-400 group-hover:text-gray-300'
                             }`}
                           >
                             <CalendarIcon className='w-4 h-4' />
@@ -1011,9 +1011,6 @@ export default function ProjectDetails() {
                 </li>
               ))}
             </ul>
-            <button className='mt-4 text-emerald-400 hover:underline text-sm'>
-              View all roles
-            </button>
           </div>
 
           {/* GitHub Repo */}
