@@ -172,7 +172,7 @@ export default function Home() {
             >
               <GitPullRequest className='w-4 h-4 text-emerald-400' />
               <span className='text-xs font-medium text-emerald-400'>
-                v2.0 Now Live
+                v1.0 Now Live
               </span>
             </motion.div>
 
