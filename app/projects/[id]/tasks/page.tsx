@@ -19,15 +19,15 @@ import { AddTaskModal } from '../AddTaskModal';
 export default function ProjectTasksPage() {
   const params = useParams();
   const { data: session } = useSession();
-  const [tasks, setTasks] = useState([]);
-  const [project, setProject] = useState(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [projectMembers, setProjectMembers] = useState([]);
+  const [projectMembers, setProjectMembers] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
-  const [supabaseUserId, setSupabaseUserId] = useState(null);
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
 
-  // Fetch Supabase user ID
+  
   useEffect(() => {
     const fetchSupabaseUserId = async () => {
       if (session?.user?.email) {
@@ -37,77 +37,122 @@ export default function ProjectTasksPage() {
           .eq('email', session.user.email)
           .single();
 
-        if (!error && data) {
+        if (error) {
+          console.error('Error fetching Supabase user ID:', error);
+        } else if (data) {
           setSupabaseUserId(data.id);
         }
       }
     };
-
     fetchSupabaseUserId();
   }, [session?.user?.email]);
 
-  // Fetch project and tasks
+ 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch project details
-        const { data: projectData } = await supabase
+        // ────── Fetch project details ──────
+        const { data: projectData, error: projectError } = await supabase
           .from('projects')
           .select('*, creator_id')
           .eq('id', params.id)
           .single();
 
+        if (projectError) {
+          console.error('Failed to load project:', projectError);
+          setLoading(false);
+          return;
+        }
+        if (!projectData) {
+          console.error('No project found with id', params.id);
+          setLoading(false);
+          return;
+        }
+
         setProject(projectData);
 
-        // Check if current user is the owner
-        if (supabaseUserId && projectData?.creator_id === supabaseUserId) {
+        // ────── Check ownership ──────
+        if (supabaseUserId && projectData.creator_id === supabaseUserId) {
           setIsOwner(true);
         } else {
           setIsOwner(false);
         }
 
-        // Fetch tasks
-        const { data: tasksData } = await supabase
+        // ────── Fetch tasks ──────
+        const { data: tasksData, error: tasksError } = await supabase
           .from('tasks')
           .select(
             `
             *,
-             assigned_to:assigned_to(id, name, avatar_url),
+            assigned_to:assigned_to(id, name, avatar_url),
             created_by:created_by(id, name, avatar_url)
-          `
-          )
-          .eq('project_id', params.id)
-          .order('created_at', { ascending: false });
-
-        setTasks(tasksData || []);
-
-        // Fetch project members
-        const { data: membersData } = await supabase
-          .from('project_roles')
-          .select(
             `
-            users(id, name, avatar_url)
-          `
           )
+          .eq('project_id', params.id);
+
+        if (tasksError) {
+          console.error('Failed to load tasks:', tasksError);
+        }
+
+        // Even if tasksError happened, we’ll treat tasksData as [] so we don’t crash
+        const taskList: any[] = tasksData || [];
+        const sortedTasks = taskList.slice().sort((a, b) => {
+            // Handle completed tasks last
+            if (a.status === 'Completed' && b.status !== 'Completed') return 1;
+            if (b.status === 'Completed' && a.status !== 'Completed') return -1;
+            if (a.status === 'Completed' && b.status === 'Completed') {
+              return new Date(b.completed_at || b.updated_at).getTime() - 
+                    new Date(a.completed_at || a.updated_at).getTime();
+            }
+            
+            // For non-completed tasks:
+            // Only "In Progress" gets special priority (1), all others same priority (2)
+            const pa = a.status === 'In Progress' ? 1 : 2;
+            const pb = b.status === 'In Progress' ? 1 : 2;
+            
+            // Same priority? Sort by creation date (newest first)
+            if (pa === pb) {
+              return new Date(b.created_at).getTime() - 
+                    new Date(a.created_at).getTime();
+            }
+            
+            // Different priorities
+            return pa - pb;
+          });
+        setTasks(sortedTasks);
+
+        // ────── Fetch project members ──────
+        const { data: membersData, error: membersError } = await supabase
+          .from('project_roles')
+          .select(`
+            users(id, name, avatar_url)
+          `)
           .eq('project_id', params.id)
           .not('filled_by', 'is', null);
 
-        setProjectMembers(
-          membersData?.map((m) => m.users).filter(Boolean) || []
-        );
+        if (membersError) {
+          console.error('Failed to load project members:', membersError);
+        }
+
+        const mappedMembers = membersData
+          ?.map((m: any) => m.users)
+          .filter(Boolean) as any[];
+        setProjectMembers(mappedMembers || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Unexpected error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
+    // Only fetch once we either know supabaseUserId, or the user isn’t logged in at all
     if (supabaseUserId || !session?.user?.email) {
       fetchData();
     }
   }, [params.id, session?.user?.email, supabaseUserId]);
 
+  // ────── Show a loading state while fetching ──────
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
@@ -118,7 +163,8 @@ export default function ProjectTasksPage() {
     );
   }
 
-  const getStatusIcon = (status) => {
+  // ────── Helper to pick status icon ──────
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Completed':
         return <Check className='w-4 h-4 text-green-500' />;
@@ -131,7 +177,8 @@ export default function ProjectTasksPage() {
     }
   };
 
-  const getPriorityColor = (priority) => {
+  // ────── Helper to pick priority badge color ──────
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High':
         return 'bg-red-900/50 text-red-300';
@@ -144,6 +191,7 @@ export default function ProjectTasksPage() {
     }
   };
 
+  // ────── Render ──────
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Header */}
@@ -176,7 +224,7 @@ export default function ProjectTasksPage() {
           <div className='flex items-center space-x-3'>
             <GitBranch className='w-6 h-6 text-emerald-400' />
             <h1 className='text-2xl md:text-3xl font-bold text-gray-100'>
-              {project?.title} Tasks
+              {project?.title || 'Untitled Project'} Tasks
             </h1>
           </div>
         </div>
@@ -229,7 +277,9 @@ export default function ProjectTasksPage() {
                     <span
                       className={`text-xs px-2 py-1 rounded ${getPriorityColor(
                         task.priority
-                      )} ${task.status === 'Completed' ? 'opacity-70' : ''}`}
+                      )} ${
+                        task.status === 'Completed' ? 'opacity-70' : ''
+                      }`}
                     >
                       {task.priority}
                     </span>
@@ -244,7 +294,7 @@ export default function ProjectTasksPage() {
                       }`}
                     >
                       {task.description.length > 100
-                        ? `${task.description.substring(0, 100)}...`
+                        ? `${task.description.substring(0, 100)}…`
                         : task.description}
                     </p>
                   )}
@@ -258,6 +308,8 @@ export default function ProjectTasksPage() {
                       }`}
                     >
                       <div
+                        role='img'
+                        aria-label={task.assigned_to?.name || 'Unassigned'}
                         className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                           task.status === 'Completed'
                             ? 'bg-gray-700/50'
@@ -274,7 +326,7 @@ export default function ProjectTasksPage() {
                           task.assigned_to?.name?.charAt(0) || 'H'
                         )}
                       </div>
-                      <span>{task.assigned_to?.name || 'Unassigned'}</span>
+                      <span>{task.assigned_to?.name ?? 'Unassigned'}</span>
                     </div>
 
                     {task.due_date && (
@@ -287,11 +339,14 @@ export default function ProjectTasksPage() {
                       >
                         <span>
                           Due:{' '}
-                          {new Date(task.due_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
+                          {new Date(task.due_date).toLocaleDateString(
+                            'en-US',
+                            {
+                              month: 'short',
+                              day:   'numeric',
+                              year:  'numeric',
+                            }
+                          )}
                           {task.status === 'Completed' && (
                             <span className='ml-1 text-green-400'>✓</span>
                           )}
@@ -316,13 +371,13 @@ export default function ProjectTasksPage() {
       {/* Add Task Modal */}
       {showTaskModal && (
         <AddTaskModal
-          projectName={project?.title}
+          projectName={project?.title || ''}
           projectMembers={projectMembers}
           projectId={params.id}
           show={showTaskModal}
           onClose={() => setShowTaskModal(false)}
           onTaskCreated={() => {
-            // The useEffect will automatically refetch tasks when modal closes
+            // when the modal closes, the above useEffect will refetch automatically
           }}
         />
       )}
