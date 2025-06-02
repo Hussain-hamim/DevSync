@@ -438,8 +438,8 @@ export default function Home() {
                   </div>
                   <div className='text-sm text-gray-400 mb-3'>
                     <span className='text-cyan-400'>
-                      {/* {project.members} */}
-                      {1} members
+                      {project.roles_needed.length} {''}
+                      members
                     </span>{' '}
                     • Needs:
                     {project.roles_needed.map((role) => (

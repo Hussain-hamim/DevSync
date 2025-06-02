@@ -46,33 +46,66 @@ export default function ProjectsPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      // 1. Fetch all projects
+      const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
 
-      setLoading(false);
-
-      if (error) {
-        console.error('Failed to fetch projects:', error.message);
+      if (projectsError) {
+        console.error('Failed to fetch projects:', projectsError.message);
         return;
       }
 
-      // Map Supabase data to your frontend format
-      const mapped = data.map((proj) => ({
-        id: proj.id,
-        name: proj.title,
-        description: proj.description,
-        techStack: proj.tech_stack || [],
-        teamSize: 4, // Optional: default or calculated
-        views: 0, // Optional: if you don’t track views yet
-        category: 'general', // You can infer or set this
-      }));
+      // 2. Fetch member counts for all projects in a single query
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('project_roles')
+        .select('project_id, filled_by')
+        .not('filled_by', 'is', null);
+
+      if (rolesError) {
+        console.error('Failed to fetch project roles:', rolesError.message);
+      }
+
+      // 3. Create a map of project_id to member count
+      const memberCounts = new Map();
+      if (rolesData) {
+        rolesData.forEach((role) => {
+          const count = memberCounts.get(role.project_id) || 0;
+          memberCounts.set(role.project_id, count + 1);
+        });
+      }
+
+      // 4. Map Supabase data to your frontend format with member counts
+      const mapped = projectsData.map((proj) => {
+        // Get unique members (count creator + filled roles)
+        let count = 0;
+
+        // Count creator (1)
+        if (proj.creator_id) count += 1;
+
+        // Count filled roles from our map
+        const rolesCount = memberCounts.get(proj.id) || 0;
+        count += rolesCount;
+
+        return {
+          id: proj.id,
+          name: proj.title,
+          description: proj.description,
+          techStack: proj.tech_stack || [],
+          teamSize: count, // Now using actual count
+          views: 0, // Optional: if you don't track views yet
+          category: 'general', // You can infer or set this
+          creatorId: proj.creator_id, // Store for potential use
+        };
+      });
 
       setProjects(mapped);
     } catch (error) {
       toast.error('Failed to load projects');
       console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -413,7 +413,7 @@ export default function ProfilePage() {
                       <div className='flex justify-between items-center mt-2 '>
                         <span className='flex items-center gap-1 text-xs text-gray-400'>
                           <Users className='w-3 h-3' />
-                          {+1} members
+                          {} members
                         </span>
                         <span
                           className={`text-xs px-2 py-1 rounded ${'bg-green-900/50 text-green-400'}`}
