@@ -69,28 +69,31 @@ export default function ProjectDetails() {
 
       const taskList: any[] = tasksData || [];
       const sortedTasks = taskList.slice().sort((a, b) => {
-          // Handle completed tasks last
-          if (a.status === 'Completed' && b.status !== 'Completed') return 1;
-          if (b.status === 'Completed' && a.status !== 'Completed') return -1;
-          if (a.status === 'Completed' && b.status === 'Completed') {
-            return new Date(b.completed_at || b.updated_at).getTime() - 
-                  new Date(a.completed_at || a.updated_at).getTime();
-          }
-          
-          // For non-completed tasks:
-          // Only "In Progress" gets special priority (1), all others same priority (2)
-          const pa = a.status === 'In Progress' ? 1 : 2;
-          const pb = b.status === 'In Progress' ? 1 : 2;
-          
-          // Same priority? Sort by creation date (newest first)
-          if (pa === pb) {
-            return new Date(b.created_at).getTime() - 
-                  new Date(a.created_at).getTime();
-          }
-          
-          // Different priorities
-          return pa - pb;
-        });
+        // Handle completed tasks last
+        if (a.status === 'Completed' && b.status !== 'Completed') return 1;
+        if (b.status === 'Completed' && a.status !== 'Completed') return -1;
+        if (a.status === 'Completed' && b.status === 'Completed') {
+          return (
+            new Date(b.completed_at || b.updated_at).getTime() -
+            new Date(a.completed_at || a.updated_at).getTime()
+          );
+        }
+
+        // For non-completed tasks:
+        // Only "In Progress" gets special priority (1), all others same priority (2)
+        const pa = a.status === 'In Progress' ? 1 : 2;
+        const pb = b.status === 'In Progress' ? 1 : 2;
+
+        // Same priority? Sort by creation date (newest first)
+        if (pa === pb) {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        }
+
+        // Different priorities
+        return pa - pb;
+      });
 
       // 3) Keep only the first 4 items
       const topFour = sortedTasks.slice(0, 4);
@@ -168,13 +171,13 @@ export default function ProjectDetails() {
       return {
         bg: 'bg-emerald-900/50',
         text: 'text-emerald-400',
-        icon: <Sparkles className="w-4 h-4" />,
+        icon: <Sparkles className='w-4 h-4' />,
       };
     } else if (type === 'task_started') {
       return {
         bg: 'bg-yellow-900/50',
         text: 'text-yellow-400',
-        icon: <Plus className="w-4 h-4" />,
+        icon: <Plus className='w-4 h-4' />,
       };
     } else if (type === 'task_created') {
       return {
@@ -489,10 +492,10 @@ export default function ProjectDetails() {
 
   if (loading || !project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100">
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
         <Header />
-        <div className="container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]">
-          <div className="animate-pulse text-gray-400">
+        <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
+          <div className='animate-pulse text-gray-400'>
             Loading project details…
           </div>
         </div>
@@ -501,19 +504,19 @@ export default function ProjectDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Header */}
-      <div className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+      <div className='border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm'>
+        <div className='container mx-auto px-6 py-4'>
+          <div className='flex items-center justify-between'>
             <Link
-              href="/projects"
-              className="flex items-center text-gray-400 hover:text-emerald-400 transition-colors"
+              href='/projects'
+              className='flex items-center text-gray-400 hover:text-emerald-400 transition-colors'
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
+              <ArrowLeft className='w-5 h-5 mr-2' />
               Back to Projects
             </Link>
-            <button className="text-gray-400 hover:text-emerald-400 transition-colors">
+            <button className='text-gray-400 hover:text-emerald-400 transition-colors'>
               <Star
                 className={`w-5 h-5 ${
                   project.starred ? 'fill-emerald-400 text-emerald-400' : ''
@@ -525,29 +528,29 @@ export default function ProjectDetails() {
       </div>
 
       {/* Project Header */}
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex items-start justify-between">
+      <div className='container mx-auto px-6 py-8'>
+        <div className='flex items-start justify-between'>
           <div>
-            <div className="flex items-center space-x-3 mb-4">
-              <GitBranch className="w-6 h-6 text-emerald-400" />
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-100">
+            <div className='flex items-center space-x-3 mb-4'>
+              <GitBranch className='w-6 h-6 text-emerald-400' />
+              <h1 className='text-2xl md:text-3xl font-bold text-gray-100'>
                 {project.title}
               </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-6">
-              <div className="flex items-center space-x-1">
-                <Users className="w-4 h-4" />
+            <div className='flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-6'>
+              <div className='flex items-center space-x-1'>
+                <Users className='w-4 h-4' />
                 <span>{projectMembers.length} members</span>
               </div>
 
-              <div className="flex items-center space-x-1">
-                <Calendar className="w-4 h-4" />
+              <div className='flex items-center space-x-1'>
+                <Calendar className='w-4 h-4' />
                 <span>Created {dayjs(project.created_at).fromNow()}</span>
               </div>
 
-              <div className="flex items-center space-x-1">
-                <Eye className="w-4 h-4" />
+              <div className='flex items-center space-x-1'>
+                <Eye className='w-4 h-4' />
                 <span>{project.views || 100} views</span>
               </div>
             </div>
@@ -555,7 +558,7 @@ export default function ProjectDetails() {
 
           <button
             onClick={() => setShowJoinModal(true)}
-            className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
+            className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'
           >
             Join Project
           </button>
@@ -563,42 +566,42 @@ export default function ProjectDetails() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className='container mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-3 gap-8'>
         {/* Left Column */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className='lg:col-span-2 space-y-8'>
           {/* Description */}
-          <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-gray-100 mb-4">
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <h2 className='text-xl font-semibold text-gray-100 mb-4'>
               Description
             </h2>
-            <div className="overflow-auto max-h-96 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50">
-              <pre className="text-gray-400 whitespace-pre-wrap font-sans p-2">
+            <div className='overflow-auto max-h-96 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50'>
+              <pre className='text-gray-400 whitespace-pre-wrap font-sans p-2'>
                 {project.description}
               </pre>
             </div>
           </div>
 
           {/* Activity Feed & Discussions */}
-          <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-            <div className="space-y-8">
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <div className='space-y-8'>
               {/* Activity Feed */}
-              <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-                <h2 className="text-xl font-semibold text-gray-100 mb-4 flex items-center">
-                  <Sparkles className="w-5 h-5 mr-2 text-emerald-400" />
+              <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+                <h2 className='text-xl font-semibold text-gray-100 mb-4 flex items-center'>
+                  <Sparkles className='w-5 h-5 mr-2 text-emerald-400' />
                   Team Activity
                 </h2>
 
-                <div className="space-y-4">
+                <div className='space-y-4'>
                   {loadingActivities ? (
                     [...Array(3)].map((_, i) => (
                       <div
                         key={i}
-                        className="flex items-start pb-4 border-b border-gray-700 last:border-0 last:pb-0"
+                        className='flex items-start pb-4 border-b border-gray-700 last:border-0 last:pb-0'
                       >
-                        <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-700 animate-pulse mr-3"></div>
-                        <div className="flex-grow">
-                          <div className="h-4 bg-gray-700 rounded w-3/4 animate-pulse"></div>
-                          <div className="h-3 bg-gray-700 rounded w-1/2 mt-2 animate-pulse"></div>
+                        <div className='flex-shrink-0 h-8 w-8 rounded-full bg-gray-700 animate-pulse mr-3'></div>
+                        <div className='flex-grow'>
+                          <div className='h-4 bg-gray-700 rounded w-3/4 animate-pulse'></div>
+                          <div className='h-3 bg-gray-700 rounded w-1/2 mt-2 animate-pulse'></div>
                         </div>
                       </div>
                     ))
@@ -608,18 +611,18 @@ export default function ProjectDetails() {
                       return (
                         <div
                           key={activity.id}
-                          className="flex items-start pb-4 border-b border-gray-700 last:border-0 last:pb-0"
+                          className='flex items-start pb-4 border-b border-gray-700 last:border-0 last:pb-0'
                         >
                           <div
                             className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center mr-3 ${style.bg} ${style.text}`}
                           >
                             {style.icon}
                           </div>
-                          <div className="flex-grow">
-                            <p className="text-gray-300">
+                          <div className='flex-grow'>
+                            <p className='text-gray-300'>
                               {formatActivity(activity)}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className='text-xs text-gray-500 mt-1'>
                               {dayjs(activity.created_at).fromNow()}
                             </p>
                           </div>
@@ -627,22 +630,22 @@ export default function ProjectDetails() {
                       );
                     })
                   ) : (
-                    <p className="text-gray-500 text-sm">No activity yet</p>
+                    <p className='text-gray-500 text-sm'>No activity yet</p>
                   )}
                 </div>
               </div>
 
               {/* Discussions Section */}
-              <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-100">
+              <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+                <div className='flex items-center justify-between mb-4'>
+                  <h2 className='text-xl font-semibold text-gray-100'>
                     Discussions
                   </h2>
                   <button
                     onClick={() => setShowDiscussionForm((prev) => !prev)}
-                    className="text-emerald-400 hover:underline text-sm flex items-center"
+                    className='text-emerald-400 hover:underline text-sm flex items-center'
                   >
-                    <MessageSquare className="w-4 h-4 mr-1" />
+                    <MessageSquare className='w-4 h-4 mr-1' />
                     {showDiscussionForm ? 'Cancel' : 'New Discussion'}
                   </button>
                 </div>
@@ -651,25 +654,25 @@ export default function ProjectDetails() {
                 {showDiscussionForm && (
                   <form
                     onSubmit={handleSubmit(onSubmitDiscussion)}
-                    className="mb-6"
+                    className='mb-6'
                   >
-                    <div className="mb-3">
+                    <div className='mb-3'>
                       <textarea
                         {...register('content')}
                         rows={3}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-gray-100 focus:border-emerald-500 focus:ring-emerald-500"
-                        placeholder="Write your message here..."
+                        className='w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-gray-100 focus:border-emerald-500 focus:ring-emerald-500'
+                        placeholder='Write your message here...'
                       />
                       {errors.content && (
-                        <p className="mt-1 text-sm text-red-400">
+                        <p className='mt-1 text-sm text-red-400'>
                           {errors.content.message as string}
                         </p>
                       )}
                     </div>
-                    <div className="flex justify-end">
+                    <div className='flex justify-end'>
                       <button
-                        type="submit"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                        type='submit'
+                        className='bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors'
                       >
                         Post Message
                       </button>
@@ -679,47 +682,47 @@ export default function ProjectDetails() {
 
                 {/* Discussions List */}
                 {loadingDiscussions ? (
-                  <div className="space-y-4">
+                  <div className='space-y-4'>
                     {[...Array(3)].map((_, i) => (
                       <div
                         key={i}
-                        className="p-4 bg-gray-800/30 rounded-lg border border-gray-700 animate-pulse h-20"
+                        className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 animate-pulse h-20'
                       />
                     ))}
                   </div>
                 ) : discussions.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className='space-y-4'>
                     {discussions.map((discussion) => (
                       <div
                         key={discussion.id}
-                        className="p-4 bg-gray-800/30 rounded-lg border border-gray-700"
+                        className='p-4 bg-gray-800/30 rounded-lg border border-gray-700'
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                        <div className='flex items-start gap-3'>
+                          <div className='flex-shrink-0'>
+                            <div className='w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden'>
                               {discussion.user?.avatar_url ? (
                                 <img
                                   src={discussion.user.avatar_url}
                                   alt={discussion.user.name}
-                                  className="w-full h-full object-cover"
+                                  className='w-full h-full object-cover'
                                 />
                               ) : (
-                                <span className="text-gray-300">
+                                <span className='text-gray-300'>
                                   {discussion.user?.name?.charAt(0) || 'U'}
                                 </span>
                               )}
                             </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline gap-2">
-                              <h3 className="text-gray-100 font-medium">
+                          <div className='flex-1 min-w-0'>
+                            <div className='flex items-baseline gap-2'>
+                              <h3 className='text-gray-100 font-medium'>
                                 {discussion.user?.name || 'Unknown User'}
                               </h3>
-                              <span className="text-xs text-gray-500">
+                              <span className='text-xs text-gray-500'>
                                 {dayjs(discussion.created_at).fromNow()}
                               </span>
                             </div>
-                            <p className="mt-1 text-gray-300 whitespace-pre-wrap">
+                            <p className='mt-1 text-gray-300 whitespace-pre-wrap'>
                               {discussion.content}
                             </p>
                           </div>
@@ -728,7 +731,7 @@ export default function ProjectDetails() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm">
+                  <p className='text-gray-500 text-sm'>
                     No discussions yet. Start the conversation!
                   </p>
                 )}
@@ -738,17 +741,17 @@ export default function ProjectDetails() {
         </div>
 
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* Tech Stack */}
-          <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-gray-100 mb-4">
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <h2 className='text-xl font-semibold text-gray-100 mb-4'>
               Tech Stack
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className='flex flex-wrap gap-2'>
               {project.tech_stack?.map((tech: string, index: number) => (
                 <span
                   key={index}
-                  className="text-xs bg-gray-900/80 text-emerald-400 px-3 py-1.5 rounded-full"
+                  className='text-xs bg-gray-900/80 text-emerald-400 px-3 py-1.5 rounded-full'
                 >
                   {tech}
                 </span>
@@ -757,116 +760,99 @@ export default function ProjectDetails() {
           </div>
 
           {/* Team Members */}
-          <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-100">
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-100'>
                 Project Members
               </h2>
-              <button className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
+              <button className='text-sm text-emerald-400 hover:text-emerald-300 transition-colors'>
                 View Team
               </button>
             </div>
 
-            <ul className="space-y-4">
+            <ul className=''>
               {projectMembers.map((member) => (
-                <li
+                <Link
                   key={member.id}
-                  className="flex items-start gap-4 group py-2"
+                  href={`../profile/${member.id}`}
+                  className='block hover:bg-gray-700/50 rounded-lg transition-colors duration-200 p-2 -mx-2 active:bg-gray-700/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50'
                 >
-                  <div className="relative flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium overflow-hidden">
-                      {member.avatar_url ? (
-                        <img
-                          src={member.avatar_url}
-                          alt={member.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        member.name?.charAt(0) || 'H'
+                  <li className='flex items-start gap-2 group'>
+                    <div className='relative flex-shrink-0'>
+                      <div className='w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium overflow-hidden group-hover:bg-gray-600 transition-colors'>
+                        {member.avatar_url ? (
+                          <img
+                            src={member.avatar_url}
+                            alt={member.name}
+                            className='w-full h-full object-cover'
+                          />
+                        ) : (
+                          member.name?.charAt(0) || 'H'
+                        )}
+                      </div>
+                      {member.isOwner && (
+                        <div className='absolute -bottom-1 -right-1 bg-purple-600 rounded-full p-0.5'>
+                          <Crown className='w-3 h-3 text-white' />
+                        </div>
                       )}
                     </div>
-                    {member.isOwner && (
-                      <div className="absolute -bottom-1 -right-1 bg-purple-600 rounded-full p-0.5">
-                        <Crown className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="text-gray-100 font-medium truncate">
-                        {member.name}
-                      </h3>
-                      <span className="text-xs text-gray-400 truncate">
-                        @{member.name.toLowerCase().replace(/\s+/g, '')}
-                      </span>
-                    </div>
-
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {member.roles.map((role: string) => (
-                        <span
-                          key={role}
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            role === 'Owner'
-                              ? 'bg-purple-900/70 text-purple-100'
-                              : 'bg-cyan-900/50 text-cyan-300'
-                          }`}
-                        >
-                          {role}
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-baseline gap-2'>
+                        <h3 className='text-gray-100 font-medium truncate group-hover:text-white transition-colors'>
+                          {member.name}
+                        </h3>
+                        <span className='text-xs text-gray-400 truncate group-hover:text-gray-300 transition-colors'>
+                          @{member.name.toLowerCase().replace(/\s+/g, '')}
                         </span>
-                      ))}
+                      </div>
+
+                      <div className='mt-1 flex flex-wrap gap-2'>
+                        {member.roles.map((role: string) => (
+                          <span
+                            key={role}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              role === 'Owner'
+                                ? 'bg-purple-900/70 text-purple-100'
+                                : 'bg-cyan-900/50 text-cyan-300'
+                            }`}
+                          >
+                            {role}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </li>
+                  </li>
+                </Link>
               ))}
             </ul>
           </div>
 
-          {/* Roles Needed */}
-          <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-gray-100 mb-4">
-              Roles Needed
-            </h2>
-            <ul className="space-y-3">
-              {project.roles_needed?.map(
-                (role: string, index: number) => (
-                  <li key={index} className="flex items-center">
-                    <span className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></span>
-                    <span className="text-gray-300">{role}</span>
-                  </li>
-                )
-              )}
-            </ul>
-            <button className="mt-4 text-emerald-400 hover:underline text-sm">
-              View all roles
-            </button>
-          </div>
-
           {/* Project Tasks Card */}
-          <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-100">
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-100'>
                 Project Tasks
               </h2>
               <Link
                 href={`/projects/${project.id}/tasks`}
-                className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+                className='text-sm text-emerald-400 hover:text-emerald-300 transition-colors'
               >
                 View All Tasks
               </Link>
             </div>
 
             {loadingTasks ? (
-              <div className="space-y-4">
+              <div className='space-y-4'>
                 {[...Array(3)].map((_, i) => (
                   <div
                     key={i}
-                    className="p-4 bg-gray-800/30 rounded-lg border border-gray-700 animate-pulse h-16"
+                    className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 animate-pulse h-16'
                   />
                 ))}
               </div>
             ) : tasks.length > 0 ? (
-              <div className="space-y-4">
+              <div className='space-y-4'>
                 {tasks.map((task) => (
                   <Link
                     href={`/projects/${project.id}/tasks/${task.id}`}
@@ -883,8 +869,8 @@ export default function ProjectDetails() {
                       }`}
                     >
                       {/* Task Header */}
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-3">
+                      <div className='flex justify-between items-start'>
+                        <div className='flex items-center gap-3'>
                           {/* Status Indicator */}
                           <div
                             className={`w-3 h-3 rounded-full flex items-center justify-center ${
@@ -898,7 +884,7 @@ export default function ProjectDetails() {
                             }`}
                           >
                             {task.status === 'Completed' && (
-                              <Check className="w-2 h-2 text-gray-900" />
+                              <Check className='w-2 h-2 text-gray-900' />
                             )}
                           </div>
 
@@ -929,7 +915,7 @@ export default function ProjectDetails() {
                       </div>
 
                       {/* Task Meta */}
-                      <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+                      <div className='mt-3 flex flex-wrap items-center gap-4 text-sm'>
                         {/* Assignee */}
                         <div
                           className={`flex items-center gap-2 ${
@@ -947,9 +933,7 @@ export default function ProjectDetails() {
                           >
                             {task.assigned_to?.name?.charAt(0) || 'H'}
                           </div>
-                          <span>
-                            {task.assigned_to?.name || 'Unassigned'}
-                          </span>
+                          <span>{task.assigned_to?.name || 'Unassigned'}</span>
                         </div>
 
                         {/* Due Date */}
@@ -961,7 +945,7 @@ export default function ProjectDetails() {
                                 : 'text-gray-400'
                             }`}
                           >
-                            <CalendarIcon className="w-4 h-4" />
+                            <CalendarIcon className='w-4 h-4' />
                             <span>
                               {new Date(task.due_date).toLocaleDateString(
                                 'en-US',
@@ -971,7 +955,7 @@ export default function ProjectDetails() {
                                 }
                               )}
                               {task.status === 'Completed' && (
-                                <span className="ml-1 text-green-400">✓</span>
+                                <span className='ml-1 text-green-400'>✓</span>
                               )}
                             </span>
                           </div>
@@ -980,8 +964,8 @@ export default function ProjectDetails() {
 
                       {/* Completed Badge */}
                       {task.status === 'Completed' && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-green-400">
-                          <Check className="w-3 h-3" />
+                        <div className='mt-2 flex items-center gap-1 text-xs text-green-400'>
+                          <Check className='w-3 h-3' />
                           <span>Completed</span>
                         </div>
                       )}
@@ -990,44 +974,61 @@ export default function ProjectDetails() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-400">
+              <div className='text-center py-4 text-gray-400'>
                 No tasks created yet
               </div>
             )}
 
             {/* Add Task Button (Owners only) */}
             {projectMembers.some(
-              (member) =>
-                member.isOwner && member.name === session?.user?.name
+              (member) => member.isOwner && member.name === session?.user?.name
             ) && (
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-sm text-gray-400">
+              <div className='flex items-center justify-between mt-4'>
+                <span className='text-sm text-gray-400'>
                   You can add tasks to this project.
                 </span>
                 <button
                   onClick={() => setShowTaskModal(true)}
-                  className="text-emerald-400 hover:underline text-md inline-flex items-center"
+                  className='text-emerald-400 hover:underline text-md inline-flex items-center'
                 >
-                  <Plus className="w-5 h-5 mr-1" />
+                  <Plus className='w-5 h-5 mr-1' />
                   Add Task
                 </button>
               </div>
             )}
           </div>
 
+          {/* roles needed */}
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <h2 className='text-xl font-semibold text-gray-100 mb-4'>
+              Roles Needed
+            </h2>
+            <ul className='space-y-3'>
+              {project.roles_needed?.map((role: string, index: number) => (
+                <li key={index} className='flex items-center'>
+                  <span className='w-2 h-2 bg-cyan-400 rounded-full mr-3'></span>
+                  <span className='text-gray-300'>{role}</span>
+                </li>
+              ))}
+            </ul>
+            <button className='mt-4 text-emerald-400 hover:underline text-sm'>
+              View all roles
+            </button>
+          </div>
+
           {/* GitHub Repo */}
           {project.github_url && (
-            <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-gray-100 mb-4">
+            <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+              <h2 className='text-xl font-semibold text-gray-100 mb-4'>
                 Repository
               </h2>
               <a
                 href={project.github_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-emerald-400 hover:underline"
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex items-center text-emerald-400 hover:underline'
               >
-                <Github className="w-5 h-5 mr-2" />
+                <Github className='w-5 h-5 mr-2' />
                 View on GitHub
               </a>
             </div>
