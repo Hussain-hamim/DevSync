@@ -57,7 +57,7 @@ export default function ProjectsPage() {
         return;
       }
 
-      // 2. Fetch member counts for all projects in a single query
+      // 2. Fetch all roles with their users
       const { data: rolesData, error: rolesError } = await supabase
         .from('project_roles')
         .select('project_id, filled_by')
@@ -67,36 +67,39 @@ export default function ProjectsPage() {
         console.error('Failed to fetch project roles:', rolesError.message);
       }
 
-      // 3. Create a map of project_id to member count
-      const memberCounts = new Map();
+      // 3. Create a map of project_id to unique member IDs
+      const projectMembersMap = new Map();
+
       if (rolesData) {
         rolesData.forEach((role) => {
-          const count = memberCounts.get(role.project_id) || 0;
-          memberCounts.set(role.project_id, count + 1);
+          if (!projectMembersMap.has(role.project_id)) {
+            projectMembersMap.set(role.project_id, new Set());
+          }
+          projectMembersMap.get(role.project_id).add(role.filled_by);
         });
       }
 
-      // 4. Map Supabase data to your frontend format with member counts
+      // 4. Map Supabase data to your frontend format with accurate member counts
       const mapped = projectsData.map((proj) => {
-        // Get unique members (count creator + filled roles)
-        let count = 0;
+        // Start with creator (if exists)
+        const uniqueMembers = new Set();
+        if (proj.creator_id) {
+          uniqueMembers.add(proj.creator_id);
+        }
 
-        // Count creator (1)
-        if (proj.creator_id) count += 1;
-
-        // Count filled roles from our map
-        const rolesCount = memberCounts.get(proj.id) || 0;
-        count += rolesCount;
+        // Add all unique members from roles
+        const roleMembers = projectMembersMap.get(proj.id) || new Set();
+        roleMembers.forEach((memberId) => uniqueMembers.add(memberId));
 
         return {
           id: proj.id,
           name: proj.title,
           description: proj.description,
           techStack: proj.tech_stack || [],
-          teamSize: count, // Now using actual count
-          views: 0, // Optional: if you don't track views yet
-          category: 'general', // You can infer or set this
-          creatorId: proj.creator_id, // Store for potential use
+          teamSize: uniqueMembers.size, // Now using actual unique count
+          views: Math.ceil(Math.random() * 100) + 100,
+          category: 'general',
+          creatorId: proj.creator_id,
         };
       });
 
@@ -303,7 +306,7 @@ export default function ProjectsPage() {
                           {/* Project content */}
                           <div className='p-6'>
                             <div className='mb-4'>
-                              <GitBranch className='w-6 h-6 text-emerald-400 mb-2' />
+                              <GitBranch className='w-6 h-6 text-amber-400 mb-2' />
                               <h3 className='text-lg font-bold text-gray-100 mb-1'>
                                 {project.name}
                               </h3>
