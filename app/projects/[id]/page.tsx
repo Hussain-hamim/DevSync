@@ -765,9 +765,12 @@ export default function ProjectDetails() {
               <h2 className='text-xl font-semibold text-gray-100'>
                 Project Members
               </h2>
-              <button className='text-sm text-emerald-400 hover:text-emerald-300 transition-colors'>
+              <Link
+                href={`/teams/${project.id}`}
+                className='flex items-center hover:underline text-sm text-emerald-400 hover:text-emerald-300 transition-colors'
+              >
                 View Team
-              </button>
+              </Link>
             </div>
 
             <ul className=''>
