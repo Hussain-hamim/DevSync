@@ -22,6 +22,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
+import { JoinProjectModal } from '@/app/projects/[id]/JoinProjectModal';
 
 dayjs.extend(relativeTime);
 
@@ -49,7 +50,7 @@ interface TeamActivity {
   content: string;
   type: string;
   created_at: string;
-  users: {
+  user: {
     name: string;
     avatar_url?: string;
   };
@@ -63,6 +64,8 @@ export default function TeamDetails() {
   const [teamTasks, setTeamTasks] = useState<TeamTask[]>([]);
   const [teamActivities, setTeamActivities] = useState<TeamActivity[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -80,7 +83,7 @@ export default function TeamDetails() {
       // Fetch project data
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('title, creator_id')
+        .select('title, creator_id, roles_needed')
         .eq('id', params.id)
         .single();
 
@@ -88,6 +91,7 @@ export default function TeamDetails() {
         throw projectError || new Error('Team not found');
 
       setTeamName(projectData.title);
+      setAvailableRoles(projectData.roles_needed || []);
 
       // Fetch team members
       const membersMap = new Map<string, TeamMember>();
@@ -145,16 +149,35 @@ export default function TeamDetails() {
       if (tasksError) throw tasksError;
       setTeamTasks(tasksData || []);
 
-      // Fetch activities
+      // Update the fetch activities query
       const { data: activitiesData, error: activitiesError } = await supabase
-        .from('activities')
-        .select('id, content, type, created_at, users(name, avatar_url)')
+        .from('activities2')
+        .select(
+          `
+    id, 
+    activity_type,
+    activity_data,
+    created_at, 
+    user_id (
+      name,
+      avatar_url
+    )
+  `
+        )
         .eq('project_id', params.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (activitiesError) throw activitiesError;
-      setTeamActivities(activitiesData || []);
+
+      // Map activities to correct format
+      const formattedActivities =
+        activitiesData?.map((activity) => ({
+          ...activity,
+          user: activity.user_id,
+        })) || [];
+
+      setTeamActivities(formattedActivities);
     } catch (error) {
       console.error('Error fetching team data:', error);
     } finally {
@@ -194,7 +217,11 @@ export default function TeamDetails() {
 
   const getUpcomingTasks = () => {
     return teamTasks
-      .filter((t) => t.due_date && !['Done', 'Cancelled'].includes(t.status))
+      .filter(
+        (t) =>
+          t.due_date &&
+          ['In Progress', 'Not Started', 'Pending'].includes(t.status)
+      )
       .sort(
         (a, b) =>
           new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
@@ -202,22 +229,40 @@ export default function TeamDetails() {
       .slice(0, 3);
   };
 
+  // Update the renderActivityText function
   const renderActivityText = (activity: TeamActivity) => {
-    switch (activity.type) {
+    const data = activity.activity_data || {};
+    const user = activity.user_id || { name: 'Unknown User' };
+
+    switch (activity.activity_type) {
+      case 'task_created':
+        return `${user.name} created task "${data.task_title || 'a task'}"`;
+      case 'task_completed':
+        return `${user.name} completed task "${data.task_title || 'a task'}"`;
+      case 'task_started':
+        return `${user.name} started working on "${
+          data.task_title || 'a task'
+        }"`;
+      case 'role_assigned':
+        return `${user.name} joined as ${data.role || 'a member'}`;
+      case 'discussion_created':
+        return `${user.name} started a discussion`;
+      case 'project_updated':
+        return `${user.name} updated project details`;
       case 'commit':
-        return 'pushed new code';
+        return `${user.name} pushed new code to ${data.branch || 'main'}`;
       case 'comment':
-        return 'commented on the project';
-      case 'task':
-        return 'updated a task';
+        return `${user.name} commented on ${data.entity || 'the project'}`;
       default:
-        return activity.content;
+        return `${user.name} performed an action`;
     }
   };
 
   const isCurrentUserOwner = teamMembers.some(
     (m) => m.isOwner && m.id === currentUser?.id
   );
+
+  const isCurrentUserMember = teamMembers.some((m) => m.id === currentUser?.id);
 
   const stats = {
     totalTasks: teamTasks.length,
@@ -227,6 +272,30 @@ export default function TeamDetails() {
       (t) =>
         t.due_date && new Date(t.due_date) < new Date() && t.status !== 'Done'
     ).length,
+  };
+
+  const handleJoinSubmit = async (role: string, message: string) => {
+    if (!currentUser?.id) {
+      alert('Please sign in to join the team');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('project_roles').insert({
+        project_id: params.id,
+        title: role,
+        filled_by: currentUser.id,
+      });
+
+      if (error) throw error;
+
+      // Refresh team data
+      await fetchTeamData();
+      setShowJoinModal(false);
+    } catch (error) {
+      console.error('Error joining team:', error);
+      alert('Failed to join team');
+    }
   };
 
   if (loading) {
@@ -282,26 +351,42 @@ export default function TeamDetails() {
                 <ClipboardList className='w-4 h-4' />
                 <span>{stats.totalTasks} tasks</span>
               </div>
+              <div className='flex items-center space-x-1'>
+                <CheckCircle className='w-4 h-4' />
+                <span>{stats.completedTasks} completed</span>
+              </div>
             </div>
           </div>
-          {isCurrentUserOwner && (
-            <div className='flex gap-2'>
+          <div className='flex gap-2'>
+            {!isCurrentUserMember && availableRoles.length > 0 && (
               <motion.button
+                onClick={() => setShowJoinModal(true)}
                 whileHover={{ scale: 1.05 }}
                 className='flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-sm'
               >
                 <Plus className='w-4 h-4' />
-                Invite Member
+                Join Team
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                className='flex items-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm'
-              >
-                <Settings className='w-4 h-4' />
-                Settings
-              </motion.button>
-            </div>
-          )}
+            )}
+            {isCurrentUserOwner && (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className='flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-sm'
+                >
+                  <Plus className='w-4 h-4' />
+                  Invite Member
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className='flex items-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm'
+                >
+                  <Settings className='w-4 h-4' />
+                  Settings
+                </motion.button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
@@ -386,20 +471,19 @@ export default function TeamDetails() {
             <div className='space-y-4'>
               {teamActivities.map((activity) => (
                 <div key={activity.id} className='flex gap-3'>
-                  {activity.users.avatar_url ? (
+                  {activity.user_id?.avatar_url ? (
                     <img
-                      src={activity.users.avatar_url}
-                      alt={activity.users.name}
+                      src={activity.user_id.avatar_url}
+                      alt={activity.user_id.name}
                       className='w-8 h-8 rounded-full'
                     />
                   ) : (
                     <div className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-gray-300'>
-                      {activity.users.name.charAt(0)}
+                      {activity.user_id?.name?.charAt(0) || 'U'}
                     </div>
                   )}
                   <div>
                     <p className='text-sm text-gray-100'>
-                      <span className='font-medium'>{activity.users.name}</span>{' '}
                       {renderActivityText(activity)}
                     </p>
                     <p className='text-xs text-gray-400'>
@@ -561,6 +645,15 @@ export default function TeamDetails() {
           </div>
         </motion.div>
       </div>
+
+      {/* Join Team Modal */}
+      <JoinProjectModal
+        projectName={teamName}
+        rolesNeeded={availableRoles}
+        show={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSubmit={handleJoinSubmit}
+      />
     </div>
   );
 }
