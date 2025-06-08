@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import { EditTaskModal } from './EditTaskModal';
 
 interface Comment {
   id: string;
@@ -71,6 +72,152 @@ export default function TaskDetailsPage() {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showStatusButtons, setShowStatusButtons] = useState(false);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [projectMembers, setProjectMembers] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  const fetchTaskDetails = async () => {
+    setLoading(true);
+    try {
+      // Fetch task with assigned user and creator info
+      const { data: taskData, error: taskError } = await supabase
+        .from('tasks')
+        .select(
+          `
+        *,
+        assigned_to:assigned_to(id, name, avatar_url),
+        created_by:created_by(id, name, avatar_url)
+      `
+        )
+        .eq('id', params.taskId)
+        .single();
+
+      if (taskError) throw taskError;
+
+      // Fetch comments with user info
+      const { data: comments, error: commentsError } = await supabase
+        .from('task_comments')
+        .select(
+          `
+        *,
+        user:users(id, name, avatar_url)
+      `
+        )
+        .eq('task_id', params.taskId)
+        .order('created_at', { ascending: true });
+
+      if (commentsError) throw commentsError;
+
+      // Fetch activity log with user info
+      const { data: activities, error: activitiesError } = await supabase
+        .from('task_activities')
+        .select(
+          `
+        *,
+        user:users(id, name, avatar_url)
+      `
+        )
+        .eq('task_id', params.taskId)
+        .order('created_at', { ascending: false });
+
+      if (activitiesError) throw activitiesError;
+
+      setTask({
+        ...taskData,
+        comments: comments || [],
+        activities: activities || [],
+      });
+    } catch (error) {
+      console.error('Error fetching task details:', error);
+      toast.error('Failed to load task details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        // ────── Fetch project members ──────
+        const { data: membersData, error: membersError } = await supabase
+          .from('project_roles')
+          .select(
+            `
+            users(id, name, avatar_url)
+          `
+          )
+          .eq('project_id', params.id)
+          .not('filled_by', 'is', null);
+
+        if (membersError) {
+          console.error('Failed to load project members:', membersError);
+        }
+
+        const mappedMembers = membersData
+          ?.map((m: any) => m.users)
+          .filter(Boolean) as any[];
+        setProjectMembers(mappedMembers || []);
+      } catch (error) {
+        console.error('Error fetching project data:', error);
+      }
+    };
+
+    if (params.id) {
+      fetchProjectData();
+    }
+  }, [params.id]);
+
+  // Add this function to your TaskDetailsPage component
+  const handleDeleteTask = async () => {
+    if (!task || !session?.user?.email) return;
+
+    try {
+      // Get current user from Supabase
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', session.user.email)
+        .single();
+
+      if (userError || !userData) {
+        throw userError || new Error('User not found');
+      }
+
+      // Check if current user is the task creator
+      if (task.created_by.id !== userData.id) {
+        toast.error('Only the task creator can delete this task');
+        return;
+      }
+
+      // Delete task from database
+      const { error: deleteError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', task.id);
+
+      if (deleteError) throw deleteError;
+
+      // Log activity in team activities table
+      await supabase.from('activities2').insert({
+        project_id: params.id,
+        user_id: userData.id,
+        activity_type: 'task_deleted',
+        activity_data: {
+          task_id: task.id,
+          task_title: task.title,
+        },
+      });
+
+      toast.success('Task deleted successfully');
+      // Redirect back to tasks list
+      window.location.href = `/projects/${params.id}/tasks`;
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task');
+    }
+  };
 
   const isUserOwnerOrAssignee = async () => {
     if (!session?.user?.email) return false;
@@ -403,10 +550,16 @@ export default function TaskDetailsPage() {
                   {task.title}
                 </h1>
                 <div className='flex gap-2'>
-                  <button className='text-gray-400 hover:text-emerald-400 p-1'>
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className='text-gray-400 hover:text-emerald-400 p-1'
+                  >
                     <Edit className='w-5 h-5' />
                   </button>
-                  <button className='text-gray-400 hover:text-red-400 p-1'>
+                  <button
+                    onClick={handleDeleteTask}
+                    className='text-gray-400 hover:text-red-400 p-1'
+                  >
                     <Trash2 className='w-5 h-5' />
                   </button>
                 </div>
@@ -682,6 +835,28 @@ export default function TaskDetailsPage() {
           </div>
         </div>
       </div>
+
+      {task && (
+        <EditTaskModal
+          task={{
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            priority: task.priority,
+            assigned_to: task.assigned_to?.id || null,
+            due_date: task.due_date,
+          }}
+          projectMembers={projectMembers}
+          show={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          projectId={params.id as string}
+          onTaskUpdated={() => {
+            // Refetch task details
+            fetchTaskDetails();
+          }}
+        />
+      )}
     </div>
   );
 }
