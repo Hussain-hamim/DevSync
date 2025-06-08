@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Calendar,
@@ -22,6 +22,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from '@/app/projects/[id]/JoinProjectModal';
 
 dayjs.extend(relativeTime);
@@ -47,16 +48,17 @@ interface TeamTask {
 
 interface TeamActivity {
   id: string;
-  content: string;
-  type: string;
+  activity_type: string;
+  activity_data: any;
   created_at: string;
-  user: {
+  user_id: {
     name: string;
     avatar_url?: string;
   };
 }
 
 export default function TeamDetails() {
+  const { data: session } = useSession();
   const params = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [teamName, setTeamName] = useState('');
@@ -66,16 +68,57 @@ export default function TeamDetails() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.4,
+      },
+    },
+  };
+
+  const buttonHover = {
+    scale: 1.05,
+    transition: { duration: 0.2 },
+  };
+
+  const buttonTap = {
+    scale: 0.98,
+    transition: { duration: 0.1 },
+  };
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setCurrentUser(user);
+      if (session?.user?.email) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
+
+        if (userData) {
+          setCurrentUser(userData);
+          setUserId(userData.id);
+        }
+      }
     };
     fetchCurrentUser();
-  }, []);
+  }, [session]);
 
   const fetchTeamData = async () => {
     setLoading(true);
@@ -91,7 +134,23 @@ export default function TeamDetails() {
         throw projectError || new Error('Team not found');
 
       setTeamName(projectData.title);
-      setAvailableRoles(projectData.roles_needed || []);
+
+      // Prepare available roles
+      const allRoles = projectData.roles_needed || [];
+      if (userId) {
+        const { data: takenRoles } = await supabase
+          .from('project_roles')
+          .select('title')
+          .eq('project_id', params.id)
+          .eq('filled_by', userId);
+
+        const userTakenRoles = takenRoles?.map((r) => r.title) || [];
+        setAvailableRoles(
+          allRoles.filter((role) => !userTakenRoles.includes(role))
+        );
+      } else {
+        setAvailableRoles(allRoles);
+      }
 
       // Fetch team members
       const membersMap = new Map<string, TeamMember>();
@@ -149,20 +208,20 @@ export default function TeamDetails() {
       if (tasksError) throw tasksError;
       setTeamTasks(tasksData || []);
 
-      // Update the fetch activities query
+      // Fetch activities
       const { data: activitiesData, error: activitiesError } = await supabase
         .from('activities2')
         .select(
           `
-    id, 
-    activity_type,
-    activity_data,
-    created_at, 
-    user_id (
-      name,
-      avatar_url
-    )
-  `
+          id, 
+          activity_type,
+          activity_data,
+          created_at, 
+          user_id (
+            name,
+            avatar_url
+          )
+        `
         )
         .eq('project_id', params.id)
         .order('created_at', { ascending: false })
@@ -170,7 +229,6 @@ export default function TeamDetails() {
 
       if (activitiesError) throw activitiesError;
 
-      // Map activities to correct format
       const formattedActivities =
         activitiesData?.map((activity) => ({
           ...activity,
@@ -205,7 +263,7 @@ export default function TeamDetails() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [params.id]);
+  }, [params.id, userId]);
 
   const getMemberWorkload = () => {
     return teamMembers.map((member) => ({
@@ -229,7 +287,6 @@ export default function TeamDetails() {
       .slice(0, 3);
   };
 
-  // Update the renderActivityText function
   const renderActivityText = (activity: TeamActivity) => {
     const data = activity.activity_data || {};
     const user = activity.user_id || { name: 'Unknown User' };
@@ -259,23 +316,25 @@ export default function TeamDetails() {
   };
 
   const isCurrentUserOwner = teamMembers.some(
-    (m) => m.isOwner && m.id === currentUser?.id
+    (m) => m.isOwner && m.id === userId
   );
 
-  const isCurrentUserMember = teamMembers.some((m) => m.id === currentUser?.id);
+  const isCurrentUserMember = teamMembers.some((m) => m.id === userId);
 
   const stats = {
     totalTasks: teamTasks.length,
-    completedTasks: teamTasks.filter((t) => t.status === 'Done').length,
+    completedTasks: teamTasks.filter((t) => t.status === 'Completed').length,
     inProgressTasks: teamTasks.filter((t) => t.status === 'In Progress').length,
     overdueTasks: teamTasks.filter(
       (t) =>
-        t.due_date && new Date(t.due_date) < new Date() && t.status !== 'Done'
+        t.due_date &&
+        new Date(t.due_date) < new Date() &&
+        t.status !== 'Completed'
     ).length,
   };
 
   const handleJoinSubmit = async (role: string, message: string) => {
-    if (!currentUser?.id) {
+    if (!userId) {
       alert('Please sign in to join the team');
       return;
     }
@@ -284,7 +343,7 @@ export default function TeamDetails() {
       const { error } = await supabase.from('project_roles').insert({
         project_id: params.id,
         title: role,
-        filled_by: currentUser.id,
+        filled_by: userId,
       });
 
       if (error) throw error;
@@ -302,9 +361,11 @@ export default function TeamDetails() {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
         <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
-          <div className='animate-pulse text-gray-400'>
-            Loading team data...
-          </div>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className='w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full'
+          />
         </div>
       </div>
     );
@@ -327,6 +388,7 @@ export default function TeamDetails() {
         <motion.button
           onClick={() => window.history.back()}
           whileHover={{ x: -4 }}
+          whileTap={{ scale: 0.98 }}
           className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
         >
           <ArrowLeft className='w-5 h-5' />
@@ -334,10 +396,20 @@ export default function TeamDetails() {
         </motion.button>
 
         {/* Team Header */}
-        <div className='flex items-start justify-between mb-8'>
-          <div>
+        <motion.div
+          initial='hidden'
+          animate='visible'
+          variants={containerVariants}
+          className='flex items-start justify-between mb-8'
+        >
+          <motion.div variants={itemVariants}>
             <div className='flex items-center space-x-3 mb-4'>
-              <Users className='w-6 h-6 text-emerald-400' />
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <Users className='w-6 h-6 text-emerald-400' />
+              </motion.div>
               <h1 className='text-2xl md:text-3xl font-bold text-gray-100'>
                 {teamName} Team
               </h1>
@@ -356,13 +428,15 @@ export default function TeamDetails() {
                 <span>{stats.completedTasks} completed</span>
               </div>
             </div>
-          </div>
-          <div className='flex gap-2'>
-            {!isCurrentUserMember && availableRoles.length > 0 && (
+          </motion.div>
+
+          <motion.div variants={itemVariants} className='flex gap-2'>
+            {!isCurrentUserMember && (
               <motion.button
                 onClick={() => setShowJoinModal(true)}
-                whileHover={{ scale: 1.05 }}
-                className='flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-sm'
+                whileHover={buttonHover}
+                whileTap={buttonTap}
+                className='flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 rounded-lg font-medium hover:opacity-90 transition-opacity'
               >
                 <Plus className='w-4 h-4' />
                 Join Team
@@ -371,14 +445,16 @@ export default function TeamDetails() {
             {isCurrentUserOwner && (
               <>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={buttonHover}
+                  whileTap={buttonTap}
                   className='flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-sm'
                 >
                   <Plus className='w-4 h-4' />
                   Invite Member
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={buttonHover}
+                  whileTap={buttonTap}
                   className='flex items-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm'
                 >
                   <Settings className='w-4 h-4' />
@@ -386,15 +462,18 @@ export default function TeamDetails() {
                 </motion.button>
               </>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
+        <motion.div
+          initial='hidden'
+          animate='visible'
+          variants={containerVariants}
+          className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'
+        >
           {/* Team Members */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            variants={itemVariants}
             className='lg:col-span-2 bg-gray-800/50 p-6 rounded-xl border border-gray-700'
           >
             <h2 className='text-xl font-semibold mb-4 flex items-center gap-2'>
@@ -408,18 +487,25 @@ export default function TeamDetails() {
                   key={member.id}
                   className='group'
                 >
-                  <div className='bg-gray-700/30 border border-gray-700 rounded-lg p-4 group-hover:border-emerald-400/30 transition-all'>
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className='bg-gray-700/30 border border-gray-700 rounded-lg p-4 group-hover:border-emerald-400/30 transition-all'
+                  >
                     <div className='flex items-center gap-3 mb-2'>
                       {member.avatar_url ? (
-                        <img
+                        <motion.img
                           src={member.avatar_url}
                           alt={member.name}
                           className='w-10 h-10 rounded-full'
+                          whileHover={{ scale: 1.05 }}
                         />
                       ) : (
-                        <div className='w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-gray-300'>
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          className='w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-gray-300'
+                        >
                           {member.name.charAt(0)}
-                        </div>
+                        </motion.div>
                       )}
                       <div>
                         <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
@@ -434,8 +520,9 @@ export default function TeamDetails() {
                     </div>
                     <div className='flex flex-wrap gap-1'>
                       {member.roles.map((role) => (
-                        <span
+                        <motion.span
                           key={role}
+                          whileHover={{ scale: 1.05 }}
                           className={`text-xs px-2 py-1 rounded-full ${
                             role === 'Owner'
                               ? 'bg-purple-900/50 text-purple-400'
@@ -443,7 +530,7 @@ export default function TeamDetails() {
                           }`}
                         >
                           {role}
-                        </span>
+                        </motion.span>
                       ))}
                     </div>
                     <p className='text-xs text-gray-500 mt-2'>
@@ -451,7 +538,7 @@ export default function TeamDetails() {
                         ?.taskCount || 0}{' '}
                       tasks
                     </p>
-                  </div>
+                  </motion.div>
                 </Link>
               ))}
             </div>
@@ -459,9 +546,7 @@ export default function TeamDetails() {
 
           {/* Recent Activity */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            variants={itemVariants}
             className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
           >
             <h2 className='text-xl font-semibold mb-4 flex items-center gap-2'>
@@ -470,17 +555,25 @@ export default function TeamDetails() {
             </h2>
             <div className='space-y-4'>
               {teamActivities.map((activity) => (
-                <div key={activity.id} className='flex gap-3'>
+                <motion.div
+                  key={activity.id}
+                  className='flex gap-3'
+                  whileHover={{ x: 5 }}
+                >
                   {activity.user_id?.avatar_url ? (
-                    <img
+                    <motion.img
                       src={activity.user_id.avatar_url}
                       alt={activity.user_id.name}
                       className='w-8 h-8 rounded-full'
+                      whileHover={{ scale: 1.1 }}
                     />
                   ) : (
-                    <div className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-gray-300'>
+                    <motion.div
+                      className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-gray-300'
+                      whileHover={{ scale: 1.1 }}
+                    >
                       {activity.user_id?.name?.charAt(0) || 'U'}
-                    </div>
+                    </motion.div>
                   )}
                   <div>
                     <p className='text-sm text-gray-100'>
@@ -490,21 +583,25 @@ export default function TeamDetails() {
                       {dayjs(activity.created_at).fromNow()}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               ))}
               {teamActivities.length === 0 && (
                 <p className='text-gray-400 text-sm'>No recent activity</p>
               )}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Stats and Overview */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
+        <motion.div
+          initial='hidden'
+          animate='visible'
+          variants={containerVariants}
+          className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'
+        >
           {/* Task Statistics */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={itemVariants}
             className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
           >
             <h2 className='text-xl font-semibold mb-4 flex items-center gap-2'>
@@ -512,7 +609,10 @@ export default function TeamDetails() {
               Task Overview
             </h2>
             <div className='grid grid-cols-2 gap-4'>
-              <div className='bg-gray-700/30 p-4 rounded-lg'>
+              <motion.div
+                whileHover={{ y: -3 }}
+                className='bg-gray-700/30 p-4 rounded-lg'
+              >
                 <div className='flex items-center gap-2 text-gray-400'>
                   <FileText className='w-4 h-4' />
                   <span className='text-sm'>Total</span>
@@ -520,8 +620,11 @@ export default function TeamDetails() {
                 <p className='text-2xl font-bold mt-2 text-gray-100'>
                   {stats.totalTasks}
                 </p>
-              </div>
-              <div className='bg-gray-700/30 p-4 rounded-lg'>
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -3 }}
+                className='bg-gray-700/30 p-4 rounded-lg'
+              >
                 <div className='flex items-center gap-2 text-gray-400'>
                   <CheckCircle className='w-4 h-4 text-green-400' />
                   <span className='text-sm'>Completed</span>
@@ -529,17 +632,23 @@ export default function TeamDetails() {
                 <p className='text-2xl font-bold mt-2 text-green-400'>
                   {stats.completedTasks}
                 </p>
-              </div>
-              <div className='bg-gray-700/30 p-4 rounded-lg'>
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -3 }}
+                className='bg-gray-700/30 p-4 rounded-lg'
+              >
                 <div className='flex items-center gap-2 text-gray-400'>
-                  <Loader2 className='w-4 h-4 text-yellow-400' />
+                  <Loader2 className='w-4 h-4 text-yellow-400 animate-spin' />
                   <span className='text-sm'>In Progress</span>
                 </div>
                 <p className='text-2xl font-bold mt-2 text-yellow-400'>
                   {stats.inProgressTasks}
                 </p>
-              </div>
-              <div className='bg-gray-700/30 p-4 rounded-lg'>
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -3 }}
+                className='bg-gray-700/30 p-4 rounded-lg'
+              >
                 <div className='flex items-center gap-2 text-gray-400'>
                   <AlertTriangle className='w-4 h-4 text-red-400' />
                   <span className='text-sm'>Overdue</span>
@@ -547,15 +656,13 @@ export default function TeamDetails() {
                 <p className='text-2xl font-bold mt-2 text-red-400'>
                   {stats.overdueTasks}
                 </p>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
 
           {/* Upcoming Deadlines */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            variants={itemVariants}
             className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
           >
             <h2 className='text-xl font-semibold mb-4 flex items-center gap-2'>
@@ -564,8 +671,9 @@ export default function TeamDetails() {
             </h2>
             <div className='space-y-3'>
               {getUpcomingTasks().map((task) => (
-                <div
+                <motion.div
                   key={task.id}
+                  whileHover={{ x: 5 }}
                   className='flex items-start gap-3 p-3 bg-gray-700/30 rounded-lg'
                 >
                   <div
@@ -581,7 +689,8 @@ export default function TeamDetails() {
                       Due {dayjs(task.due_date).fromNow()}
                     </p>
                   </div>
-                  <span
+                  <motion.span
+                    whileHover={{ scale: 1.1 }}
                     className={`text-xs px-2 py-1 rounded-full ${
                       task.priority === 'High'
                         ? 'bg-red-900/50 text-red-400'
@@ -589,15 +698,15 @@ export default function TeamDetails() {
                     }`}
                   >
                     {task.priority}
-                  </span>
-                </div>
+                  </motion.span>
+                </motion.div>
               ))}
               {getUpcomingTasks().length === 0 && (
                 <p className='text-gray-400 text-sm'>No upcoming deadlines</p>
               )}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Workload Distribution */}
         <motion.div
@@ -612,10 +721,17 @@ export default function TeamDetails() {
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {getMemberWorkload().map((member) => (
-              <div key={member.id} className='flex items-center gap-3'>
-                <div className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-gray-300'>
+              <motion.div
+                key={member.id}
+                className='flex items-center gap-3'
+                whileHover={{ x: 5 }}
+              >
+                <motion.div
+                  className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-gray-300'
+                  whileHover={{ scale: 1.1 }}
+                >
                   {member.name.charAt(0)}
-                </div>
+                </motion.div>
                 <div className='flex-1'>
                   <div className='flex justify-between text-sm mb-1'>
                     <span className='text-gray-100'>{member.name}</span>
@@ -624,9 +740,9 @@ export default function TeamDetails() {
                     </span>
                   </div>
                   <div className='w-full bg-gray-700 rounded-full h-2'>
-                    <div
-                      className='bg-emerald-400 h-2 rounded-full'
-                      style={{
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{
                         width: `${Math.min(
                           (member.taskCount /
                             (Math.max(
@@ -637,23 +753,29 @@ export default function TeamDetails() {
                           100
                         )}%`,
                       }}
+                      transition={{ duration: 0.8, type: 'spring' }}
+                      className='bg-emerald-400 h-2 rounded-full'
                     />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
       </div>
 
       {/* Join Team Modal */}
-      <JoinProjectModal
-        projectName={teamName}
-        rolesNeeded={availableRoles}
-        show={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-        onSubmit={handleJoinSubmit}
-      />
+      <AnimatePresence>
+        {showJoinModal && (
+          <JoinProjectModal
+            projectName={teamName}
+            rolesNeeded={availableRoles}
+            show={showJoinModal}
+            onClose={() => setShowJoinModal(false)}
+            onSubmit={handleJoinSubmit}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
