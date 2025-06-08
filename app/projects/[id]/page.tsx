@@ -505,28 +505,6 @@ export default function ProjectDetails() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
-      {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm'>
-        <div className='container mx-auto px-6 py-4'>
-          <div className='flex items-center justify-between'>
-            <Link
-              href='/projects'
-              className='flex items-center text-gray-400 hover:text-emerald-400 transition-colors'
-            >
-              <ArrowLeft className='w-5 h-5 mr-2' />
-              Back to Projects
-            </Link>
-            <button className='text-gray-400 hover:text-emerald-400 transition-colors'>
-              <Star
-                className={`w-5 h-5 ${
-                  project.starred ? 'fill-emerald-400 text-emerald-400' : ''
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Project Header */}
       <div className='container mx-auto px-6 py-8'>
         <div className='flex items-start justify-between'>
@@ -552,6 +530,25 @@ export default function ProjectDetails() {
               <div className='flex items-center space-x-1'>
                 <Eye className='w-4 h-4' />
                 <span>{project.views || 100} views</span>
+              </div>
+
+              {/* New Action Buttons */}
+              <div className='flex items-center gap-3 ml-2'>
+                <Link
+                  href={`/projects/${project.id}/tasks`}
+                  className='flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm rounded-lg hover:opacity-90 transition-opacity'
+                >
+                  <GitBranch className='w-4 h-4' />
+                  View Tasks
+                </Link>
+
+                <Link
+                  href={`/teams/${project.id}`}
+                  className='flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-sm rounded-lg hover:opacity-90 transition-opacity'
+                >
+                  <Users className='w-4 h-4' />
+                  View Team
+                </Link>
               </div>
             </div>
           </div>
