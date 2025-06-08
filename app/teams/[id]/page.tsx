@@ -431,7 +431,7 @@ export default function TeamDetails() {
           </motion.div>
 
           <motion.div variants={itemVariants} className='flex gap-2'>
-            {!isCurrentUserMember && (
+            {
               <motion.button
                 onClick={() => setShowJoinModal(true)}
                 whileHover={buttonHover}
@@ -441,7 +441,7 @@ export default function TeamDetails() {
                 <Plus className='w-4 h-4' />
                 Join Team
               </motion.button>
-            )}
+            }
             {isCurrentUserOwner && (
               <>
                 <motion.button
