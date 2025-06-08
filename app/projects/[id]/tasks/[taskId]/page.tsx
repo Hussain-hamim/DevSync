@@ -155,10 +155,21 @@ export default function TaskDetailsPage() {
           console.error('Failed to load project members:', membersError);
         }
 
-        const mappedMembers = membersData
-          ?.map((m: any) => m.users)
-          .filter(Boolean) as any[];
-        setProjectMembers(mappedMembers || []);
+        // Filter to unique members by their ID
+        const uniqueMembers =
+          membersData
+            ?.map((m: any) => m.users)
+            .filter(Boolean)
+            .reduce((acc: any[], current: any) => {
+              const x = acc.find((item) => item.id === current.id);
+              if (!x) {
+                return acc.concat([current]);
+              } else {
+                return acc;
+              }
+            }, []) || [];
+
+        setProjectMembers(uniqueMembers);
       } catch (error) {
         console.error('Error fetching project data:', error);
       }
