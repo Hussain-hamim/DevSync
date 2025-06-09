@@ -517,19 +517,21 @@ export default function ProjectDetails() {
             </div>
 
             <div className='flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-y-3 gap-x-4 text-sm text-gray-400 mb-4 sm:mb-6'>
-              <div className='flex items-center space-x-1'>
-                <Users className='w-4 h-4' />
-                <span>{projectMembers.length} members</span>
-              </div>
+              <div className='flex flex-row flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400'>
+                <div className='flex items-center space-x-1'>
+                  <Users className='w-4 h-4' />
+                  <span>{projectMembers.length} members</span>
+                </div>
 
-              <div className='flex items-center space-x-1'>
-                <Calendar className='w-4 h-4' />
-                <span>Created {dayjs(project.created_at).fromNow()}</span>
-              </div>
+                <div className='flex items-center space-x-1'>
+                  <Calendar className='w-4 h-4' />
+                  <span>Created {dayjs(project.created_at).fromNow()}</span>
+                </div>
 
-              <div className='flex items-center space-x-1'>
-                <Eye className='w-4 h-4' />
-                <span>{project.views || 100} views</span>
+                <div className='flex items-center space-x-1'>
+                  <Eye className='w-4 h-4' />
+                  <span>{project.views || 100} views</span>
+                </div>
               </div>
 
               {/* Action Buttons - full width on mobile */}
