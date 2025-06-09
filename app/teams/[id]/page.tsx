@@ -400,9 +400,9 @@ export default function TeamDetails() {
           initial='hidden'
           animate='visible'
           variants={containerVariants}
-          className='flex items-start justify-between mb-8'
+          className='flex flex-col md:flex-row md:items-start justify-between mb-8 gap-4'
         >
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} className='flex-1'>
             <div className='flex items-center space-x-3 mb-4'>
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
@@ -414,7 +414,7 @@ export default function TeamDetails() {
                 {teamName} Team
               </h1>
             </div>
-            <div className='flex flex-wrap items-center gap-4 text-sm text-gray-400'>
+            <div className='flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400'>
               <div className='flex items-center space-x-1'>
                 <Users className='w-4 h-4' />
                 <span>{teamMembers.length} members</span>
@@ -430,24 +430,27 @@ export default function TeamDetails() {
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className='flex gap-2'>
+          <motion.div
+            variants={itemVariants}
+            className='flex flex-col sm:flex-row gap-2 w-full md:w-auto'
+          >
             {
               <motion.button
                 onClick={() => setShowJoinModal(true)}
                 whileHover={buttonHover}
                 whileTap={buttonTap}
-                className='flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 rounded-lg font-medium hover:opacity-90 transition-opacity'
+                className='flex items-center justify-center gap-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 rounded-lg font-medium hover:opacity-90 transition-opacity w-full sm:w-auto'
               >
                 <Plus className='w-4 h-4' />
                 Join Team
               </motion.button>
             }
             {isCurrentUserOwner && (
-              <>
+              <div className='flex flex-col sm:flex-row gap-2 w-full sm:w-auto'>
                 <motion.button
                   whileHover={buttonHover}
                   whileTap={buttonTap}
-                  className='flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-sm'
+                  className='flex items-center justify-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-sm w-full sm:w-auto'
                 >
                   <Plus className='w-4 h-4' />
                   Invite Member
@@ -455,12 +458,12 @@ export default function TeamDetails() {
                 <motion.button
                   whileHover={buttonHover}
                   whileTap={buttonTap}
-                  className='flex items-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm'
+                  className='flex items-center justify-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm w-full sm:w-auto'
                 >
                   <Settings className='w-4 h-4' />
                   Settings
                 </motion.button>
-              </>
+              </div>
             )}
           </motion.div>
         </motion.div>
