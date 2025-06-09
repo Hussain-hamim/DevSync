@@ -560,20 +560,22 @@ export default function TaskDetailsPage() {
                 <h1 className='text-2xl font-bold text-gray-100'>
                   {task.title}
                 </h1>
-                <div className='flex gap-2'>
-                  <button
-                    onClick={() => setShowEditModal(true)}
-                    className='text-gray-400 hover:text-emerald-400 p-1'
-                  >
-                    <Edit className='w-5 h-5' />
-                  </button>
-                  <button
-                    onClick={handleDeleteTask}
-                    className='text-gray-400 hover:text-red-400 p-1'
-                  >
-                    <Trash2 className='w-5 h-5' />
-                  </button>
-                </div>
+                {showStatusButtons && (
+                  <div className='flex gap-2'>
+                    <button
+                      onClick={() => setShowEditModal(true)}
+                      className='text-gray-400 hover:text-emerald-400 p-1'
+                    >
+                      <Edit className='w-5 h-5' />
+                    </button>
+                    <button
+                      onClick={handleDeleteTask}
+                      className='text-gray-400 hover:text-red-400 p-1'
+                    >
+                      <Trash2 className='w-5 h-5' />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className='flex flex-wrap items-center gap-4 mb-6'>

@@ -506,9 +506,9 @@ export default function ProjectDetails() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Project Header */}
-      <div className='container mx-auto px-6 py-8'>
-        <div className='flex items-start justify-between'>
-          <div>
+      <div className='container mx-auto px-4 sm:px-6 py-6 sm:py-8'>
+        <div className='flex flex-col md:flex-row md:items-start justify-between gap-4'>
+          <div className='flex-1'>
             <div className='flex items-center space-x-3 mb-4'>
               <GitBranch className='w-6 h-6 text-emerald-400' />
               <h1 className='text-2xl md:text-3xl font-bold text-gray-100'>
@@ -516,7 +516,7 @@ export default function ProjectDetails() {
               </h1>
             </div>
 
-            <div className='flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-6'>
+            <div className='flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-y-3 gap-x-4 text-sm text-gray-400 mb-4 sm:mb-6'>
               <div className='flex items-center space-x-1'>
                 <Users className='w-4 h-4' />
                 <span>{projectMembers.length} members</span>
@@ -532,32 +532,36 @@ export default function ProjectDetails() {
                 <span>{project.views || 100} views</span>
               </div>
 
-              {/* New Action Buttons */}
-              <div className='flex items-center gap-3 ml-2'>
-                <Link
-                  href={`/projects/${project.id}/tasks`}
-                  className='flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm rounded-lg hover:opacity-90 transition-opacity'
-                >
-                  <GitBranch className='w-4 h-4' />
-                  View Tasks
-                </Link>
+              {/* Action Buttons - full width on mobile */}
+              <div className='w-full sm:w-auto mt-2 sm:mt-0'>
+                <div className='flex flex-row xs:flex-row gap-2 w-full'>
+                  <Link
+                    href={`/projects/${project.id}/tasks`}
+                    className='flex items-center justify-center gap-1 px-3 py-1.5 sm:py-1 bg-gradient-to-r from-purple-600/90 to-indigo-600/90 text-white text-sm rounded-md hover:opacity-90 transition-all duration-200 w-full sm:w-auto'
+                  >
+                    <GitBranch className='w-3.5 h-3.5' />
+                    <span>View Tasks</span>
+                  </Link>
 
-                <Link
-                  href={`/teams/${project.id}`}
-                  className='flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-sm rounded-lg hover:opacity-90 transition-opacity'
-                >
-                  <Users className='w-4 h-4' />
-                  View Team
-                </Link>
+                  <Link
+                    href={`/teams/${project.id}`}
+                    className='flex items-center justify-center gap-1 px-3 py-1.5 sm:py-1 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 text-white text-sm rounded-md hover:opacity-90 transition-all duration-200 w-full sm:w-auto'
+                  >
+                    <Users className='w-3.5 h-3.5' />
+                    <span>View Team</span>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Join Button - full width on mobile */}
           <button
             onClick={() => setShowJoinModal(true)}
-            className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity'
+            className='flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-500/90 to-cyan-500/90 text-gray-900 px-4 py-2 sm:py-1.5 text-sm sm:text-base rounded-md font-medium hover:opacity-90 transition-all duration-200 w-full md:w-auto'
           >
-            Join Project
+            <Plus className='w-3.5 h-3.5' />
+            <span>Join Project</span>
           </button>
         </div>
       </div>
