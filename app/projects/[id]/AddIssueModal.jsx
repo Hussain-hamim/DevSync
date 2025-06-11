@@ -5,6 +5,7 @@ import { supabase } from '@/app/lib/supabase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { X } from 'lucide-react';
 
 const issueSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
@@ -73,7 +74,7 @@ export function AddIssueModal({ projectId, show, onClose, onIssueCreated }) {
             onClick={onClose}
             className='text-gray-400 hover:text-gray-200'
           >
-            &times;
+            <X className='w-5 h-5' />
           </button>
         </div>
 
