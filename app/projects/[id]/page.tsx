@@ -15,12 +15,13 @@ import {
   Plus,
   Check,
   Calendar as CalendarIcon,
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
 import { joinProjectRole } from '@/app/actions/joinProject';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from './JoinProjectModal';
 import Header from '@/components/Header';
@@ -28,6 +29,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { AddTaskModal } from './AddTaskModal';
+import { AddIssueModal } from './AddIssueModal';
 
 // Form validation imports
 import { useForm } from 'react-hook-form';
@@ -49,6 +51,40 @@ export default function ProjectDetails() {
   // Tasks state & sorting
   const [tasks, setTasks] = useState<any[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
+
+  //
+  const [issues, setIssues] = useState<any[]>([]);
+  const [loadingIssues, setLoadingIssues] = useState(true);
+  const [showIssueModal, setShowIssueModal] = useState(false);
+
+  const onIssueCreated = (newIssue) => {
+    setIssues((prev) => [newIssue, ...prev]);
+    fetchIssues(); // Refresh issues list
+  };
+
+  const fetchIssues = async () => {
+    setLoadingIssues(true);
+    try {
+      const { data, error } = await supabase
+        .from('issues')
+        .select(
+          `
+        *,
+        created_by:created_by(id, name, avatar_url),
+        assigned_to:assigned_to(id, name, avatar_url)
+      `
+        )
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setIssues(data || []);
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+    } finally {
+      setLoadingIssues(false);
+    }
+  };
 
   // Fetch + sort tasks client-side, then slice the top 4
   const fetchTasks = async () => {
@@ -417,6 +453,7 @@ export default function ProjectDetails() {
     fetchProjectMembers();
     fetchActivities();
     fetchDiscussions();
+    fetchIssues();
   }, [project?.id]);
 
   // Post a new discussion
@@ -1036,8 +1073,128 @@ export default function ProjectDetails() {
               </a>
             </div>
           )}
+
+          {/* Issues Section */}
+          <div className='bg-gray-800/60 border border-gray-700 rounded-xl p-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-100'>Issues</h2>
+              <button
+                onClick={() => setShowIssueModal(true)}
+                className='text-emerald-400 hover:underline text-sm flex items-center'
+              >
+                <Plus className='w-4 h-4 mr-1' />
+                New Issue
+              </button>
+            </div>
+
+            {loadingIssues ? (
+              <div className='space-y-4'>
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 animate-pulse h-20'
+                  />
+                ))}
+              </div>
+            ) : issues.length > 0 ? (
+              <div className='space-y-4'>
+                {issues.map((issue) => (
+                  <div
+                    key={issue.id}
+                    className='p-4 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors'
+                  >
+                    <div className='flex items-start gap-3'>
+                      <div className='flex-shrink-0'>
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                            issue.status === 'Open'
+                              ? 'bg-green-900/50 text-green-400'
+                              : issue.status === 'In Progress'
+                              ? 'bg-blue-900/50 text-blue-400'
+                              : 'bg-gray-700 text-gray-400'
+                          }`}
+                        >
+                          {issue.status === 'Open'
+                            ? '!'
+                            : issue.status === 'In Progress'
+                            ? '→'
+                            : '✓'}
+                        </div>
+                      </div>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-baseline gap-2'>
+                          <h3 className='text-gray-100 font-medium hover:underline cursor-pointer'>
+                            {issue.title}
+                          </h3>
+                          {issue.priority === 'High' && (
+                            <span className='text-xs bg-red-900/50 text-red-300 px-2 py-0.5 rounded'>
+                              High Priority
+                            </span>
+                          )}
+                          {issue.priority === 'Critical' && (
+                            <span className='text-xs bg-purple-900/50 text-purple-300 px-2 py-0.5 rounded'>
+                              Critical
+                            </span>
+                          )}
+                        </div>
+                        <p className='mt-1 text-gray-400 text-sm line-clamp-2'>
+                          {issue.description}
+                        </p>
+                        <div className='mt-2 flex flex-wrap items-center gap-3 text-xs'>
+                          <span className='text-gray-500'>
+                            #{issue.id.split('-')[0]}
+                          </span>
+                          <span className='text-gray-500'>
+                            opened {dayjs(issue.created_at).fromNow()} by{' '}
+                            {issue.created_by?.name || 'Anonymous'}
+                          </span>
+                          {issue.assigned_to && (
+                            <span className='flex items-center gap-1 text-gray-400'>
+                              <User className='w-3 h-3' />
+                              {issue.assigned_to.name}
+                            </span>
+                          )}
+                          {issue.labels?.length > 0 && (
+                            <div className='flex flex-wrap gap-1'>
+                              {issue.labels.map((label, i) => (
+                                <span
+                                  key={i}
+                                  className='bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full text-xs'
+                                >
+                                  {label}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className='text-center py-6 text-gray-500'>
+                <MessageSquare className='w-8 h-8 mx-auto mb-2 text-gray-600' />
+                <p>No issues reported yet</p>
+                <button
+                  onClick={() => setShowIssueModal(true)}
+                  className='mt-3 text-emerald-400 hover:underline text-sm flex items-center justify-center mx-auto'
+                >
+                  <Plus className='w-4 h-4 mr-1' />
+                  Create first issue
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <AddIssueModal
+        projectId={project.id}
+        show={showIssueModal}
+        onClose={() => setShowIssueModal(false)}
+        onIssueCreated={onIssueCreated}
+      />
 
       {/* Join Project Modal */}
       <JoinProjectModal
