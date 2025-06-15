@@ -22,12 +22,13 @@ import {
   Zap,
 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import Header from '@/components/Header';
 import { supabase } from './lib/supabase';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import FloatingElements from '@/components/FloatingElements';
 
 export default function Home() {
   const heroRef = useRef(null);
@@ -73,57 +74,9 @@ export default function Home() {
     fetchProjects();
   }, []);
 
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  });
-
-  const yBg = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
-  const opacityBg = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
-  const floatingElements = [
-    {
-      icon: <Code className='w-6 h-6 text-emerald-400' />,
-      top: '15%',
-      left: '10%',
-      delay: 0.1,
-    },
-    {
-      icon: <GitMerge className='w-6 h-6 text-cyan-400' />,
-      top: '25%',
-      left: '85%',
-      delay: 0.3,
-    },
-    {
-      icon: <Server className='w-6 h-6 text-purple-400' />,
-      top: '75%',
-      left: '15%',
-      delay: 0.5,
-    },
-    {
-      icon: <CpuIcon className='w-6 h-6 text-yellow-400' />,
-      top: '65%',
-      left: '80%',
-      delay: 0.7,
-    },
-    {
-      icon: <Zap className='w-6 h-6 text-pink-400' />,
-      top: '40%',
-      left: '25%',
-      delay: 0.2,
-    },
-    {
-      icon: <Terminal className='w-6 h-6 text-blue-400' />,
-      top: '50%',
-      left: '70%',
-      delay: 0.4,
-    },
-  ];
-
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100 overflow-x-hidden'>
       {/* Smart Header */}
-      {/* <Header /> */}
       <Header />
 
       {/* Hero Section */}
@@ -132,36 +85,10 @@ export default function Home() {
         className='relative pt-32 pb-24 px-6 overflow-hidden min-h-screen flex items-center justify-center'
       >
         {/* Animated background elements */}
-        <motion.div
-          style={{ y: yBg, opacity: opacityBg }}
-          className='absolute inset-0 overflow-hidden pointer-events-none'
-        >
-          {floatingElements.map((element, index) => (
-            <motion.div
-              key={index}
-              initial={{ y: 0, opacity: 0 }}
-              animate={{
-                y: [0, -20, 0, 20, 0],
-                opacity: [0, 1, 1, 1, 0],
-              }}
-              transition={{
-                duration: 8 + index,
-                delay: element.delay,
-                repeat: Infinity,
-                repeatType: 'reverse',
-                ease: 'easeInOut',
-              }}
-              className='absolute'
-              style={{ top: element.top, left: element.left }}
-            >
-              {element.icon}
-            </motion.div>
-          ))}
-        </motion.div>
+        <FloatingElements />
 
         {/* Grid pattern */}
         <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-20'></div>
-
         <div className='container mx-auto relative z-10'>
           <div className='max-w-3xl mx-auto text-center'>
             <motion.div
@@ -316,9 +243,6 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
-
-      {/* Rest of your sections (Features Grid, Project Showcase, etc.) */}
-      {/* ... keep your existing sections but consider adding motion to them as well ... */}
 
       {/* Features Grid */}
       <section className='py-20 px-6 bg-gray-800/50 relative overflow-hidden'>
