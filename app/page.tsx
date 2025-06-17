@@ -15,11 +15,6 @@ import {
   Search,
   User,
   Users,
-  Code,
-  GitMerge,
-  Server,
-  CpuIcon,
-  Zap,
 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { motion } from 'framer-motion';
@@ -89,6 +84,7 @@ export default function Home() {
 
         {/* Grid pattern */}
         <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-20'></div>
+        {/* hero content */}
         <div className='container mx-auto relative z-10'>
           <div className='max-w-3xl mx-auto text-center'>
             <motion.div
@@ -162,12 +158,13 @@ export default function Home() {
               </Link>
 
               <button
+                type='button'
                 onClick={() => signIn('github')}
-                className='relative overflow-hidden group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
+                className='relative overflow-hidden cursor-pointer group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
               >
                 <span className='relative z-10 flex items-center'>
                   <Github className='w-4 h-4 mr-2' />
-                  <Link href={'/'}>GitHub Connect</Link>
+                  GitHub Connect
                 </span>
                 <span className='absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity'></span>
               </button>
@@ -265,38 +262,7 @@ export default function Home() {
           </motion.div>
 
           <div className='grid md:grid-cols-3 gap-6'>
-            {[
-              {
-                icon: <Cpu className='w-5 h-5 text-emerald-400' />,
-                title: 'Role-Based Matching',
-                desc: 'Find teammates based on needed skills (Rust, React, ML, etc.)',
-              },
-              {
-                icon: <GitBranch className='w-5 h-5 text-emerald-400' />,
-                title: 'Project Scaffolding',
-                desc: 'Pre-configured environments with your stack',
-              },
-              {
-                icon: <LayoutPanelLeft className='w-5 h-5 text-emerald-400' />,
-                title: 'Progress Dashboard',
-                desc: 'Track commits, tasks, and burndown',
-              },
-              {
-                icon: <MessageSquare className='w-5 h-5 text-emerald-400' />,
-                title: 'Technical Discussions',
-                desc: 'Threaded conversations with code snippets',
-              },
-              {
-                icon: <Sparkles className='w-5 h-5 text-emerald-400' />,
-                title: 'AI Code Review',
-                desc: 'Get PR suggestions before teammates see them',
-              },
-              {
-                icon: <BarChart2 className='w-5 h-5 text-emerald-400' />,
-                title: 'Skill Analytics',
-                desc: 'See your growth across languages/frameworks',
-              },
-            ].map((feature, index) => (
+            {features.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -567,3 +533,36 @@ export default function Home() {
     </div>
   );
 }
+
+const features = [
+  {
+    icon: <Cpu className='w-5 h-5 text-emerald-400' />,
+    title: 'Role-Based Matching',
+    desc: 'Find teammates based on needed skills (Rust, React, ML, etc.)',
+  },
+  {
+    icon: <GitBranch className='w-5 h-5 text-emerald-400' />,
+    title: 'Project Scaffolding',
+    desc: 'Pre-configured environments with your stack',
+  },
+  {
+    icon: <LayoutPanelLeft className='w-5 h-5 text-emerald-400' />,
+    title: 'Progress Dashboard',
+    desc: 'Track commits, tasks, and burndown',
+  },
+  {
+    icon: <MessageSquare className='w-5 h-5 text-emerald-400' />,
+    title: 'Technical Discussions',
+    desc: 'Threaded conversations with code snippets',
+  },
+  {
+    icon: <Sparkles className='w-5 h-5 text-emerald-400' />,
+    title: 'AI Code Review',
+    desc: 'Get PR suggestions before teammates see them',
+  },
+  {
+    icon: <BarChart2 className='w-5 h-5 text-emerald-400' />,
+    title: 'Skill Analytics',
+    desc: 'See your growth across languages/frameworks',
+  },
+];
