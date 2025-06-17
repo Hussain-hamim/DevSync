@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Github, Globe, Linkedin, Twitter } from 'lucide-react';
+import { Github, Globe, Linkedin, Twitter } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Header from '@/components/Header';
 import {
@@ -17,7 +15,6 @@ import { GithubData, Project, SocialLink, CommitsData } from '@/types/profile';
 import { Session } from 'next-auth';
 
 export default function ProfilePage() {
-  const router = useRouter();
   const { data, status: sessionStatus } = useSession();
   const [githubData, setGithubData] = useState<GithubData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -191,12 +188,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
+    <div className='min-h-screen bg-gradient-to-br pt-15 from-gray-900 to-gray-800 font-sans text-gray-100'>
       <Header />
 
       <div className='container mx-auto px-4 py-8'>
-        <BackButton router={router} />
-
         {githubData && (
           <>
             <ProfileHeader
@@ -220,17 +215,6 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-const BackButton = ({ router }) => (
-  <motion.button
-    onClick={() => router.back()}
-    whileHover={{ x: -4 }}
-    className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
-  >
-    <ArrowLeft className='w-5 h-5' />
-    <span>Back</span>
-  </motion.button>
-);
 
 const LoadingState = () => (
   <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
