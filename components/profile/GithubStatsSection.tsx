@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Github, Code2, Cpu, ArrowRight } from 'lucide-react';
+import { Github, Code2, Cpu } from 'lucide-react';
 import { GithubData } from '@/types/profile';
 
 const GithubStatsSection = ({ githubData }: { githubData: GithubData }) => (
@@ -24,17 +24,6 @@ const GithubStatsCard = ({ githubData }: { githubData: GithubData }) => (
       <StatRow label='Followers' value={githubData.profile.followers} />
       <StatRow label='Following' value={githubData.profile.following} />
       <StatRow label='Total Forks' value={githubData.stats.forks} />
-      <div className='pt-4'>
-        <a
-          href={`https://github.com/${githubData.profile.login}`}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='inline-flex items-center gap-2 text-cyan-400 hover:underline text-sm'
-        >
-          View on GitHub
-          <ArrowRight className='w-4 h-4' />
-        </a>
-      </div>
     </div>
   </motion.div>
 );

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
-import { motion } from "framer-motion";
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Github,
@@ -12,7 +12,6 @@ import {
   Star,
   GitFork,
   Zap,
-  ArrowRight,
   Users,
   Globe,
   Circle,
@@ -23,7 +22,8 @@ import {
   Folder,
   UserPlus,
   UserCheck,
-} from "lucide-react";
+} from 'lucide-react';
+import Header from '@/components/Header';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,7 +62,7 @@ export default function ProfilePage() {
   const [githubData, setGithubData] = useState<GitHubData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [lastUpdated, setLastUpdated] = useState<string>('');
   const [isLive, setIsLive] = useState(false);
   const [createdProjects, setCreatedProjects] = useState([]);
   const [joinedProjects, setJoinedProjects] = useState([]);
@@ -73,9 +73,9 @@ export default function ProfilePage() {
   const fetchGitHubData = async (username: string, token?: string) => {
     try {
       const headers = {
-        Authorization: token ? `Bearer ${token}` : "",
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
+        Authorization: token ? `Bearer ${token}` : '',
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
       };
 
       // Fetch all data in parallel
@@ -92,14 +92,14 @@ export default function ProfilePage() {
           token
             ? fetch(`https://api.github.com/user/following/${username}`, {
                 headers,
-                method: "GET",
+                method: 'GET',
               })
             : Promise.resolve({ ok: false }),
         ]);
 
-      if (!commitsRes.ok) throw new Error("Failed to fetch commits");
-      if (!profileRes.ok) throw new Error("Failed to fetch profile");
-      if (!reposRes.ok) throw new Error("Failed to fetch repositories");
+      if (!commitsRes.ok) throw new Error('Failed to fetch commits');
+      if (!profileRes.ok) throw new Error('Failed to fetch profile');
+      if (!reposRes.ok) throw new Error('Failed to fetch repositories');
 
       const [commitsData, profileData, reposData] = await Promise.all([
         commitsRes.json(),
@@ -161,7 +161,7 @@ export default function ProfilePage() {
         isFollowing: followingStatus,
       };
     } catch (error) {
-      console.error("GitHub API error:", error);
+      console.error('GitHub API error:', error);
       throw error;
     }
   };
@@ -173,11 +173,11 @@ export default function ProfilePage() {
     try {
       const headers = {
         Authorization: `Bearer ${userData.github_token}`,
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
       };
 
-      const method = isFollowing ? "DELETE" : "PUT";
+      const method = isFollowing ? 'DELETE' : 'PUT';
       const url = `https://api.github.com/user/following/${githubData.profile.login}`;
 
       const response = await fetch(url, {
@@ -202,12 +202,12 @@ export default function ProfilePage() {
         }
       } else {
         throw new Error(
-          `Failed to ${isFollowing ? "unfollow" : "follow"} user`
+          `Failed to ${isFollowing ? 'unfollow' : 'follow'} user`
         );
       }
     } catch (error) {
-      console.error("Error toggling follow status:", error);
-      setError("Failed to update follow status");
+      console.error('Error toggling follow status:', error);
+      setError('Failed to update follow status');
     } finally {
       setFollowLoading(false);
     }
@@ -221,12 +221,12 @@ export default function ProfilePage() {
 
         // 1. Get user from Supabase
         const { data: user, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", id)
+          .from('users')
+          .select('*')
+          .eq('id', id)
           .single();
 
-        if (userError || !user) throw new Error("User not found");
+        if (userError || !user) throw new Error('User not found');
         setUserData(user);
 
         // 2. Fetch projects data
@@ -241,7 +241,7 @@ export default function ProfilePage() {
           try {
             const headers = {
               Authorization: `Bearer ${token}`,
-              Accept: "application/vnd.github+json",
+              Accept: 'application/vnd.github+json',
             };
             const res = await fetch(
               `https://api.github.com/user/${user.github_id}`,
@@ -250,13 +250,13 @@ export default function ProfilePage() {
             const data = await res.json();
             githubUsername = data.login;
           } catch (err) {
-            console.warn("Failed to fetch GitHub username from ID:", err);
+            console.warn('Failed to fetch GitHub username from ID:', err);
           }
         }
 
         // Fallback to email prefix if no GitHub username yet
         if (!githubUsername && user.email) {
-          githubUsername = user.email.split("@")[0];
+          githubUsername = user.email.split('@')[0];
         }
 
         // 4. Fetch GitHub data if we have a username
@@ -267,12 +267,12 @@ export default function ProfilePage() {
             setAllCommits({ total_count: data.stats.contributions });
             setIsFollowing(data.isFollowing);
           } catch (err) {
-            console.warn("Failed to fetch GitHub data:", err);
+            console.warn('Failed to fetch GitHub data:', err);
             // Set partial data if available
             setGithubData({
               profile: {
                 login: githubUsername,
-                avatar_url: "/default-avatar.png",
+                avatar_url: '/default-avatar.png',
                 name: user.name || githubUsername,
               },
               stats: {
@@ -296,8 +296,8 @@ export default function ProfilePage() {
 
         setLastUpdated(new Date().toLocaleTimeString());
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load profile");
-        console.error("Error fetching profile data:", err);
+        setError(err instanceof Error ? err.message : 'Failed to load profile');
+        console.error('Error fetching profile data:', err);
       } finally {
         setLoading(false);
         setTimeout(() => setIsLive(false), 3000);
@@ -308,20 +308,20 @@ export default function ProfilePage() {
       try {
         // Fetch created projects
         const { data: createdProjects, error: projectsError } = await supabase
-          .from("projects")
-          .select("*")
-          .eq("creator_id", user.id)
+          .from('projects')
+          .select('*')
+          .eq('creator_id', user.id)
           .limit(4)
-          .order("created_at", { ascending: false });
+          .order('created_at', { ascending: false });
 
         if (projectsError) throw projectsError;
         setCreatedProjects(createdProjects || []);
 
         // Fetch joined projects
         const { data: projectRoles, error: rolesError } = await supabase
-          .from("project_roles")
-          .select("project_id, title")
-          .eq("filled_by", user.id);
+          .from('project_roles')
+          .select('project_id, title')
+          .eq('filled_by', user.id);
 
         if (rolesError) throw rolesError;
 
@@ -329,17 +329,17 @@ export default function ProfilePage() {
           const projectIds = projectRoles.map((role) => role.project_id);
           const { data: joinedProjects, error: joinedProjectsError } =
             await supabase
-              .from("projects")
-              .select("*")
-              .in("id", projectIds)
+              .from('projects')
+              .select('*')
+              .in('id', projectIds)
               .limit(4)
-              .order("created_at", { ascending: false });
+              .order('created_at', { ascending: false });
 
           if (joinedProjectsError) throw joinedProjectsError;
 
           const projectsWithRoles = joinedProjects.map((project) => {
             const role = projectRoles.find((r) => r.project_id === project.id);
-            return { ...project, roleTitle: role?.title || "Member" };
+            return { ...project, roleTitle: role?.title || 'Member' };
           });
 
           setJoinedProjects(projectsWithRoles || []);
@@ -347,7 +347,7 @@ export default function ProfilePage() {
           setJoinedProjects([]);
         }
       } catch (err) {
-        console.error("Error fetching projects:", err);
+        console.error('Error fetching projects:', err);
         setCreatedProjects([]);
         setJoinedProjects([]);
       }
@@ -361,9 +361,10 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">
-          Loading {userData?.name || "user"} data...
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center'>
+        <Header />
+        <div className='animate-pulse text-gray-400'>
+          Loading {userData?.name || 'user'} data...
         </div>
       </div>
     );
@@ -371,12 +372,12 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center p-4">
-        <h1 className="text-2xl font-bold text-rose-500 mb-4">Error</h1>
-        <p className="text-gray-300 mb-6 max-w-md text-center">{error}</p>
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center p-4'>
+        <h1 className='text-2xl font-bold text-rose-500 mb-4'>Error</h1>
+        <p className='text-gray-300 mb-6 max-w-md text-center'>{error}</p>
         <button
           onClick={() => router.back()}
-          className="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+          className='px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors'
         >
           Back to Leaderboard
         </button>
@@ -386,37 +387,19 @@ export default function ProfilePage() {
 
   if (!userData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
-        <div className="text-rose-500">User not found</div>
+      <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center'>
+        <div className='text-rose-500'>User not found</div>
       </div>
     );
   }
 
   const joinDate = githubData?.profile?.created_at
-    ? new Date(githubData.profile.created_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+    ? new Date(githubData.profile.created_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
       })
-    : "Unknown";
-
-  const LiveIndicator = () => (
-    <motion.div
-      animate={{
-        scale: [1, 1.1, 1],
-        opacity: [0.8, 1, 0.8],
-      }}
-      transition={{
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-      className="flex items-center"
-    >
-      <Circle className="w-2 h-2 text-emerald-400 fill-emerald-400" />
-      <span className="text-xs text-emerald-400 ml-1">LIVE</span>
-    </motion.div>
-  );
+    : 'Unknown';
 
   const StatsCard = ({
     icon,
@@ -431,148 +414,125 @@ export default function ProfilePage() {
   }) => (
     <motion.div
       whileHover={{ scale: 1.03 }}
-      className="p-4 rounded-lg border bg-gray-800/50 border-gray-700"
+      className='p-4 rounded-lg border bg-gray-800/50 border-gray-700'
     >
-      <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+      <div className='flex items-center gap-2 text-sm text-gray-400 mb-1'>
         {icon}
         <span>{title}</span>
       </div>
-      <div className={`text-2xl font-bold ${color}`}>{value || "N/A"}</div>
+      <div className={`text-2xl font-bold ${color}`}>{value || 'N/A'}</div>
     </motion.div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <motion.button
-          onClick={() => router.back()}
-          whileHover={{ x: -4 }}
-          className="flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back to Leaderboard</span>
-        </motion.button>
+    <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100'>
+      <div className='container mx-auto px-4 py-8'>
+        <Header />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col md:flex-row gap-8 mb-12"
+          className='flex flex-col pt-15 md:flex-row gap-8 mb-12'
         >
-          <div className="relative self-start">
-            <div className="relative w-32 h-32">
+          <div className='relative self-start'>
+            <div className='relative w-32 h-32'>
               <img
                 src={
                   userData.avatar_url ||
                   githubData?.profile?.avatar_url ||
-                  "/default-avatar.png"
+                  '/default-avatar.png'
                 }
                 alt={userData.name}
-                className="w-full h-full rounded-full object-cover border-2 border-emerald-400/30"
+                className='w-full h-full rounded-full object-cover border-2 border-emerald-400/30'
               />
-              {isLive && (
-                <motion.div
-                  className="absolute -bottom-1 -right-1 z-10"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                >
-                  <div className="w-5 h-5 rounded-full bg-emerald-500 border-2 border-gray-900 flex items-center justify-center">
-                    <LiveIndicator />
-                  </div>
-                </motion.div>
-              )}
             </div>
           </div>
 
-          <div className="flex-1">
-            <div className="flex items-start justify-between">
+          <div className='flex-1'>
+            <div className='flex items-start justify-between'>
               <div>
-                <h1 className="text-3xl font-bold mb-2">
-                  {userData.name || githubData?.profile?.name || "GitHub User"}
+                <h1 className='text-3xl font-bold mb-2'>
+                  {userData.name || githubData?.profile?.name || 'GitHub User'}
                 </h1>
                 {githubData?.profile?.login && (
-                  <p className="text-gray-400 mb-4">
+                  <p className='text-gray-400 mb-4'>
                     @{githubData.profile.login}
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Clock className="w-4 h-4" />
+              <div className='flex items-center gap-2 text-sm text-gray-400'>
+                <Clock className='w-4 h-4' />
                 <span>Updated: {lastUpdated}</span>
               </div>
             </div>
 
-            <p className="text-gray-300 mb-6 max-w-2xl">
-              {githubData?.profile?.bio || "No bio available"}
+            <p className='text-gray-300 mb-6 max-w-2xl'>
+              {githubData?.profile?.bio || 'No bio available'}
             </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-6'>
               <StatsCard
-                icon={<GitCommit className="w-4 h-4" />}
-                title="Commits"
+                icon={<GitCommit className='w-4 h-4' />}
+                title='Commits'
                 value={githubData?.stats.commits || 0}
-                color="text-emerald-400"
+                color='text-emerald-400'
               />
               <StatsCard
-                icon={<Star className="w-4 h-4" />}
-                title="Stars"
+                icon={<Star className='w-4 h-4' />}
+                title='Stars'
                 value={githubData?.stats.stars || 0}
-                color="text-purple-400"
+                color='text-purple-400'
               />
+
               <StatsCard
-                icon={<GitPullRequest className="w-4 h-4" />}
-                title="PRs"
-                value={githubData?.stats.pullRequests || 0}
-                color="text-cyan-400"
-              />
-              <StatsCard
-                icon={<Code2 className="w-4 h-4" />}
-                title="Repos"
+                icon={<Code2 className='w-4 h-4' />}
+                title='Repos'
                 value={githubData?.stats.repositories || 0}
-                color="text-yellow-400"
+                color='text-yellow-400'
               />
               <StatsCard
-                icon={<GitCommit className="w-4 h-4" />}
-                title="Contributions"
+                icon={<GitCommit className='w-4 h-4' />}
+                title='Contributions'
                 value={allCommits?.total_count || 0}
-                color="text-cyan-400"
+                color='text-cyan-400'
               />
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className='flex flex-wrap gap-3'>
               {githubData?.profile?.html_url && (
                 <motion.a
                   href={githubData.profile.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target='_blank'
+                  rel='noopener noreferrer'
                   whileHover={{ y: -2 }}
-                  className="flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-purple-400 hover:border-purple-400/30 transition-colors"
+                  className='flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-purple-400 hover:border-purple-400/30 transition-colors'
                 >
-                  <Github className="w-4 h-4" />
+                  <Github className='w-4 h-4' />
                   <span>GitHub Profile</span>
                 </motion.a>
               )}
               {userData.role_url && (
                 <motion.a
                   href={userData.role_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target='_blank'
+                  rel='noopener noreferrer'
                   whileHover={{ y: -2 }}
-                  className="flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-blue-400 hover:border-blue-400/30 transition-colors"
+                  className='flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-blue-400 hover:border-blue-400/30 transition-colors'
                 >
-                  <Users className="w-4 h-4" />
+                  <Users className='w-4 h-4' />
                   <span>Role Profile</span>
                 </motion.a>
               )}
               {githubData?.profile?.blog && (
                 <motion.a
                   href={githubData.profile.blog}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target='_blank'
+                  rel='noopener noreferrer'
                   whileHover={{ y: -2 }}
-                  className="flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-emerald-400 hover:border-emerald-400/30 transition-colors"
+                  className='flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-emerald-400 hover:border-emerald-400/30 transition-colors'
                 >
-                  <Globe className="w-4 h-4" />
+                  <Globe className='w-4 h-4' />
                   <span>Website</span>
                 </motion.a>
               )}
@@ -583,8 +543,8 @@ export default function ProfilePage() {
                   whileHover={{ y: -2 }}
                   className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-sm transition-colors ${
                     isFollowing
-                      ? "bg-gray-800/50 border-gray-700 text-gray-300 hover:text-rose-400 hover:border-rose-400/30"
-                      : "bg-purple-900/50 border-purple-700 text-purple-300 hover:text-purple-400 hover:border-purple-400/30"
+                      ? 'bg-gray-800/50 border-gray-700 text-gray-300 hover:text-rose-400 hover:border-rose-400/30'
+                      : 'bg-purple-900/50 border-purple-700 text-purple-300 hover:text-purple-400 hover:border-purple-400/30'
                   }`}
                 >
                   {followLoading ? (
@@ -592,11 +552,11 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       {isFollowing ? (
-                        <UserCheck className="w-4 h-4" />
+                        <UserCheck className='w-4 h-4' />
                       ) : (
-                        <UserPlus className="w-4 h-4" />
+                        <UserPlus className='w-4 h-4' />
                       )}
-                      <span>{isFollowing ? "Following" : "Follow"}</span>
+                      <span>{isFollowing ? 'Following' : 'Follow'}</span>
                     </>
                   )}
                 </motion.button>
@@ -605,156 +565,134 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-80 space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
-            >
-              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <Folder className="w-5 h-5 text-emerald-400" />
-                Created Projects
-              </h2>
-              <div className="space-y-4">
-                {createdProjects.length > 0 ? (
-                  createdProjects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="group hover:bg-gray-700/50 p-3 rounded-lg transition-colors"
-                    >
-                      <h3 className="font-medium group-hover:text-emerald-400 transition-colors">
+        {/* Three Column Layout */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8'>
+          {/* Created Projects Column */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
+          >
+            <h2 className='text-xl font-semibold mb-6 flex items-center gap-2'>
+              <Folder className='w-5 h-5 text-emerald-400' />
+              Created Projects
+            </h2>
+            <div className='space-y-4'>
+              {createdProjects.length > 0 ? (
+                createdProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className='group hover:bg-gray-700/50 p-3 rounded-lg transition-colors'
+                  >
+                    <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
+                      {project.title}
+                    </h3>
+                    <p className='text-sm text-gray-400 mt-1 max-h-16 line-clamp-2'>
+                      {project.description}
+                    </p>
+                    <div className='flex justify-between items-center mt-2'>
+                      <span className='flex items-center gap-1 text-xs text-gray-400'>
+                        <Users className='w-3 h-3' />
+                        {project.members || 1} members
+                      </span>
+                      <span className='text-xs px-2 py-1 rounded bg-green-900/50 text-green-400'>
+                        Active
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className='text-gray-400 text-sm'>No projects created</p>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Joined Projects Column */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
+          >
+            <h2 className='text-xl font-semibold mb-6 flex items-center gap-2'>
+              <Users className='w-5 h-5 text-emerald-400' />
+              Joined Projects
+            </h2>
+            <div className='space-y-4'>
+              {joinedProjects.length > 0 ? (
+                joinedProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className='group hover:bg-gray-700/50 p-3 rounded-lg transition-colors'
+                  >
+                    <div className='flex items-center gap-2 justify-between'>
+                      <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
                         {project.title}
                       </h3>
-                      <p className="text-sm text-gray-400 mt-1 max-h-16 line-clamp-2">
-                        {project.description}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="flex items-center gap-1 text-xs text-gray-400">
-                          <Users className="w-3 h-3" />
-                          {project.members || 1} members
-                        </span>
-                        <span className="text-xs px-2 py-1 rounded bg-green-900/50 text-green-400">
-                          Active
-                        </span>
-                      </div>
+                      <span className='text-xs bg-gray-900 px-2 py-1 rounded'>
+                        {project.roleTitle}
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm">No projects created</p>
-                )}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
-            >
-              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <Users className="w-5 h-5 text-emerald-400" />
-                Joined Projects
-              </h2>
-              <div className="space-y-4">
-                {joinedProjects.length > 0 ? (
-                  joinedProjects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="group hover:bg-gray-700/50 p-3 rounded-lg transition-colors"
-                    >
-                      <div className="flex items-center gap-2 justify-between">
-                        <h3 className="font-medium group-hover:text-emerald-400 transition-colors">
-                          {project.title}
-                        </h3>
-                        <span className="text-xs bg-gray-900 px-2 py-1 rounded">
-                          {project.roleTitle}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-400 mt-1 max-h-16 line-clamp-2">
-                        {project.description}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="flex items-center gap-1 text-xs text-gray-400">
-                          <Users className="w-3 h-3" />
-                          {project.members || 1} members
-                        </span>
-                      </div>
+                    <p className='text-sm text-gray-400 mt-1 max-h-16 line-clamp-2'>
+                      {project.description}
+                    </p>
+                    <div className='flex justify-between items-center mt-2'>
+                      <span className='flex items-center gap-1 text-xs text-gray-400'>
+                        <Users className='w-3 h-3' />
+                        {project.members || 1} members
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm">No joined projects</p>
-                )}
-              </div>
-            </motion.div>
+                  </div>
+                ))
+              ) : (
+                <p className='text-gray-400 text-sm'>No joined projects</p>
+              )}
+            </div>
+          </motion.div>
 
-            {githubData?.skills && githubData.skills.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
-              >
-                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                  <Code2 className="w-5 h-5 text-emerald-400" />
-                  Top Languages
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {githubData.skills.map((skill, index) => (
-                    <motion.span
-                      key={index}
-                      whileHover={{ scale: 1.05 }}
-                      className="px-3 py-1.5 bg-gray-700 rounded-full text-sm flex items-center gap-1"
-                    >
-                      <Cpu className="w-3 h-3 text-emerald-400" />
-                      {skill}
-                    </motion.span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
+          {/* Stats & Languages Column */}
+          <div className='space-y-8'>
             {githubData?.stats && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-gray-800/50 p-6 rounded-xl border border-gray-700"
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
               >
-                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-emerald-400" />
+                <h2 className='text-xl font-semibold mb-6 flex items-center gap-2'>
+                  <Activity className='w-5 h-5 text-emerald-400' />
                   GitHub Stats
                 </h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Followers</span>
-                    <span className="font-medium">
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-gray-400'>Followers</span>
+                    <span className='font-medium'>
                       {githubData.stats.followers}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Following</span>
-                    <span className="font-medium">
+                  <div className='flex items-center justify-between'>
+                    <span className='text-gray-400'>Following</span>
+                    <span className='font-medium'>
                       {githubData.stats.following}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Total Forks</span>
-                    <span className="font-medium">
+                  <div className='flex items-center justify-between'>
+                    <span className='text-gray-400'>Total Forks</span>
+                    <span className='font-medium'>
                       {githubData.stats.forks}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Total Contributions</span>
-                    <span className="font-medium">
+                  <div className='flex items-center justify-between'>
+                    <span className='text-gray-400'>Total Contributions</span>
+                    <span className='font-medium'>
                       {allCommits?.total_count || 0}
                     </span>
                   </div>
                   {userData.role_preferences && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Role Preferences</span>
-                      <span className="font-medium">
+                    <div className='flex items-center justify-between'>
+                      <span className='text-gray-400'>Role Preferences</span>
+                      <span className='font-medium'>
                         {userData.role_preferences}
                       </span>
                     </div>
@@ -762,69 +700,96 @@ export default function ProfilePage() {
                 </div>
               </motion.div>
             )}
-          </div>
 
-          {githubData?.recentRepos && githubData.recentRepos.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="flex-1 bg-gray-800/50 p-6 rounded-xl border border-gray-700"
-            >
-              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-emerald-400" />
-                Recent Repositories
-              </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {githubData.recentRepos.map((repo, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ y: -5 }}
-                    className="group"
-                  >
-                    <a
-                      href={repo.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block hover:bg-gray-700/50 p-4 rounded-lg transition-colors border border-gray-700"
+            {githubData?.skills && githubData.skills.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
+              >
+                <h2 className='text-xl font-semibold mb-6 flex items-center gap-2'>
+                  <Code2 className='w-5 h-5 text-emerald-400' />
+                  Top Languages
+                </h2>
+                <div className='flex flex-wrap gap-2'>
+                  {githubData.skills.map((skill, index) => (
+                    <motion.span
+                      key={index}
+                      whileHover={{ scale: 1.05 }}
+                      className='px-3 py-1.5 bg-gray-700 rounded-full text-sm flex items-center gap-1'
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium group-hover:text-emerald-400 transition-colors">
-                          {repo.name}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1 text-xs text-gray-400">
-                            <Star className="w-3 h-3" />
-                            {repo.stars}
-                          </span>
-                          <span className="flex items-center gap-1 text-xs text-gray-400">
-                            <GitFork className="w-3 h-3" />
-                            {repo.forks}
-                          </span>
-                        </div>
-                      </div>
-                      {repo.description && (
-                        <p className="text-sm text-gray-400 mb-3 line-clamp-2">
-                          {repo.description}
-                        </p>
-                      )}
-                      <div className="flex justify-between items-center">
-                        {repo.language && (
-                          <span className="text-xs bg-gray-900 px-2 py-1 rounded">
-                            {repo.language}
-                          </span>
-                        )}
-                        <span className="text-xs text-gray-500">
-                          {new Date(repo.updated_at).toLocaleDateString()}
+                      <Cpu className='w-3 h-3 text-emerald-400' />
+                      {skill}
+                    </motion.span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Repositories Section - Full Width Below */}
+        {githubData?.recentRepos && githubData.recentRepos.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className='bg-gray-800/50 p-6 rounded-xl border border-gray-700'
+          >
+            <h2 className='text-xl font-semibold mb-6 flex items-center gap-2'>
+              <Zap className='w-5 h-5 text-emerald-400' />
+              Recent Repositories
+            </h2>
+            <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-4'>
+              {githubData.recentRepos.map((repo, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ y: -5 }}
+                  className='group'
+                >
+                  <a
+                    href={repo.url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='block hover:bg-gray-700/50 p-4 rounded-lg transition-colors border border-gray-700'
+                  >
+                    <div className='flex justify-between items-start mb-2'>
+                      <h3 className='font-medium group-hover:text-emerald-400 transition-colors'>
+                        {repo.name}
+                      </h3>
+                      <div className='flex items-center gap-2'>
+                        <span className='flex items-center gap-1 text-xs text-gray-400'>
+                          <Star className='w-3 h-3' />
+                          {repo.stars}
+                        </span>
+                        <span className='flex items-center gap-1 text-xs text-gray-400'>
+                          <GitFork className='w-3 h-3' />
+                          {repo.forks}
                         </span>
                       </div>
-                    </a>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </div>
+                    </div>
+                    {repo.description && (
+                      <p className='text-sm text-gray-400 mb-3 line-clamp-2'>
+                        {repo.description}
+                      </p>
+                    )}
+                    <div className='flex justify-between items-center'>
+                      {repo.language && (
+                        <span className='text-xs bg-gray-900 px-2 py-1 rounded'>
+                          {repo.language}
+                        </span>
+                      )}
+                      <span className='text-xs text-gray-500'>
+                        {new Date(repo.updated_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </a>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
