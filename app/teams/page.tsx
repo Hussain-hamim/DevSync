@@ -137,17 +137,7 @@ const TeamPage = () => {
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
       <Header />
 
-      <div className='container mx-auto px-4 py-8'>
-        {/* Back button */}
-        <motion.button
-          onClick={() => router.back()}
-          whileHover={{ x: -4 }}
-          className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          <span>Back</span>
-        </motion.button>
-
+      <div className='container mx-auto px-4 py-8 pt-10'>
         <section className='py-12 relative overflow-hidden'>
           <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10'></div>
           <div className='container mx-auto relative z-10'>

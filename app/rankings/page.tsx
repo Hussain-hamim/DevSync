@@ -29,7 +29,7 @@ export default function RankingsPage() {
 
       const { data: supabaseUsers, error: supabaseError } = await supabase
         .from('users')
-        .select('id, github_id, github_token, name, email')
+        .select('id, github_id, github_token, name, email, github_username')
         .not('github_token', 'is', null)
         .limit(20);
 
@@ -62,6 +62,8 @@ export default function RankingsPage() {
               stars: 0,
               followers: 0,
               pull_requests: 0,
+              forks: 0,
+              contributions: 0,
               score: 0,
             };
           }
@@ -81,7 +83,7 @@ export default function RankingsPage() {
     fetchUsers();
     const refreshInterval = setInterval(() => {
       fetchUsers();
-    }, 10 * 60 * 1000);
+    }, 10 * 60 * 1000); // Refresh every 10 minutes
     return () => clearInterval(refreshInterval);
   }, []);
 
@@ -263,9 +265,8 @@ export default function RankingsPage() {
                         </div>
 
                         {/* Score */}
-                        <div className='col-span-1 text-center'>
+                        <div className='col-span-1 '>
                           <AnimatePresence mode='wait'>
-                            <GitPullRequest />
                             <ScoreChange value={user.score || 0} />
                           </AnimatePresence>
                         </div>
@@ -351,8 +352,6 @@ export default function RankingsPage() {
   );
 }
 
-////////////////////////////
-
 // Define types
 type User = {
   id: string;
@@ -360,13 +359,15 @@ type User = {
   github_token: string;
   name: string;
   email: string;
-  avatar_url?: string;
   github_username?: string;
+  avatar_url?: string;
   commits?: number;
   repositories?: number;
   stars?: number;
   followers?: number;
   pull_requests?: number;
+  forks?: number;
+  contributions?: number;
   isLive?: boolean;
   pulse?: boolean;
   score?: number;
@@ -432,7 +433,7 @@ async function fetchGitHubData(user: User): Promise<Partial<User>> {
 
     // Get repositories (only need basic info for count and stars)
     const reposResponse = await fetch(
-      `https://api.github.com/user/repos?per_page=100&affiliation=owner`,
+      `https://api.github.com/users/${username}/repos?per_page=100`,
       { headers }
     );
 
@@ -442,28 +443,38 @@ async function fetchGitHubData(user: User): Promise<Partial<User>> {
 
     const reposData = await reposResponse.json();
 
-    // Calculate stars from repositories
+    // Calculate stars and forks from repositories
     const stars = reposData.reduce(
       (acc: number, repo: any) => acc + (repo.stargazers_count || 0),
       0
     );
+    const forks = reposData.reduce(
+      (acc: number, repo: any) => acc + (repo.forks_count || 0),
+      0
+    );
 
-    // Get commit count (approximate using the API)
-    const eventsResponse = await fetch(
-      `https://api.github.com/users/${username}/events?per_page=100`,
+    // Get commit count using search API (more accurate)
+    const commitsResponse = await fetch(
+      `https://api.github.com/search/commits?q=author:${username}`,
       { headers }
     );
 
     let commits = 0;
-    let pullRequests = 0;
+    if (commitsResponse.ok) {
+      const commitsData = await commitsResponse.json();
+      commits = commitsData.total_count || 0;
+    }
 
-    if (eventsResponse.ok) {
-      const eventsData = await eventsResponse.json();
-      commits = eventsData.filter((e: any) => e.type === 'PushEvent').length;
-      pullRequests = eventsData.filter(
-        (e: any) =>
-          e.type === 'PullRequestEvent' && e.payload.action === 'opened'
-      ).length;
+    // Get pull requests count
+    const prsResponse = await fetch(
+      `https://api.github.com/search/issues?q=author:${username}+type:pr`,
+      { headers }
+    );
+
+    let pullRequests = 0;
+    if (prsResponse.ok) {
+      const prsData = await prsResponse.json();
+      pullRequests = prsData.total_count || 0;
     }
 
     return {
@@ -472,8 +483,10 @@ async function fetchGitHubData(user: User): Promise<Partial<User>> {
       commits,
       repositories: reposData.length || 0,
       stars,
+      forks,
       followers: userData.followers || 0,
       pull_requests: pullRequests,
+      contributions: commits,
       isLive: Math.random() > 0.7,
       last_updated: new Date().toISOString(),
     };
@@ -487,8 +500,10 @@ async function fetchGitHubData(user: User): Promise<Partial<User>> {
       commits: 0,
       repositories: 0,
       stars: 0,
+      forks: 0,
       followers: 0,
       pull_requests: 0,
+      contributions: 0,
       isLive: false,
       last_updated: new Date().toISOString(),
     };
@@ -502,7 +517,8 @@ const calculateScore = (user: User): number => {
       (user.repositories || 0) * 3 +
       (user.stars || 0) * 0.2 +
       (user.followers || 0) * 0.3 +
-      (user.pull_requests || 0) * 0.7
+      (user.pull_requests || 0) * 0.7 +
+      (user.forks || 0) * 0.1
   );
 };
 

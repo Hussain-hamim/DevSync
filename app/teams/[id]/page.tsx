@@ -368,6 +368,7 @@ export default function TeamDetails() {
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className='w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full'
           />
+          <span className='ml-4 text-gray-300'>Loading team data...</span>
         </div>
       </div>
     );
@@ -387,7 +388,7 @@ export default function TeamDetails() {
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       <Header />
 
-      <div className='container mx-auto px-6 '>
+      <div className='container mx-auto px-6 py-8'>
         {/* Team Header */}
         <motion.div
           initial='hidden'
