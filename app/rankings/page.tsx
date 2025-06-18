@@ -20,6 +20,7 @@ export default function RankingsPage() {
   const [rankings, setRankings] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Fetch users from Supabase and enrich with GitHub data
   const fetchUsers = async () => {
@@ -140,6 +141,83 @@ export default function RankingsPage() {
                   <ChevronDown className='w-4 h-4' />
                 </button>
               </motion.div>
+
+              {/* Metric filter dropdown */}
+              <motion.div whileHover={{ scale: 1.03 }} className='relative'>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className='w-full sm:w-auto bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors'
+                >
+                  <GitPullRequest className='w-4 h-4' />
+                  <span>
+                    {sortBy === 'score'
+                      ? 'Points'
+                      : sortBy === 'commits'
+                      ? 'Commits'
+                      : sortBy === 'repositories'
+                      ? 'Repos'
+                      : sortBy === 'stars'
+                      ? 'Stars'
+                      : sortBy === 'followers'
+                      ? 'Followers'
+                      : 'PRs'}
+                  </span>
+                  <ChevronDown className='w-4 h-4' />
+                </button>
+
+                {isDropdownOpen && (
+                  <div
+                    className='fixed inset-0 z-0'
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                )}
+
+                {isDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10'
+                  >
+                    <div className='py-1'>
+                      {(
+                        [
+                          'score',
+                          'commits',
+                          'repositories',
+                          'stars',
+                          'followers',
+                          'pull_requests',
+                        ] as MetricType[]
+                      ).map((metric) => (
+                        <button
+                          key={metric}
+                          onClick={() => {
+                            setSortBy(metric);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm ${
+                            sortBy === metric
+                              ? 'text-emerald-400 bg-gray-700'
+                              : 'text-gray-300 hover:bg-gray-700'
+                          }`}
+                        >
+                          {metric === 'score'
+                            ? 'Points'
+                            : metric === 'commits'
+                            ? 'Commits'
+                            : metric === 'repositories'
+                            ? 'Repositories'
+                            : metric === 'stars'
+                            ? 'Stars'
+                            : metric === 'followers'
+                            ? 'Followers'
+                            : 'Pull Requests'}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
             </div>
           </div>
         </motion.header>
@@ -156,11 +234,46 @@ export default function RankingsPage() {
             Points
           </div>
           <div className='col-span-6 grid grid-cols-5 gap-2 text-center'>
-            <div className='text-gray-400 text-sm font-medium'>Commits</div>
-            <div className='text-gray-400 text-sm font-medium'>Repos</div>
-            <div className='text-gray-400 text-sm font-medium'>Stars</div>
-            <div className='text-gray-400 text-sm font-medium'>Followers</div>
-            <div className='text-gray-400 text-sm font-medium'>PRs</div>
+            <button
+              onClick={() => setSortBy('commits')}
+              className={`text-gray-400 text-sm font-medium ${
+                sortBy === 'commits' ? 'text-emerald-400' : ''
+              }`}
+            >
+              Commits {sortBy === 'commits' && '↓'}
+            </button>
+            <button
+              onClick={() => setSortBy('repositories')}
+              className={`text-gray-400 text-sm font-medium ${
+                sortBy === 'repositories' ? 'text-emerald-400' : ''
+              }`}
+            >
+              Repos {sortBy === 'repositories' && '↓'}
+            </button>
+            <button
+              onClick={() => setSortBy('stars')}
+              className={`text-gray-400 text-sm font-medium ${
+                sortBy === 'stars' ? 'text-emerald-400' : ''
+              }`}
+            >
+              Stars {sortBy === 'stars' && '↓'}
+            </button>
+            <button
+              onClick={() => setSortBy('followers')}
+              className={`text-gray-400 text-sm font-medium ${
+                sortBy === 'followers' ? 'text-emerald-400' : ''
+              }`}
+            >
+              Followers {sortBy === 'followers' && '↓'}
+            </button>
+            <button
+              onClick={() => setSortBy('pull_requests')}
+              className={`text-gray-400 text-sm font-medium ${
+                sortBy === 'pull_requests' ? 'text-emerald-400' : ''
+              }`}
+            >
+              PRs {sortBy === 'pull_requests' && '↓'}
+            </button>
           </div>
         </div>
 
@@ -186,158 +299,161 @@ export default function RankingsPage() {
             {sortedRankings.length > 0 ? (
               <AnimatePresence>
                 {sortedRankings.map((user, index) => (
-                  <Link href={`/profile/${user.id}`} key={user.id} passHref>
-                    <motion.article
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        borderColor: user.pulse
-                          ? 'rgba(16, 185, 129, 0.5)'
-                          : 'rgba(55, 65, 81, 0.5)',
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 300,
-                        damping: 25,
-                      }}
-                      className={`bg-gray-800/50 border rounded-lg p-3 md:p-4 relative overflow-hidden group ${
-                        user.isLive
-                          ? 'border-emerald-400/30'
-                          : 'border-gray-700'
-                      }`}
-                    >
-                      {/* Desktop Layout */}
-                      <div className='hidden md:grid grid-cols-12 items-center gap-4'>
-                        {/* Rank */}
-                        <div className='col-span-1 flex justify-center'>
-                          <RankBadge rank={index} />
-                        </div>
+                  <motion.article
+                    key={user.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      borderColor: user.pulse
+                        ? 'rgba(16, 185, 129, 0.5)'
+                        : 'rgba(55, 65, 81, 0.5)',
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 25,
+                    }}
+                    className={`bg-gray-800/50 border rounded-lg p-3 md:p-4 relative overflow-hidden group ${
+                      user.isLive ? 'border-emerald-400/30' : 'border-gray-700'
+                    }`}
+                    onClick={() =>
+                      (window.location.href = `/profile/${user.id}`)
+                    }
+                  >
+                    {/* Desktop Layout */}
+                    <div className='hidden md:grid grid-cols-12 items-center gap-4'>
+                      {/* Rank */}
+                      <div className='col-span-1 flex justify-center'>
+                        <RankBadge rank={index} />
+                      </div>
 
-                        {/* User Info */}
-                        <div className='col-span-4 cursor-pointer'>
-                          <motion.div
-                            className='flex items-center gap-4'
-                            whileHover={{ x: 5 }}
-                          >
-                            <div className='relative'>
-                              <img
-                                src={
-                                  user.avatar_url ||
-                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                    user.name
-                                  )}&background=random`
-                                }
-                                alt={`${user.name}'s avatar`}
-                                className='w-10 h-10 rounded-full border-2 border-gray-700 object-cover'
-                                width={40}
-                                height={40}
+                      {/* User Info */}
+                      <div className='col-span-4 cursor-pointer'>
+                        <motion.div
+                          className='flex items-center gap-4'
+                          whileHover={{ x: 5 }}
+                        >
+                          <div className='relative'>
+                            <img
+                              src={
+                                user.avatar_url ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  user.name
+                                )}&background=random`
+                              }
+                              alt={`${user.name}'s avatar`}
+                              className='w-10 h-10 rounded-full border-2 border-gray-700 object-cover'
+                              width={40}
+                              height={40}
+                            />
+                            {user.isLive && (
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                }}
+                                className='absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-900'
                               />
-                              {user.isLive && (
-                                <motion.div
-                                  animate={{ scale: [1, 1.2, 1] }}
-                                  transition={{
-                                    duration: 1.5,
-                                    repeat: Infinity,
+                            )}
+                          </div>
+                          <div>
+                            <h2 className='font-medium text-gray-100 group-hover:text-emerald-400 transition-colors'>
+                              {user.name}
+                            </h2>
+                            {user.github_username && (
+                              <span className='text-sm text-gray-400'>
+                                <span
+                                  className='hover:text-emerald-400 transition-colors cursor-pointer'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(
+                                      `https://github.com/${user.github_username}`,
+                                      '_blank'
+                                    );
                                   }}
-                                  className='absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-900'
-                                />
-                              )}
-                            </div>
-                            <div>
-                              <h2 className='font-medium text-gray-100 group-hover:text-emerald-400 transition-colors'>
-                                {user.name}
-                              </h2>
-                              {user.github_username && (
-                                <a
-                                  href={`https://github.com/${user.github_username}`}
-                                  target='_blank'
-                                  rel='noopener noreferrer'
-                                  className='text-sm text-gray-400 hover:text-emerald-400 transition-colors'
-                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   @{user.github_username}
-                                </a>
-                              )}
-                            </div>
-                          </motion.div>
-                        </div>
-
-                        {/* Score */}
-                        <div className='col-span-1 '>
-                          <AnimatePresence mode='wait'>
-                            <ScoreChange value={user.score || 0} />
-                          </AnimatePresence>
-                        </div>
-
-                        {/* Metrics */}
-                        <div className='col-span-6 grid grid-cols-5 gap-2 text-center'>
-                          <div className='font-medium'>{user.commits || 0}</div>
-                          <div className='font-medium'>
-                            {user.repositories || 0}
+                                </span>
+                              </span>
+                            )}
                           </div>
-                          <div className='font-medium'>{user.stars || 0}</div>
-                          <div className='font-medium'>
-                            {user.followers || 0}
-                          </div>
-                          <div className='font-medium'>
-                            {user.pull_requests || 0}
-                          </div>
-                        </div>
+                        </motion.div>
                       </div>
 
-                      {/* Mobile Layout */}
-                      <div className='md:hidden flex items-center gap-3'>
-                        <div className='flex-shrink-0'>
-                          <RankBadge rank={index} />
-                        </div>
-
-                        <div className='flex-shrink-0'>
-                          <img
-                            src={
-                              user.avatar_url ||
-                              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                user.name
-                              )}&background=random`
-                            }
-                            alt={`${user.name}'s avatar`}
-                            className='w-10 h-10 rounded-full border-2 border-gray-700 object-cover'
-                            width={40}
-                            height={40}
-                          />
-                        </div>
-
-                        <div className='flex-1 min-w-0'>
-                          <h2 className='font-medium text-gray-100 truncate'>
-                            {user.name}
-                          </h2>
-                          {user.github_username && (
-                            <div className='text-xs text-gray-400 truncate'>
-                              @{user.github_username}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className='flex-shrink-0 text-right'>
-                          <div className='font-bold text-emerald-400'>
-                            {user.score || 0}
-                          </div>
-                          <div className='text-xs text-gray-400'>pts</div>
-                        </div>
+                      {/* Score */}
+                      <div className='col-span-1 '>
+                        <AnimatePresence mode='wait'>
+                          <ScoreChange value={user.score || 0} />
+                        </AnimatePresence>
                       </div>
 
-                      {/* Activity indicator */}
-                      {user.isLive && (
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: '100%' }}
-                          transition={{ duration: 3, repeat: Infinity }}
-                          className='absolute bottom-0 left-0 h-0.5 bg-emerald-400/50'
+                      {/* Metrics */}
+                      <div className='col-span-6 grid grid-cols-5 gap-2 text-center'>
+                        <div className='font-medium'>{user.commits || 0}</div>
+                        <div className='font-medium'>
+                          {user.repositories || 0}
+                        </div>
+                        <div className='font-medium'>{user.stars || 0}</div>
+                        <div className='font-medium'>{user.followers || 0}</div>
+                        <div className='font-medium'>
+                          {user.pull_requests || 0}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mobile Layout */}
+                    <div className='md:hidden flex items-center gap-3'>
+                      <div className='flex-shrink-0'>
+                        <RankBadge rank={index} />
+                      </div>
+
+                      <div className='flex-shrink-0'>
+                        <img
+                          src={
+                            user.avatar_url ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              user.name
+                            )}&background=random`
+                          }
+                          alt={`${user.name}'s avatar`}
+                          className='w-10 h-10 rounded-full border-2 border-gray-700 object-cover'
+                          width={40}
+                          height={40}
                         />
-                      )}
-                    </motion.article>
-                  </Link>
+                      </div>
+
+                      <div className='flex-1 min-w-0'>
+                        <h2 className='font-medium text-gray-100 truncate'>
+                          {user.name}
+                        </h2>
+                        {user.github_username && (
+                          <div className='text-xs text-gray-400 truncate'>
+                            @{user.github_username}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className='flex-shrink-0 text-right'>
+                        <div className='font-bold text-emerald-400'>
+                          {user.score || 0}
+                        </div>
+                        <div className='text-xs text-gray-400'>pts</div>
+                      </div>
+                    </div>
+
+                    {/* Activity indicator */}
+                    {user.isLive && (
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: '100%' }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className='absolute bottom-0 left-0 h-0.5 bg-emerald-400/50'
+                      />
+                    )}
+                  </motion.article>
                 ))}
               </AnimatePresence>
             ) : (
@@ -389,7 +505,7 @@ const ScoreChange = ({ value }: { value: number }) => (
     animate={{ y: 0, opacity: 1 }}
     exit={{ y: 10, opacity: 0 }}
     transition={{ duration: 0.4 }}
-    className='text-gray-100 font-bold'
+    className=' text-amber-200 font-bold'
   >
     {value}
   </motion.span>
