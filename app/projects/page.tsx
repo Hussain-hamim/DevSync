@@ -132,7 +132,7 @@ export default function ProjectsPage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
-        {/* <Header /> */}
+        <Header />
         <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
           <div className='animate-pulse text-gray-400'>
             Loading projects data...

@@ -16,6 +16,7 @@ import { supabase } from '@/app/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { AddTaskModal } from '../AddTaskModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import Header from '@/components/Header';
 
 export default function ProjectTasksPage() {
   const params = useParams();
@@ -160,6 +161,7 @@ export default function ProjectTasksPage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
+        <Header />
         <div className='container mx-auto px-6 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
           <motion.div
             animate={{ opacity: [0.5, 1, 0.5] }}
@@ -226,6 +228,8 @@ export default function ProjectTasksPage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Header */}
+      {/* <Header /> */}
+
       <div className='border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10'>
         <div className='container mx-auto px-6 py-4'>
           <div className='flex items-center justify-between'>

@@ -24,6 +24,7 @@ import {
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from '@/app/projects/[id]/JoinProjectModal';
+import Header from '@/components/Header';
 
 dayjs.extend(relativeTime);
 
@@ -360,6 +361,7 @@ export default function TeamDetails() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
+        <Header />
         <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
           <motion.div
             animate={{ rotate: 360 }}
@@ -383,18 +385,9 @@ export default function TeamDetails() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
-      <div className='container mx-auto px-6 py-8'>
-        {/* Back button */}
-        <motion.button
-          onClick={() => window.history.back()}
-          whileHover={{ x: -4 }}
-          whileTap={{ scale: 0.98 }}
-          className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          <span>Back</span>
-        </motion.button>
+      <Header />
 
+      <div className='container mx-auto px-6 '>
         {/* Team Header */}
         <motion.div
           initial='hidden'

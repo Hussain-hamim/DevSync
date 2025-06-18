@@ -16,6 +16,7 @@ import {
   Check,
   Calendar as CalendarIcon,
   User,
+  Sparkle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -542,9 +543,11 @@ export default function ProjectDetails() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
+      <Header />
+
       {/* Project Header */}
       <div className='container mx-auto px-4 sm:px-6 py-6 sm:py-8'>
-        <div className='flex flex-col md:flex-row md:items-start justify-between gap-4'>
+        <div className='flex flex-col pt-15 md:flex-row md:items-start justify-between gap-4'>
           <div className='flex-1'>
             <div className='flex items-center space-x-3 mb-4'>
               <GitBranch className='w-6 h-6 text-emerald-400' />
@@ -567,7 +570,7 @@ export default function ProjectDetails() {
 
                 <div className='flex items-center space-x-1'>
                   <Eye className='w-4 h-4' />
-                  <span>{project.views || 100} views</span>
+                  <span>{project.views || 812} views</span>
                 </div>
               </div>
 
@@ -597,9 +600,12 @@ export default function ProjectDetails() {
           {/* Join Button - full width on mobile */}
           <button
             onClick={() => setShowJoinModal(true)}
-            className='flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-500/90 to-cyan-500/90 text-gray-900 px-4 py-2 sm:py-1.5 text-sm sm:text-base rounded-md font-medium hover:opacity-90 transition-all duration-200 w-full md:w-auto'
+            className='group flex items-center justify-center cursor-pointer gap-1 bg-gradient-to-r from-cyan-900 to-emerald-500  text-gray-900 px-4 py-2 sm:py-1.5 text-sm sm:text-base rounded-md font-medium hover:opacity-90 transition-all duration-200 w-full md:w-auto'
           >
-            <Plus className='w-3.5 h-3.5' />
+            <span className='relative'>
+              <Sparkles className='w-4 h-4 text-amber-400 animate-pulse' />
+              <span className='absolute inset-0 bg-amber-400 rounded-full opacity-0 group-hover:opacity-40 blur-sm group-hover:animate-ping duration-1000'></span>
+            </span>
             <span>Join Project</span>
           </button>
         </div>

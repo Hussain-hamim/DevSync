@@ -63,7 +63,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [isLive, setIsLive] = useState(false);
   const [createdProjects, setCreatedProjects] = useState([]);
   const [joinedProjects, setJoinedProjects] = useState([]);
   const [allCommits, setAllCommits] = useState<any>(null);
@@ -217,7 +216,6 @@ export default function ProfilePage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setIsLive(true);
 
         // 1. Get user from Supabase
         const { data: user, error: userError } = await supabase
@@ -300,7 +298,6 @@ export default function ProfilePage() {
         console.error('Error fetching profile data:', err);
       } finally {
         setLoading(false);
-        setTimeout(() => setIsLive(false), 3000);
       }
     };
 
@@ -354,9 +351,6 @@ export default function ProfilePage() {
     };
 
     fetchData();
-
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
   }, [id]);
 
   if (loading) {
@@ -524,16 +518,29 @@ export default function ProfilePage() {
                   <span>Role Profile</span>
                 </motion.a>
               )}
+
+              {/* TODO: find alt sol */}
               {githubData?.profile?.blog && (
                 <motion.a
-                  href={githubData.profile.blog}
+                  href={
+                    githubData?.profile.blog.startsWith('http')
+                      ? githubData.profile.blog
+                      : `https://${githubData?.profile.blog}`
+                  }
                   target='_blank'
                   rel='noopener noreferrer'
                   whileHover={{ y: -2 }}
                   className='flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-emerald-400 hover:border-emerald-400/30 transition-colors'
                 >
                   <Globe className='w-4 h-4' />
-                  <span>Website</span>
+                  <span>
+                    {
+                      githubData?.profile.blog
+                        .replace(/^https?:\/\//, '')
+                        .replace(/^www\./, '')
+                        .split('/')[0]
+                    }
+                  </span>
                 </motion.a>
               )}
               {userData.github_token && githubData?.profile?.login && (

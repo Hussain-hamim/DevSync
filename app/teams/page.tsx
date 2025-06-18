@@ -184,6 +184,7 @@ const TeamPage = () => {
               </div>
             ) : loading ? (
               <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                <Header />
                 {[...Array(6)].map((_, index) => (
                   <motion.div
                     key={index}
@@ -197,6 +198,7 @@ const TeamPage = () => {
               </div>
             ) : teams.length > 0 ? (
               <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                <Header />
                 {teams.map((team, index) => (
                   <Link href={`/teams/${team.id}`} key={team.id}>
                     <motion.div

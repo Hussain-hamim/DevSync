@@ -17,6 +17,7 @@ import { supabase } from '@/app/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { EditTaskModal } from './EditTaskModal';
+import Header from '@/components/Header';
 
 interface Comment {
   id: string;
@@ -503,6 +504,7 @@ export default function TaskDetailsPage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
+        <Header />
         <div className='container mx-auto px-6 py-8'>
           <div className='animate-pulse space-y-6'>
             <div className='h-10 w-1/3 bg-gray-700 rounded'></div>
@@ -536,22 +538,10 @@ export default function TaskDetailsPage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Header */}
-      <div className='border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm'>
-        <div className='container mx-auto px-6 py-4'>
-          <div className='flex items-center justify-between'>
-            <Link
-              href={`/projects/${params.id}/tasks`}
-              className='flex items-center text-gray-400 hover:text-emerald-400 transition-colors'
-            >
-              <ArrowLeft className='w-5 h-5 mr-2' />
-              Back to Tasks
-            </Link>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
-      <div className='container mx-auto px-6 py-8'>
+      <div className='container mx-auto px-6 py-25'>
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
           {/* Left Column - Task Details */}
           <div className='lg:col-span-2'>
