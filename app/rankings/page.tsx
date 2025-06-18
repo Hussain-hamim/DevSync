@@ -280,7 +280,7 @@ export default function RankingsPage() {
         {/* Loading State */}
         {isLoading && (
           <div className='space-y-3'>
-            {[...Array(3)].map((_, i) => (
+            {[...Array(4)].map((_, i) => (
               <div key={i}>
                 <div className='hidden md:block'>
                   <UserSkeleton />

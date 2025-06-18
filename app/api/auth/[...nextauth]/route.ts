@@ -38,6 +38,7 @@ const authOptions: NextAuthOptions = {
           scope: 'read:user user:email',
         },
       },
+
       profile(profile) {
         return {
           id: profile.id.toString(),
@@ -50,6 +51,7 @@ const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  // basePath: '/api/auth',
   callbacks: {
     async jwt({ token, account, profile }): Promise<CustomJWT> {
       if (account && profile) {
