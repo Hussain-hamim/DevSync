@@ -129,19 +129,6 @@ export default function RankingsPage() {
             </div>
 
             <div className='flex flex-col sm:flex-row gap-3 w-full sm:w-auto'>
-              <motion.div whileHover={{ scale: 1.03 }}>
-                <button
-                  onClick={() =>
-                    setTimeframe(timeframe === 'weekly' ? 'monthly' : 'weekly')
-                  }
-                  className='w-full sm:w-auto bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors'
-                >
-                  <Calendar className='w-4 h-4' />
-                  <span>{timeframe === 'weekly' ? 'Weekly' : 'Monthly'}</span>
-                  <ChevronDown className='w-4 h-4' />
-                </button>
-              </motion.div>
-
               {/* Metric filter dropdown */}
               <motion.div whileHover={{ scale: 1.03 }} className='relative'>
                 <button
@@ -176,7 +163,7 @@ export default function RankingsPage() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10'
+                    className='absolute right-0  mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-100'
                   >
                     <div className='py-1'>
                       {(
@@ -217,6 +204,19 @@ export default function RankingsPage() {
                     </div>
                   </motion.div>
                 )}
+              </motion.div>
+
+              <motion.div whileHover={{ scale: 1.03 }}>
+                <button
+                  onClick={() =>
+                    setTimeframe(timeframe === 'weekly' ? 'monthly' : 'weekly')
+                  }
+                  className='w-full sm:w-auto bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors'
+                >
+                  <Calendar className='w-4 h-4' />
+                  <span>{timeframe === 'weekly' ? 'Weekly' : 'Monthly'}</span>
+                  <ChevronDown className='w-4 h-4' />
+                </button>
               </motion.div>
             </div>
           </div>
