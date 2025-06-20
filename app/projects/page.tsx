@@ -147,16 +147,7 @@ export default function ProjectsPage() {
       {/* Header */}
       <Header />
 
-      <div className='container mx-auto px-3 py-5'>
-        <motion.button
-          onClick={() => router.back()}
-          whileHover={{ x: -4 }}
-          className='flex items-center gap-2 text-gray-400 hover:text-emerald-400 mb-8 transition-colors'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          <span>Back</span>
-        </motion.button>
-
+      <div className='container mt-5 mx-auto px-3 py-5'>
         <motion.header
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

@@ -24,6 +24,7 @@ import { supabase } from './lib/supabase';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import FloatingElements from '@/components/FloatingElements';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const heroRef = useRef(null);
@@ -31,6 +32,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [allProjects, setAllProjects] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -181,16 +183,28 @@ export default function Home() {
                 {
                   value: allProjects ? allProjects.length + '+' : '100+',
                   label: 'Active Projects',
+                  link: 'projects',
                 },
-                { value: allUsers.length + '+', label: 'Developers' },
+                {
+                  value: allUsers.length + '+',
+                  label: 'Developers',
+                  link: 'developers',
+                },
                 { value: '98%', label: 'Satisfaction' },
               ].map((stat, index) => (
                 <motion.div
                   key={index}
                   whileHover={{ y: -5 }}
-                  className='bg-gray-800/50 p-4 rounded-lg border border-gray-700'
+                  className='bg-gray-800/50 p-4 rounded-lg border cursor-pointer border-gray-700'
                 >
-                  <div className='text-2xl font-bold text-emerald-400'>
+                  <div
+                    onClick={() => {
+                      router.push(
+                        stat.link === 'developers' ? '/rankings' : '/projects'
+                      );
+                    }}
+                    className='text-2xl font-bold text-emerald-400'
+                  >
                     {stat.value}
                   </div>
                   <div className='text-xs text-gray-400'>{stat.label}</div>
