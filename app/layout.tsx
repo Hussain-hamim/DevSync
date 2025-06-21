@@ -1,18 +1,7 @@
 import type { Metadata } from 'next';
-// import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Providers from './Providers';
-import Header from '@/components/Header';
-
-// const geistSans = Geist({
-//   variable: '--font-geist-sans',
-//   subsets: ['latin'],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: '--font-geist-mono',
-//   subsets: ['latin'],
-// });
+import { Analytics } from '@vercel/analytics/react';
 
 export const metadata: Metadata = {
   title: 'DevSync',
@@ -26,13 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body
-        // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        className={`antialiased`}
-      >
+      <body className={`antialiased`}>
         <Providers>
           {/* <Header /> */}
           {children}
+          <Analytics />
         </Providers>
       </body>
     </html>
