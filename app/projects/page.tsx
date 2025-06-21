@@ -147,7 +147,7 @@ export default function ProjectsPage() {
       {/* Header */}
       <Header />
 
-      <div className='container mt-5 mx-auto px-3 py-5'>
+      <div className='container mt-10 mx-auto px-3 py-5'>
         <motion.header
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
