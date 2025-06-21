@@ -305,6 +305,7 @@ export function NewProjectModal({
                           ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                           : 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 hover:opacity-90'
                       }`}
+disabled={isSubmitting}
                     >
                       {isSubmitting ? 'Creating...' : 'Create Project'}
                     </button>
