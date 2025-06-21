@@ -213,7 +213,7 @@ export default function ProjectsPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10'
+                className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-40'
               >
                 {['all', 'web', 'ai', 'devops', 'tools'].map((filter) => (
                   <button

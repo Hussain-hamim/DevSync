@@ -30,8 +30,8 @@ export default function Home() {
   const heroRef = useRef(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [allProjects, setAllProjects] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
+  const [allProjects, setAllProjects]= useState([]);
+  const [allUsers, setAllUsers]= useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function Home() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100 overflow-x-hidden'>
-      {/* Smart Header */}
+   
       <Header />
 
       {/* Hero Section */}
@@ -186,7 +186,7 @@ export default function Home() {
                   link: 'projects',
                 },
                 {
-                  value: allUsers.length + '+',
+                  value: allUsers?allUsers.length + '+':0,
                   label: 'Developers',
                   link: 'developers',
                 },
