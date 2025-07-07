@@ -161,6 +161,17 @@ export default function Home() {
 
               <button
                 type='button'
+                onClick={() => signIn('google')}
+                className='relative overflow-hidden cursor-pointer group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
+              >
+                <span className='relative z-10 flex items-center'>
+                  <User className='w-4 h-4 mr-2' />
+                  Continue With Google
+                </span>
+                <span className='absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity'></span>
+              </button>
+              <button
+                type='button'
                 onClick={() => signIn('github')}
                 className='relative overflow-hidden cursor-pointer group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
               >

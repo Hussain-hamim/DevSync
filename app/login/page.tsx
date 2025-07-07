@@ -1,8 +1,5 @@
 'use client';
-import {
-  Terminal,
-  Github,
-} from 'lucide-react';
+import { Terminal, Github, User } from 'lucide-react';
 import { signIn, useSession } from 'next-auth/react';
 
 export default function LoginPage() {
@@ -28,10 +25,19 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <div className='bg-gray-800/70 rounded-xl border border-gray-700 p-8 shadow-lg'>  
-
+        <div className='bg-gray-800/70 rounded-xl border border-gray-700 p-8 shadow-lg'>
           {/* Social Login */}
           <div className='space-y-3'>
+            <button
+              type='button'
+              onClick={() => signIn('google')}
+              // onClick={handleSignIn}
+              className='w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg py-2.5 px-5 transition-colors flex items-center justify-center'
+            >
+              <User className='w-5 h-5 mr-2' />
+              Continue with Google
+            </button>
+
             <button
               type='button'
               onClick={() => signIn('github')}
@@ -42,7 +48,6 @@ export default function LoginPage() {
               Continue with GitHub
             </button>
           </div>
-
         </div>
       </div>
     </div>

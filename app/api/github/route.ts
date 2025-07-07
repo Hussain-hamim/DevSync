@@ -1,3 +1,5 @@
+// /app/api/auth/github/route.ts
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
