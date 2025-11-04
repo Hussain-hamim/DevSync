@@ -7,7 +7,15 @@ const ProfileHeader = ({
   socialLinks,
   commitsCount,
 }: {
-  profile: GithubProfile;
+  profile: {
+    name: string;
+    avatar_url: string;
+    bio?: string;
+    public_repos?: number;
+    followers?: number;
+    following?: number;
+    created_at: string;
+  };
   socialLinks: SocialLink[];
   commitsCount: number;
 }) => {
@@ -65,19 +73,18 @@ const ProfileHeader = ({
 
       <div className='flex-1'>
         <h1 className='text-3xl font-bold mb-2'>{profile.name}</h1>
-        <p className='text-gray-400 mb-4 max-w-2xl'>
-          {profile.bio || 'No bio available'}
-        </p>
+        <p className='text-gray-400 mb-4 max-w-2xl'>{profile.bio}</p>
 
         <div className='flex flex-wrap gap-3 mb-6'>
           {socialLinks.map((social, index) => (
             <motion.a
               key={index}
-              href={social.url}
+              href={social.onClick ? undefined : social.url}
               target='_blank'
               rel='noopener noreferrer'
               whileHover={{ y: -2 }}
-              className={`flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm ${social.color} transition-colors`}
+              onClick={social.onClick}
+              className={`flex items-center gap-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-700 text-sm ${social.color} transition-colors cursor-pointer`}
             >
               <social.icon className='w-4 h-4' />
               <span>{social.username}</span>
@@ -88,7 +95,7 @@ const ProfileHeader = ({
         <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
           <StatCard
             label='Repositories'
-            value={profile.public_repos}
+            value={profile.public_repos || 0}
             color='text-emerald-400'
           />
           <StatCard
@@ -97,8 +104,8 @@ const ProfileHeader = ({
             color='text-cyan-400'
           />
           <StatCard
-            label='Stars'
-            value={profile.public_repos} // This should be actual stars count
+            label='Followers'
+            value={profile.followers || 0}
             color='text-purple-400'
           />
           <StatCard

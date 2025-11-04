@@ -71,14 +71,18 @@ export default function ProfilePage() {
 
   const fetchGitHubData = async (username: string, token?: string) => {
     try {
+      if (!token) {
+        throw new Error('GitHub token is required to fetch user data');
+      }
+
       const headers = {
-        Authorization: token ? `Bearer ${token}` : '',
+        Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
       };
 
       // Fetch all data in parallel
-      const [commitsRes, profileRes, reposRes, followingRes] =
+      const [commitsRes, profileRes, reposRes, prsRes, followingRes] =
         await Promise.all([
           fetch(`https://api.github.com/search/commits?q=author:${username}`, {
             headers,
@@ -88,27 +92,31 @@ export default function ProfilePage() {
             `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
             { headers }
           ),
-          token
-            ? fetch(`https://api.github.com/user/following/${username}`, {
-                headers,
-                method: 'GET',
-              })
-            : Promise.resolve({ ok: false }),
+          fetch(
+            `https://api.github.com/search/issues?q=author:${username}+type:pr`,
+            { headers }
+          ),
+          fetch(`https://api.github.com/user/following/${username}`, {
+            headers,
+            method: 'GET',
+          }),
         ]);
 
       if (!commitsRes.ok) throw new Error('Failed to fetch commits');
       if (!profileRes.ok) throw new Error('Failed to fetch profile');
       if (!reposRes.ok) throw new Error('Failed to fetch repositories');
 
-      const [commitsData, profileData, reposData] = await Promise.all([
-        commitsRes.json(),
-        profileRes.json(),
-        reposRes.json(),
-      ]);
+      const [commitsData, profileData, reposData, prsData] =
+        await Promise.all([
+          commitsRes.json(),
+          profileRes.json(),
+          reposRes.json(),
+          prsRes.ok ? prsRes.json() : { total_count: 0 },
+        ]);
 
       // Check if current user is following this profile
       let followingStatus = false;
-      if (token && followingRes.ok) {
+      if (followingRes.ok) {
         followingStatus = followingRes.status === 204; // 204 means following
       }
 
@@ -119,7 +127,7 @@ export default function ProfilePage() {
           (acc, repo) => acc + (repo.stargazers_count || 0),
           0
         ),
-        pullRequests: 0, // This would require additional API calls
+        pullRequests: prsData.total_count || 0,
         forks: reposData.reduce(
           (acc, repo) => acc + (repo.forks_count || 0),
           0
@@ -230,37 +238,38 @@ export default function ProfilePage() {
         // 2. Fetch projects data
         await fetchProjectsData(user);
 
-        // 3. Determine GitHub credentials
-        let githubUsername = user.github_username;
-        let token = user.github_token || process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-
-        // If we have github_id but no username, try to get it
-        if (!githubUsername && user.github_id) {
+        // 3. Fetch GitHub data if user has a GitHub token
+        if (user.github_token) {
           try {
+            // Use the same approach as rankings page - get user's own data with their token
             const headers = {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${user.github_token}`,
               Accept: 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
             };
-            const res = await fetch(
-              `https://api.github.com/user/${user.github_id}`,
-              { headers }
-            );
-            const data = await res.json();
-            githubUsername = data.login;
-          } catch (err) {
-            console.warn('Failed to fetch GitHub username from ID:', err);
-          }
-        }
 
-        // Fallback to email prefix if no GitHub username yet
-        if (!githubUsername && user.email) {
-          githubUsername = user.email.split('@')[0];
-        }
+            // Get authenticated user details (this returns the profile user's own data)
+            const userResponse = await fetch('https://api.github.com/user', {
+              headers,
+            });
 
-        // 4. Fetch GitHub data if we have a username
-        if (githubUsername) {
-          try {
-            const data = await fetchGitHubData(githubUsername, token);
+            if (!userResponse.ok) {
+              if (userResponse.status === 401) {
+                console.warn('GitHub token is invalid or expired');
+                throw new Error('GitHub token is invalid or expired');
+              }
+              throw new Error('Failed to fetch GitHub user data');
+            }
+
+            const githubUserData = await userResponse.json();
+            const githubUsername = githubUserData.login;
+
+            if (!githubUsername) {
+              throw new Error('GitHub username not found');
+            }
+
+            // Now fetch full GitHub data using the username and token
+            const data = await fetchGitHubData(githubUsername, user.github_token);
             setGithubData(data);
             setAllCommits({ total_count: data.stats.contributions });
             setIsFollowing(data.isFollowing);
@@ -269,9 +278,9 @@ export default function ProfilePage() {
             // Set partial data if available
             setGithubData({
               profile: {
-                login: githubUsername,
-                avatar_url: '/default-avatar.png',
-                name: user.name || githubUsername,
+                login: user.github_username || user.email?.split('@')[0] || 'user',
+                avatar_url: user.avatar_url || '/default-avatar.png',
+                name: user.name || 'GitHub User',
               },
               stats: {
                 commits: 0,
@@ -290,6 +299,31 @@ export default function ProfilePage() {
             setAllCommits({ total_count: 0 });
             setIsFollowing(false);
           }
+        } else {
+          // No GitHub token available
+          console.warn('No GitHub token available for this user');
+          setGithubData({
+            profile: {
+              login: user.github_username || user.email?.split('@')[0] || 'user',
+              avatar_url: user.avatar_url || '/default-avatar.png',
+              name: user.name || 'User',
+            },
+            stats: {
+              commits: 0,
+              stars: 0,
+              pullRequests: 0,
+              forks: 0,
+              followers: 0,
+              following: 0,
+              repositories: 0,
+              contributions: 0,
+            },
+            skills: [],
+            recentRepos: [],
+            isFollowing: false,
+          });
+          setAllCommits({ total_count: 0 });
+          setIsFollowing(false);
         }
 
         setLastUpdated(new Date().toLocaleTimeString());

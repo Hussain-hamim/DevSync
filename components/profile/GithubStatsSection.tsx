@@ -2,12 +2,17 @@ import { motion } from 'framer-motion';
 import { Github, Code2, Cpu } from 'lucide-react';
 import { GithubData } from '@/types/profile';
 
-const GithubStatsSection = ({ githubData }: { githubData: GithubData }) => (
-  <div className='w-full md:w-80 space-y-8'>
-    <GithubStatsCard githubData={githubData} />
-    <SkillsCard skills={githubData.skills} />
-  </div>
-);
+const GithubStatsSection = ({ githubData }: { githubData: GithubData }) => {
+  // Add null check for githubData
+  if (!githubData) return null;
+
+  return (
+    <div className='w-full md:w-80 space-y-8'>
+      <GithubStatsCard githubData={githubData} />
+      <SkillsCard skills={githubData.skills || []} />
+    </div>
+  );
+};
 
 const GithubStatsCard = ({ githubData }: { githubData: GithubData }) => (
   <motion.div

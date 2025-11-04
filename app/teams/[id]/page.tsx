@@ -175,7 +175,7 @@ export default function TeamDetails() {
       const { data: rolesData, error: rolesError } = await supabase
         .from('project_roles')
         .select(
-          'title, users(id, name, avatar_url, github_username, created_at)'
+          'title, filled_by:users!fk_project_roles_filled_by(id, name, avatar_url, github_username, created_at)'
         )
         .eq('project_id', params.id)
         .not('filled_by', 'is', null);
@@ -183,7 +183,7 @@ export default function TeamDetails() {
       if (rolesError) throw rolesError;
 
       rolesData?.forEach((role: any) => {
-        const user = role.users;
+        const user = role.filled_by;
         if (user) {
           const existing = membersMap.get(user.id) || {
             ...user,

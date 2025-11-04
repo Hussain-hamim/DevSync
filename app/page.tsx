@@ -1,5 +1,5 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
+"use client";
+import { useEffect, useRef, useState } from "react";
 import {
   GitBranch,
   LayoutPanelLeft,
@@ -15,16 +15,16 @@ import {
   Search,
   User,
   Users,
-} from 'lucide-react';
-import { signIn } from 'next-auth/react';
-import { motion } from 'framer-motion';
-import { TypeAnimation } from 'react-type-animation';
-import Header from '@/components/Header';
-import { supabase } from './lib/supabase';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import FloatingElements from '@/components/FloatingElements';
-import { useRouter } from 'next/navigation';
+} from "lucide-react";
+import { signIn } from "next-auth/react";
+import { motion } from "framer-motion";
+import { TypeAnimation } from "react-type-animation";
+import Header from "@/components/Header";
+import { supabase } from "./lib/supabase";
+import Link from "next/link";
+import { toast } from "sonner";
+import FloatingElements from "@/components/FloatingElements";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const heroRef = useRef(null);
@@ -39,31 +39,31 @@ export default function Home() {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .order('created_at', { ascending: false })
+          .from("projects")
+          .select("*")
+          .order("created_at", { ascending: false })
           .limit(4);
 
         const { data: allProjects } = await supabase
-          .from('projects')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .from("projects")
+          .select("*")
+          .order("created_at", { ascending: false });
         setAllProjects(allProjects);
 
-        const { data: allUsers } = await supabase.from('users').select('*');
+        const { data: allUsers } = await supabase.from("users").select("*");
         setAllUsers(allUsers);
 
         console.log(error?.message);
         if (error) {
-          console.error('Failed to fetch projects:', error.message);
+          console.error("Failed to fetch projects:", error.message);
           return;
         }
 
         setProjects(data);
         setLoading(false);
       } catch (error) {
-        toast.error('Failed to load projects');
-        console.error('Error:', error);
+        toast.error("Failed to load projects");
+        console.error("Error:", error);
         setLoading(false);
       }
     };
@@ -72,31 +72,31 @@ export default function Home() {
   }, []);
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100 overflow-x-hidden'>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100 overflow-x-hidden">
       {/* Smart Header */}
       <Header />
 
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className='relative pt-32 pb-24 px-6 overflow-hidden min-h-screen flex items-center justify-center'
+        className="relative pt-32 pb-24 px-6 overflow-hidden min-h-screen flex items-center justify-center"
       >
         {/* Animated background elements */}
         <FloatingElements />
 
         {/* Grid pattern */}
-        <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-20'></div>
+        <div className="absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
         {/* hero content */}
-        <div className='container mx-auto relative z-10'>
-          <div className='max-w-3xl mx-auto text-center'>
+        <div className="container mx-auto relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 200 }}
-              className='inline-flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded-full mb-4 border border-gray-700'
+              transition={{ type: "spring", stiffness: 200 }}
+              className="inline-flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded-full mb-4 border border-gray-700"
             >
-              <GitPullRequest className='w-4 h-4 text-emerald-400' />
-              <span className='text-xs font-medium text-emerald-400'>
+              <GitPullRequest className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-medium text-emerald-400">
                 v1.0 Now Live
               </span>
             </motion.div>
@@ -105,19 +105,19 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className='text-4xl md:text-6xl font-bold mb-6 leading-tight'
+              className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
             >
-              <span className='bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent'>
+              <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                 <TypeAnimation
                   sequence={[
-                    'Code Together,',
+                    "Code Together,",
                     1000,
-                    'Build Together,',
+                    "Build Together,",
                     1000,
-                    'Ship Together,',
+                    "Ship Together,",
                     1000,
                   ]}
-                  wrapper='span'
+                  wrapper="span"
                   speed={30}
                   repeat={Infinity}
                 />
@@ -136,7 +136,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className='text-xl text-gray-400 mb-10 max-w-2xl mx-auto'
+              className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
             >
               The developer platform where coders connect, collaborate, and
               create amazing projects as teams.
@@ -146,40 +146,68 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className='flex flex-col sm:flex-row justify-center gap-3'
+              className="flex flex-col sm:flex-row justify-center gap-3"
             >
               <Link
-                href='/projects'
-                className='relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center space-x-2'
+                href="/projects"
+                className="relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center space-x-2"
               >
-                <span className='relative z-10 flex items-center'>
+                <span className="relative z-10 flex items-center">
                   <span>Find Projects</span>
-                  <ArrowRight className='w-4 h-4 ml-2 transition-transform group-hover:translate-x-1' />
+                  <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                 </span>
-                <span className='absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity'></span>
+                <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity"></span>
               </Link>
 
               <button
-                type='button'
-                onClick={() => signIn('google')}
-                className='relative overflow-hidden cursor-pointer group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
+                type="button"
+                onClick={() => signIn("google")}
+                className="relative overflow-hidden cursor-pointer group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2"
               >
-                <span className='relative z-10 flex items-center'>
-                  <User className='w-4 h-4 mr-2' />
+                <span className="relative z-10 flex items-center">
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <g>
+                      <path
+                        fill="#4285F4"
+                        d="M24 9.5c3.54 0 6.41 1.48 8.37 3.51l6.24-6.24C34.68 2.53 29.79 0 24 0 14.81 0 6.85 5.4 2.71 13.28l7.62 5.92C12.11 13.05 17.55 9.5 24 9.5z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M46.99 24.55c0-1.69-.16-3.31-.47-4.84H24v9.18h12.95c-.56 2.89-2.25 5.34-4.79 6.99v5.76h7.75C44.98 36.81 46.99 31.13 46.99 24.55z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M10.33 28.82A14.5 14.5 0 0 1 8.39 24c0-1.67.31-3.29.86-4.82l-7.62-5.92A23.93 23.93 0 0 0 0 24c0 3.88.92 7.54 2.59 10.74l7.74-5.92z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M24 48c6.42 0 11.81-2.13 15.74-5.79l-7.75-5.76c-2.19 1.46-5.01 2.33-7.99 2.33-6.44 0-11.91-4.16-13.86-9.76l-7.73 5.92C6.85 42.6 14.81 48 24 48z"
+                      />
+                      <path fill="none" d="M0 0h48v48H0z" />
+                    </g>
+                  </svg>
                   Continue With Google
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-300/90 text-gray-900 font-semibold border border-yellow-600 whitespace-nowrap">
+                    Test mode
+                  </span>
                 </span>
-                <span className='absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity'></span>
+                <span className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"></span>
               </button>
               <button
-                type='button'
-                onClick={() => signIn('github')}
-                className='relative overflow-hidden cursor-pointer group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2'
+                type="button"
+                onClick={() => signIn("github")}
+                className="relative overflow-hidden cursor-pointer group bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center justify-center space-x-2"
               >
-                <span className='relative z-10 flex items-center'>
-                  <Github className='w-4 h-4 mr-2' />
+                <span className="relative z-10 flex items-center">
+                  <Github className="w-4 h-4 mr-2" />
                   GitHub Connect
                 </span>
-                <span className='absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity'></span>
+                <span className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"></span>
               </button>
             </motion.div>
 
@@ -188,37 +216,37 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2 }}
-              className='mt-16 grid grid-cols-3 gap-4 max-w-md mx-auto'
+              className="mt-16 grid grid-cols-3 gap-4 max-w-md mx-auto"
             >
               {[
                 {
-                  value: allProjects ? allProjects.length + '+' : '100+',
-                  label: 'Active Projects',
-                  link: 'projects',
+                  value: allProjects ? allProjects.length + "+" : "100+",
+                  label: "Active Projects",
+                  link: "projects",
                 },
                 {
-                  value: allUsers.length + '+',
-                  label: 'Developers',
-                  link: 'developers',
+                  value: allUsers.length + "+",
+                  label: "Developers",
+                  link: "developers",
                 },
-                { value: '98%', label: 'Satisfaction' },
+                { value: "98%", label: "Satisfaction" },
               ].map((stat, index) => (
                 <motion.div
                   key={index}
                   whileHover={{ y: -5 }}
-                  className='bg-gray-800/50 p-4 rounded-lg border cursor-pointer border-gray-700'
+                  className="bg-gray-800/50 p-4 rounded-lg border cursor-pointer border-gray-700"
                 >
                   <div
                     onClick={() => {
                       router.push(
-                        stat.link === 'developers' ? '/rankings' : '/projects'
+                        stat.link === "developers" ? "/rankings" : "/projects"
                       );
                     }}
-                    className='text-2xl font-bold text-emerald-400'
+                    className="text-2xl font-bold text-emerald-400"
                   >
                     {stat.value}
                   </div>
-                  <div className='text-xs text-gray-400'>{stat.label}</div>
+                  <div className="text-xs text-gray-400">{stat.label}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -230,9 +258,9 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5 }}
-          className='absolute bottom-8 left-1/2 transform -translate-x-1/2'
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
         >
-          <div className='flex flex-col items-center'>
+          <div className="flex flex-col items-center">
             <motion.div
               animate={{
                 y: [0, 10, 0],
@@ -241,25 +269,25 @@ export default function Home() {
               transition={{
                 duration: 2,
                 repeat: Infinity,
-                repeatType: 'loop',
+                repeatType: "loop",
               }}
-              className='w-6 h-6 text-gray-400'
+              className="w-6 h-6 text-gray-400"
             >
               <svg
-                viewBox='0 0 24 24'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d='M7 10L12 15L17 10'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
+                  d="M7 10L12 15L17 10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             </motion.div>
-            <span className='text-xs text-gray-500 mt-1'>
+            <span className="text-xs text-gray-500 mt-1">
               Scroll to explore
             </span>
           </div>
@@ -267,26 +295,26 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className='py-20 px-6 bg-gray-800/50 relative overflow-hidden'>
-        <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10'></div>
-        <div className='container mx-auto relative z-10'>
+      <section className="py-20 px-6 bg-gray-800/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
+        <div className="container mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className='max-w-3xl mx-auto text-center mb-16'
+            className="max-w-3xl mx-auto text-center mb-16"
           >
-            <h2 className='text-3xl font-bold mb-4'>
-              <span className='text-emerald-400'>Developer-First</span>{' '}
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="text-emerald-400">Developer-First</span>{" "}
               Collaboration
             </h2>
-            <p className='text-gray-400'>
+            <p className="text-gray-400">
               Tools built for how technical teams actually work
             </p>
           </motion.div>
 
-          <div className='grid md:grid-cols-3 gap-6'>
+          <div className="grid md:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -294,13 +322,13 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className='bg-gray-800/60 p-6 rounded-xl border border-gray-700 hover:border-emerald-400/30 transition-all hover:shadow-lg hover:-translate-y-1'
+                className="bg-gray-800/60 p-6 rounded-xl border border-gray-700 hover:border-emerald-400/30 transition-all hover:shadow-lg hover:-translate-y-1"
               >
-                <div className='w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center mb-4 border border-gray-700'>
+                <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center mb-4 border border-gray-700">
                   {feature.icon}
                 </div>
-                <h3 className='text-lg font-semibold mb-2'>{feature.title}</h3>
-                <p className='text-gray-400 text-sm'>{feature.desc}</p>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-gray-400 text-sm">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -308,25 +336,25 @@ export default function Home() {
       </section>
 
       {/* Project Showcase */}
-      <section className='py-20 px-6 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden'>
-        <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10'></div>
-        <div className='container mx-auto relative z-10'>
+      <section className="py-20 px-6 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
+        <div className="container mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className='max-w-4xl mx-auto text-center mb-16'
+            className="max-w-4xl mx-auto text-center mb-16"
           >
-            <h2 className='text-3xl font-bold mb-4'>
-              <span className='text-cyan-400'>Active Projects</span> Looking for
+            <h2 className="text-3xl font-bold mb-4">
+              <span className="text-cyan-400">Active Projects</span> Looking for
               Devs
             </h2>
-            <p className='text-gray-400'>Real work happening right now</p>
+            <p className="text-gray-400">Real work happening right now</p>
           </motion.div>
 
           {!loading ? (
-            <div className='grid md:grid-cols-2 gap-6 max-w-4xl mx-auto'>
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {projects.map((project, index) => (
                 <motion.div
                   key={index}
@@ -335,34 +363,34 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                   whileHover={{ scale: 1.02 }}
-                  className='bg-gray-800/70 p-6 rounded-xl border border-gray-700 hover:border-cyan-400/30 transition-all'
+                  className="bg-gray-800/70 p-6 rounded-xl border border-gray-700 hover:border-cyan-400/30 transition-all"
                 >
-                  <h3 className='text-lg font-semibold mb-3'>
+                  <h3 className="text-lg font-semibold mb-3">
                     {project.title}
                   </h3>
-                  <div className='flex flex-wrap gap-2 mb-4'>
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {project.tech_stack.map((tech) => (
                       <motion.span
                         key={tech}
                         whileHover={{ scale: 1.05 }}
-                        className='text-xs bg-gray-900 px-2 py-1 rounded'
+                        className="text-xs bg-gray-900 px-2 py-1 rounded"
                       >
                         {tech}
                       </motion.span>
                     ))}
                   </div>
-                  <div className='text-sm text-gray-400 mb-3'>
-                    <span className='text-cyan-400'>
-                      {project.roles_needed.length} {''}
+                  <div className="text-sm text-gray-400 mb-3">
+                    <span className="text-cyan-400">
+                      {project.roles_needed.length} {""}
                       members
-                    </span>{' '}
+                    </span>{" "}
                     • Needs:
                     {project.roles_needed.map((role) => (
-                      <span key={role}>{' ' + role + ', '}</span>
+                      <span key={role}>{" " + role + ", "}</span>
                     ))}
                   </div>
                   <Link href={`projects/${project.id}`}>
-                    <button className='text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition-colors'>
+                    <button className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition-colors">
                       View Details
                     </button>
                   </Link>
@@ -370,33 +398,33 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className='grid md:grid-cols-2 gap-6 max-w-4xl mx-auto'>
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {[1, 2, 3, 4].map((_, index) => (
                 <div
                   key={index}
-                  className='bg-gray-800/70 p-6 rounded-xl border border-gray-700'
+                  className="bg-gray-800/70 p-6 rounded-xl border border-gray-700"
                 >
                   {/* Title Skeleton */}
-                  <div className='h-6 bg-gray-700 rounded mb-3 w-3/4 animate-pulse'></div>
+                  <div className="h-6 bg-gray-700 rounded mb-3 w-3/4 animate-pulse"></div>
 
                   {/* Tech Stack Skeleton */}
-                  <div className='flex flex-wrap gap-2 mb-4'>
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {[1, 2, 3].map((tech) => (
                       <div
                         key={tech}
-                        className='h-6 bg-gray-700 rounded w-16 animate-pulse'
+                        className="h-6 bg-gray-700 rounded w-16 animate-pulse"
                       ></div>
                     ))}
                   </div>
 
                   {/* Members & Roles Skeleton */}
-                  <div className='space-y-2 mb-3'>
-                    <div className='h-4 bg-gray-700 rounded w-5/6 animate-pulse'></div>
-                    <div className='h-4 bg-gray-700 rounded w-4/6 animate-pulse'></div>
+                  <div className="space-y-2 mb-3">
+                    <div className="h-4 bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                    <div className="h-4 bg-gray-700 rounded w-4/6 animate-pulse"></div>
                   </div>
 
                   {/* Button Skeleton */}
-                  <div className='h-8 bg-gray-700 rounded w-24 animate-pulse'></div>
+                  <div className="h-8 bg-gray-700 rounded w-24 animate-pulse"></div>
                 </div>
               ))}
             </div>
@@ -405,45 +433,45 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className='py-20 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden'>
-        <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10'></div>
-        <div className='container mx-auto px-6 relative z-10'>
+      <section className="py-20 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
+        <div className="container mx-auto px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className='max-w-3xl mx-auto text-center mb-16'
+            className="max-w-3xl mx-auto text-center mb-16"
           >
-            <h2 className='text-3xl md:text-4xl font-bold text-gray-100 mb-4'>
-              How <span className='text-emerald-400'>DevSync</span> Works
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-100 mb-4">
+              How <span className="text-emerald-400">DevSync</span> Works
             </h2>
-            <p className='text-lg text-gray-400'>
+            <p className="text-lg text-gray-400">
               Get started in minutes and find your perfect developer team
             </p>
           </motion.div>
 
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto'>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
               {
-                icon: <User className='w-6 h-6 text-emerald-400' />,
-                title: 'Create Profile',
-                desc: 'Highlight your skills and preferred roles',
+                icon: <User className="w-6 h-6 text-emerald-400" />,
+                title: "Create Profile",
+                desc: "Highlight your skills and preferred roles",
               },
               {
-                icon: <Search className='w-6 h-6 text-emerald-400' />,
-                title: 'Browse Projects',
-                desc: 'Find exciting projects needing your skills',
+                icon: <Search className="w-6 h-6 text-emerald-400" />,
+                title: "Browse Projects",
+                desc: "Find exciting projects needing your skills",
               },
               {
-                icon: <Users className='w-6 h-6 text-emerald-400' />,
-                title: 'Join Team',
-                desc: 'Claim an open role matching your expertise',
+                icon: <Users className="w-6 h-6 text-emerald-400" />,
+                title: "Join Team",
+                desc: "Claim an open role matching your expertise",
               },
               {
-                icon: <Code2 className='w-6 h-6 text-emerald-400' />,
-                title: 'Build & Ship',
-                desc: 'Collaborate and create something amazing',
+                icon: <Code2 className="w-6 h-6 text-emerald-400" />,
+                title: "Build & Ship",
+                desc: "Collaborate and create something amazing",
               },
             ].map((item, index) => (
               <motion.div
@@ -452,15 +480,15 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className='bg-gray-800/60 p-6 rounded-xl border border-gray-700 hover:border-emerald-400/30 transition-all group hover:shadow-lg'
+                className="bg-gray-800/60 p-6 rounded-xl border border-gray-700 hover:border-emerald-400/30 transition-all group hover:shadow-lg"
               >
-                <div className='w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center mb-4 border border-gray-700 group-hover:border-emerald-400/30 transition-colors'>
+                <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center mb-4 border border-gray-700 group-hover:border-emerald-400/30 transition-colors">
                   {item.icon}
                 </div>
-                <h3 className='text-lg font-semibold text-gray-100 mb-2'>
+                <h3 className="text-lg font-semibold text-gray-100 mb-2">
                   {item.title}
                 </h3>
-                <p className='text-gray-400 text-sm'>{item.desc}</p>
+                <p className="text-gray-400 text-sm">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -468,25 +496,25 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className='py-20 px-6 bg-gray-900 relative overflow-hidden'>
-        <div className='absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10'></div>
-        <div className='container mx-auto max-w-2xl text-center relative z-10'>
+      <section className="py-20 px-6 bg-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#2e2e2e_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
+        <div className="container mx-auto max-w-2xl text-center relative z-10">
           <motion.div
             initial={{ scale: 0 }}
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
-            transition={{ type: 'spring', stiffness: 200 }}
+            transition={{ type: "spring", stiffness: 200 }}
           >
-            <Terminal className='w-10 h-10 mx-auto text-emerald-400 mb-4' />
+            <Terminal className="w-10 h-10 mx-auto text-emerald-400 mb-4" />
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className='text-2xl md:text-3xl font-bold mb-6'
+            className="text-2xl md:text-3xl font-bold mb-6"
           >
-            Ready to <span className='text-cyan-400'>ship real code</span> with
+            Ready to <span className="text-cyan-400">ship real code</span> with
             a technical team?
           </motion.h2>
           <motion.p
@@ -494,7 +522,7 @@ export default function Home() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className='text-gray-400 mb-8'
+            className="text-gray-400 mb-8"
           >
             No recruiters. No job descriptions. Just building.
           </motion.p>
@@ -503,40 +531,40 @@ export default function Home() {
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6 }}
-            href='/login'
-            className='inline-block relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-all'
+            href="/login"
+            className="inline-block relative overflow-hidden group bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-900 px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-all"
           >
-            <span className='relative z-10'>Join DevSync — It&apos;s free</span>
-            <span className='absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity'></span>
+            <span className="relative z-10">Join DevSync — It&apos;s free</span>
+            <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity"></span>
           </motion.a>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className='bg-gray-900 border-t border-gray-800 py-12 px-6'>
-        <div className='container mx-auto'>
-          <div className='flex flex-col md:flex-row justify-between items-center'>
+      <footer className="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className='flex items-center space-x-2 mb-6 md:mb-0'
+              className="flex items-center space-x-2 mb-6 md:mb-0"
             >
-              <Terminal className='w-5 h-5 text-emerald-400' />
-              <span className='font-medium'>DevSync</span>
+              <Terminal className="w-5 h-5 text-emerald-400" />
+              <span className="font-medium">DevSync</span>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className='flex space-x-6'
+              className="flex space-x-6"
             >
-              {['GitHub', 'Twitter', 'Discord', 'LinkedIn'].map((item) => (
+              {["GitHub", "Twitter", "Discord", "LinkedIn"].map((item) => (
                 <a
                   key={item}
-                  href='https://x.com/erencodes'
-                  target='_blank'
-                  className='text-gray-400 hover:text-emerald-400 transition-colors text-sm'
+                  href="https://x.com/erencodes"
+                  target="_blank"
+                  className="text-gray-400 hover:text-emerald-400 transition-colors text-sm"
                 >
                   {item}
                 </a>
@@ -548,7 +576,7 @@ export default function Home() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className='border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-xs'
+            className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-xs"
           >
             © {new Date().getFullYear()} DevSync — Built by developers, for
             developers
@@ -561,33 +589,33 @@ export default function Home() {
 
 const features = [
   {
-    icon: <Cpu className='w-5 h-5 text-emerald-400' />,
-    title: 'Role-Based Matching',
-    desc: 'Find teammates based on needed skills (Rust, React, ML, etc.)',
+    icon: <Cpu className="w-5 h-5 text-emerald-400" />,
+    title: "Role-Based Matching",
+    desc: "Find teammates based on needed skills (Rust, React, ML, etc.)",
   },
   {
-    icon: <GitBranch className='w-5 h-5 text-emerald-400' />,
-    title: 'Project Scaffolding',
-    desc: 'Pre-configured environments with your stack',
+    icon: <GitBranch className="w-5 h-5 text-emerald-400" />,
+    title: "Project Scaffolding",
+    desc: "Pre-configured environments with your stack",
   },
   {
-    icon: <LayoutPanelLeft className='w-5 h-5 text-emerald-400' />,
-    title: 'Progress Dashboard',
-    desc: 'Track commits, tasks, and burndown',
+    icon: <LayoutPanelLeft className="w-5 h-5 text-emerald-400" />,
+    title: "Progress Dashboard",
+    desc: "Track commits, tasks, and burndown",
   },
   {
-    icon: <MessageSquare className='w-5 h-5 text-emerald-400' />,
-    title: 'Technical Discussions',
-    desc: 'Threaded conversations with code snippets',
+    icon: <MessageSquare className="w-5 h-5 text-emerald-400" />,
+    title: "Technical Discussions",
+    desc: "Threaded conversations with code snippets",
   },
   {
-    icon: <Sparkles className='w-5 h-5 text-emerald-400' />,
-    title: 'AI Code Review',
-    desc: 'Get PR suggestions before teammates see them',
+    icon: <Sparkles className="w-5 h-5 text-emerald-400" />,
+    title: "AI Code Review",
+    desc: "Get PR suggestions before teammates see them",
   },
   {
-    icon: <BarChart2 className='w-5 h-5 text-emerald-400' />,
-    title: 'Skill Analytics',
-    desc: 'See your growth across languages/frameworks',
+    icon: <BarChart2 className="w-5 h-5 text-emerald-400" />,
+    title: "Skill Analytics",
+    desc: "See your growth across languages/frameworks",
   },
 ];

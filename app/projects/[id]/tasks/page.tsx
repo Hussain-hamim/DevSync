@@ -122,7 +122,7 @@ export default function ProjectTasksPage() {
         .from('project_roles')
         .select(
           `
-          users(id, name, avatar_url)
+          filled_by:users!fk_project_roles_filled_by(id, name, avatar_url)
         `
         )
         .eq('project_id', params.id)
@@ -137,7 +137,7 @@ export default function ProjectTasksPage() {
         Array.from(
           new Map(
             membersData
-              ?.map((m: any) => m.users)
+              ?.map((m: any) => m.filled_by)
               .filter(Boolean)
               .map((user: any) => [user.id, user])
           ).values()
