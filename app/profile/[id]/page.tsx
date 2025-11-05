@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import {
@@ -26,6 +27,13 @@ import {
   Linkedin,
 } from "lucide-react";
 import Header from "@/components/Header";
+import {
+  followUser,
+  unfollowUser,
+  checkFollowStatus,
+  getFollowCounts,
+} from "@/app/actions/followUser";
+import { toast } from "sonner";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,6 +68,7 @@ type GitHubData = {
 export default function ProfilePage() {
   const router = useRouter();
   const { id } = useParams();
+  const { data: session } = useSession();
   const [userData, setUserData] = useState<any>(null);
   const [githubData, setGithubData] = useState<GitHubData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,6 +79,11 @@ export default function ProfilePage() {
   const [allCommits, setAllCommits] = useState<any>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [followCounts, setFollowCounts] = useState({
+    followers: 0,
+    following: 0,
+  });
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const fetchGitHubData = async (username: string, token?: string) => {
     try {
@@ -83,26 +97,21 @@ export default function ProfilePage() {
         "X-GitHub-Api-Version": "2022-11-28",
       };
 
-      // Fetch all data in parallel
-      const [commitsRes, profileRes, reposRes, prsRes, followingRes] =
-        await Promise.all([
-          fetch(`https://api.github.com/search/commits?q=author:${username}`, {
-            headers,
-          }),
-          fetch(`https://api.github.com/users/${username}`, { headers }),
-          fetch(
-            `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
-            { headers }
-          ),
-          fetch(
-            `https://api.github.com/search/issues?q=author:${username}+type:pr`,
-            { headers }
-          ),
-          fetch(`https://api.github.com/user/following/${username}`, {
-            headers,
-            method: "GET",
-          }),
-        ]);
+      // Fetch all data in parallel (removed GitHub follow check - using DevSync follows instead)
+      const [commitsRes, profileRes, reposRes, prsRes] = await Promise.all([
+        fetch(`https://api.github.com/search/commits?q=author:${username}`, {
+          headers,
+        }),
+        fetch(`https://api.github.com/users/${username}`, { headers }),
+        fetch(
+          `https://api.github.com/users/${username}/repos?per_page=100&sort=updated`,
+          { headers }
+        ),
+        fetch(
+          `https://api.github.com/search/issues?q=author:${username}+type:pr`,
+          { headers }
+        ),
+      ]);
 
       if (!commitsRes.ok) throw new Error("Failed to fetch commits");
       if (!profileRes.ok) throw new Error("Failed to fetch profile");
@@ -115,13 +124,7 @@ export default function ProfilePage() {
         prsRes.ok ? prsRes.json() : { total_count: 0 },
       ]);
 
-      // Check if current user is following this profile
-      let followingStatus = false;
-      if (followingRes.ok) {
-        followingStatus = followingRes.status === 204; // 204 means following
-      }
-
-      // Calculate statistics
+      // Calculate statistics (DevSync follows are handled separately)
       const stats = {
         commits: commitsData.total_count || 0,
         stars: reposData.reduce(
@@ -133,6 +136,7 @@ export default function ProfilePage() {
           (acc, repo) => acc + (repo.forks_count || 0),
           0
         ),
+        // GitHub followers/following - kept for reference but DevSync counts are used in UI
         followers: profileData.followers,
         following: profileData.following,
         repositories: reposData.length,
@@ -166,7 +170,7 @@ export default function ProfilePage() {
         stats,
         skills,
         recentRepos,
-        isFollowing: followingStatus,
+        isFollowing: false, // DevSync follow status is handled separately
       };
     } catch (error) {
       console.error("GitHub API error:", error);
@@ -174,48 +178,54 @@ export default function ProfilePage() {
     }
   };
 
+  // Get current user ID for follow functionality
+  useEffect(() => {
+    const fetchCurrentUserId = async () => {
+      if (session?.user?.email) {
+        const { data: currentUser } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", session.user.email)
+          .single();
+        if (currentUser) {
+          setCurrentUserId(currentUser.id);
+        }
+      }
+    };
+    fetchCurrentUserId();
+  }, [session]);
+
   const toggleFollow = async () => {
-    if (!githubData?.profile?.login || !userData.github_token) return;
+    if (!id || !session?.user) {
+      toast.error("Please login to follow users");
+      return;
+    }
 
     setFollowLoading(true);
     try {
-      const headers = {
-        Authorization: `Bearer ${userData.github_token}`,
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      };
+      let result;
+      if (isFollowing) {
+        result = await unfollowUser(id as string);
+      } else {
+        result = await followUser(id as string);
+      }
 
-      const method = isFollowing ? "DELETE" : "PUT";
-      const url = `https://api.github.com/user/following/${githubData.profile.login}`;
-
-      const response = await fetch(url, {
-        method,
-        headers,
-      });
-
-      if (response.ok) {
+      if (result.success) {
         setIsFollowing(!isFollowing);
         // Update followers count locally
-        if (githubData) {
-          setGithubData({
-            ...githubData,
-            stats: {
-              ...githubData.stats,
-              followers: isFollowing
-                ? githubData.stats.followers - 1
-                : githubData.stats.followers + 1,
-            },
-            isFollowing: !isFollowing,
-          });
-        }
-      } else {
-        throw new Error(
-          `Failed to ${isFollowing ? "unfollow" : "follow"} user`
+        setFollowCounts((prev) => ({
+          ...prev,
+          followers: isFollowing ? prev.followers - 1 : prev.followers + 1,
+        }));
+        toast.success(
+          isFollowing ? "Unfollowed successfully" : "Followed successfully"
         );
+      } else {
+        toast.error(result.error || "Failed to update follow status");
       }
     } catch (error) {
       console.error("Error toggling follow status:", error);
-      setError("Failed to update follow status");
+      toast.error("Failed to update follow status");
     } finally {
       setFollowLoading(false);
     }
@@ -236,10 +246,16 @@ export default function ProfilePage() {
         if (userError || !user) throw new Error("User not found");
         setUserData(user);
 
-        // 2. Fetch projects data
+        // 2. Fetch DevSync follow status and counts
+        const followStatus = await checkFollowStatus(user.id);
+        setIsFollowing(followStatus.isFollowing);
+        const counts = await getFollowCounts(user.id);
+        setFollowCounts(counts);
+
+        // 3. Fetch projects data
         await fetchProjectsData(user);
 
-        // 3. Fetch GitHub data if user has a GitHub token
+        // 4. Fetch GitHub data if user has a GitHub token
         if (user.github_token) {
           try {
             // Use the same approach as rankings page - get user's own data with their token
@@ -276,7 +292,6 @@ export default function ProfilePage() {
             );
             setGithubData(data);
             setAllCommits({ total_count: data.stats.contributions });
-            setIsFollowing(data.isFollowing);
           } catch (err) {
             console.warn("Failed to fetch GitHub data:", err);
             // Set partial data if available
@@ -658,13 +673,13 @@ export default function ProfilePage() {
                 </motion.a>
               )}
 
-              {/* Follow Button - Only show if current user has GitHub token */}
-              {userData?.github_token && githubData?.profile?.login && (
+              {/* Follow Button - Show for all logged-in users (not just GitHub users) */}
+              {session?.user && currentUserId && currentUserId !== id && (
                 <motion.button
                   onClick={toggleFollow}
                   disabled={followLoading}
                   whileHover={{ y: -2 }}
-                  className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-sm transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
                     isFollowing
                       ? "bg-gray-800/50 border-gray-700 text-gray-300 hover:text-rose-400 hover:border-rose-400/30"
                       : "bg-purple-900/50 border-purple-700 text-purple-300 hover:text-purple-400 hover:border-purple-400/30"
@@ -789,15 +804,15 @@ export default function ProfilePage() {
                 </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Followers</span>
+                    <span className="text-gray-400">DevSync Followers</span>
                     <span className="font-medium">
-                      {githubData.stats.followers}
+                      {followCounts.followers}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Following</span>
+                    <span className="text-gray-400">DevSync Following</span>
                     <span className="font-medium">
-                      {githubData.stats.following}
+                      {followCounts.following}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

@@ -118,7 +118,7 @@ const ProfileHeader = ({
             color='text-cyan-400'
           />
           <StatCard
-            label='Followers'
+            label='DevSync Followers'
             value={profile.followers || 0}
             color='text-purple-400'
           />

@@ -15,6 +15,7 @@ import {
 import { Project, SocialLink, GithubData } from "@/types/profile";
 import { Session } from "next-auth";
 import { motion } from "framer-motion";
+import { getFollowCounts } from "@/app/actions/followUser";
 
 export default function ProfilePage() {
   const { data, status: sessionStatus } = useSession();
@@ -26,6 +27,10 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
   const [allCommits, setAllCommits] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [followCounts, setFollowCounts] = useState({
+    followers: 0,
+    following: 0,
+  });
 
   const session = data as Session & {
     user: {
@@ -56,6 +61,10 @@ export default function ProfilePage() {
         setUserData(fetchedUserData);
 
         if (fetchedUserData) {
+          // Fetch follow counts
+          const counts = await getFollowCounts(fetchedUserData.id);
+          setFollowCounts(counts);
+
           await Promise.all([
             fetchCreatedProjects(fetchedUserData.id),
             fetchJoinedProjects(fetchedUserData.id),
@@ -376,6 +385,11 @@ export default function ProfilePage() {
     if (session?.user?.email) {
       const updatedUserData = await fetchUserData(session.user.email);
       setUserData(updatedUserData);
+      // Refresh follow counts
+      if (updatedUserData) {
+        const counts = await getFollowCounts(updatedUserData.id);
+        setFollowCounts(counts);
+      }
     }
   };
 
@@ -421,8 +435,8 @@ export default function ProfilePage() {
               githubData?.profile?.bio ||
               "Update your profile to add a bio",
             public_repos: githubData?.profile?.public_repos || 0,
-            followers: githubData?.profile?.followers || 0,
-            following: githubData?.profile?.following || 0,
+            followers: followCounts.followers,
+            following: followCounts.following,
             created_at:
               userData?.created_at ||
               githubData?.profile?.created_at ||
