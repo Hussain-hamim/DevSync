@@ -11,28 +11,49 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen w-full bg-[#0a0a0a] relative flex items-center justify-center p-4">
+      {/* Cosmic Aurora Background */}
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse at 20% 30%, rgba(56, 189, 248, 0.4) 0%, transparent 60%),
+            radial-gradient(ellipse at 80% 70%, rgba(139, 92, 246, 0.3) 0%, transparent 70%),
+            radial-gradient(ellipse at 60% 20%, rgba(236, 72, 153, 0.25) 0%, transparent 50%),
+            radial-gradient(ellipse at 40% 80%, rgba(34, 197, 94, 0.2) 0%, transparent 65%)
+          `,
+        }}
+      />
+      <div className="relative z-10 w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Terminal className="w-10 h-10 text-emerald-400" />
+            <Terminal className="w-12 h-12 text-cyan-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-100 mb-2">
-            Welcome back to <span className="text-emerald-400">DevSync</span>
+          <h1 className="text-3xl font-black text-gray-100 mb-3">
+            Welcome to{" "}
+            <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+              DevSync
+            </span>
           </h1>
-          <p className="text-gray-400">Collaborate on your next big project</p>
+          <p className="text-lg text-gray-400 mb-1">
+            Connect with developers, join teams, and build amazing projects
+            together
+          </p>
+          <p className="text-sm text-gray-500">
+            Sign in to experience the best of DevSync
+          </p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-gray-800/70 rounded-xl border border-gray-700 p-8 shadow-lg">
+        <div className="bg-gray-900/60 backdrop-blur-xl rounded-xl border border-gray-800/50 p-8 shadow-2xl">
           {/* Social Login */}
           <div className="space-y-3">
             <button
               type="button"
               onClick={() => signIn("google")}
               // onClick={handleSignIn}
-              className="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg py-2.5 px-5 transition-colors flex items-center justify-center"
+              className="w-full bg-gray-800/60 hover:bg-gray-700/60 border border-gray-700/50 text-gray-300 font-semibold rounded-xl py-3 px-5 transition-all flex items-center justify-center backdrop-blur-sm hover:border-cyan-500/50"
             >
               <svg
                 className="w-4 h-4 mr-2"
@@ -67,7 +88,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => signIn("github")}
               // onClick={handleSignIn}
-              className="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg py-2.5 px-5 transition-colors flex items-center justify-center"
+              className="w-full bg-gray-800/60 hover:bg-gray-700/60 border border-gray-700/50 text-gray-300 font-semibold rounded-xl py-3 px-5 transition-all flex items-center justify-center backdrop-blur-sm hover:border-cyan-500/50"
             >
               <Github className="w-5 h-5 mr-2" />
               Continue with GitHub
