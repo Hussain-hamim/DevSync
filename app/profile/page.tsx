@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { Globe, Linkedin, Twitter } from "lucide-react";
+import { useSession, signIn } from "next-auth/react";
+import { Globe, Linkedin, Twitter, Github } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import Header from "@/components/Header";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/components/profile";
 import { Project, SocialLink, GithubData } from "@/types/profile";
 import { Session } from "next-auth";
+import { motion } from "framer-motion";
 
 export default function ProfilePage() {
   const { data, status: sessionStatus } = useSession();
@@ -431,6 +432,42 @@ export default function ProfilePage() {
           commitsCount={allCommits?.total_count || 0}
           onEdit={() => setShowEditModal(true)}
         />
+
+        {/* Connect GitHub Section - Show if user doesn't have GitHub connected */}
+        {!userData?.github_token && !userData?.github_id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 bg-gray-800/50 border border-gray-700 rounded-lg p-6"
+          >
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
+                  <Github className="w-6 h-6 text-gray-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-100 mb-1">
+                    Connect Your GitHub Account
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    Connect GitHub to appear in developer rankings and showcase
+                    your contributions
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => signIn("github")}
+                className="relative overflow-hidden group bg-gray-700 hover:bg-gray-600 border border-gray-600 px-6 py-3 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 whitespace-nowrap"
+              >
+                <span className="relative z-10 flex items-center">
+                  <Github className="w-4 h-4 mr-2" />
+                  Connect GitHub
+                </span>
+                <span className="absolute inset-0 bg-gradient-to-r from-gray-600 to-gray-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         <div className="flex flex-col md:flex-row gap-8">
           <ProjectsSection

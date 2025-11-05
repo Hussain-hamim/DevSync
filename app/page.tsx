@@ -15,6 +15,7 @@ import {
   Search,
   User,
   Users,
+  Trophy,
 } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -210,6 +211,20 @@ export default function Home() {
                     <span className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                   </button>
                 </>
+              )}
+
+              {session && (
+                <Link
+                  href="/rankings"
+                  className="relative overflow-hidden group bg-gradient-to-r from-amber-500 to-orange-500 text-gray-900 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center space-x-2"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <Trophy className="w-4 h-4 mr-2" />
+                    <span>See Developers Ranking</span>
+                    <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                </Link>
               )}
             </motion.div>
 
