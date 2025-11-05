@@ -61,9 +61,6 @@ export default function LoginPage() {
                 </g>
               </svg>
               Continue with Google
-              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-300/90 text-gray-900 font-semibold border border-yellow-600 whitespace-nowrap">
-                Test mode
-              </span>
             </button>
 
             <button

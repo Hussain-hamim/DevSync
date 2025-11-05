@@ -71,6 +71,7 @@ const authOptions: NextAuthOptions = {
           prompt: 'consent',
           access_type: 'offline',
           response_type: 'code',
+          scope: 'openid email profile',
         },
       },
       profile(profile: GoogleProfile) {
@@ -120,38 +121,78 @@ const authOptions: NextAuthOptions = {
       if (!account || !profile) return false;
 
       try {
-        let userData;
+        const email = user.email as string;
+        if (!email) {
+          console.error('No email provided in user data');
+          return false;
+        }
+
+        // Check if user already exists by email
+        const { data: existingUser, error: fetchError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .limit(1)
+          .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          // PGRST116 is "no rows returned", which is fine for new users
+          console.error('Error fetching existing user:', fetchError.message);
+          return false;
+        }
+
+        let updateData: Record<string, any> = {};
 
         if (account.provider === 'github') {
           const githubProfile = profile as GithubProfile;
-          userData = {
+          updateData = {
             github_id: `github_${githubProfile.id}`,
-            email: user.email as string,
-            name: user.name || githubProfile.login || '',
-            avatar_url: githubProfile.avatar_url,
+            email,
+            name: user.name || githubProfile.login || existingUser?.name || '',
+            avatar_url: githubProfile.avatar_url || existingUser?.avatar_url,
             github_token: account.access_token as string,
             github_username: githubProfile.username || githubProfile.login,
+            // Preserve Google data if user already exists
+            ...(existingUser?.google_id && { google_id: existingUser.google_id }),
+            ...(existingUser?.google_token && { google_token: existingUser.google_token }),
+            ...(existingUser?.username && !existingUser.github_username && { username: existingUser.username }),
           };
         } else if (account.provider === 'google') {
           const googleProfile = profile as GoogleProfile;
-          userData = {
+          const username = googleProfile.email.split('@')[0];
+          
+          updateData = {
             google_id: `google_${googleProfile.sub}`,
-            email: googleProfile.email,
-            name: googleProfile.name,
-            avatar_url: googleProfile.picture,
+            email,
+            name: googleProfile.name || existingUser?.name || '',
+            avatar_url: googleProfile.picture || existingUser?.avatar_url,
             google_token: account.access_token as string,
-            username: googleProfile.email.split('@')[0],
+            username: username,
+            // Preserve GitHub data if user already exists
+            ...(existingUser?.github_id && { github_id: existingUser.github_id }),
+            ...(existingUser?.github_token && { github_token: existingUser.github_token }),
+            ...(existingUser?.github_username && { github_username: existingUser.github_username }),
           };
         }
 
-        if (userData) {
-          const { error } = await supabase.from('users').upsert(
-            userData,
-            { onConflict: 'email' } // Assuming email is unique across providers
-          );
+        // If user exists, update; otherwise insert
+        if (existingUser) {
+          const { error: updateError } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('email', email);
 
-          if (error) {
-            console.error('Supabase user insert error:', error.message);
+          if (updateError) {
+            console.error('Supabase user update error:', updateError.message);
+            return false;
+          }
+        } else {
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert(updateData);
+
+          if (insertError) {
+            console.error('Supabase user insert error:', insertError.message);
             return false;
           }
         }

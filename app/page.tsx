@@ -192,9 +192,6 @@ export default function Home() {
                     </g>
                   </svg>
                   Continue With Google
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-300/90 text-gray-900 font-semibold border border-yellow-600 whitespace-nowrap">
-                    Test mode
-                  </span>
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"></span>
               </button>

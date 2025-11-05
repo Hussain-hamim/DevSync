@@ -1,5 +1,24 @@
 import { supabase } from '@/app/lib/supabase';
 import GitHubProvider from 'next-auth/providers/github';
+import GoogleProvider from 'next-auth/providers/google';
+import type { Profile } from 'next-auth';
+
+// Define interfaces for profiles
+interface GithubProfile extends Profile {
+  login: string;
+  id: number;
+  avatar_url: string;
+  name?: string;
+  email?: string;
+  username: string;
+}
+
+interface GoogleProfile extends Profile {
+  sub: string;
+  name: string;
+  email: string;
+  picture: string;
+}
 
 export const authOptions = {
   providers: [
@@ -10,23 +29,66 @@ export const authOptions = {
         params: {
           scope: 'read:user user:email',
         },
-      }, // repo = needed to access user's repos private and public
+      },
+      profile(profile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+          login: profile.login,
+          username: profile.login,
+        };
+      },
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      authorization: {
+        params: {
+          prompt: 'consent',
+          access_type: 'offline',
+          response_type: 'code',
+          scope: 'openid email profile',
+        },
+      },
+      profile(profile: GoogleProfile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          username: profile.email.split('@')[0],
+        };
+      },
     }),
   ],
   callbacks: {
     // @ts-ignore
     async jwt({ token, account, profile }) {
-      if (account && profile) {
+      if (account) {
         token.accessToken = account.access_token;
-        token.login = profile.login; // GitHub username
+        // Handle both GitHub and Google profiles
+        if (profile) {
+          if ('login' in profile) {
+            // GitHub profile
+            const githubProfile = profile as GithubProfile;
+            token.login = githubProfile.login;
+            token.username = githubProfile.login;
+          } else if ('sub' in profile) {
+            // Google profile
+            const googleProfile = profile as GoogleProfile;
+            token.username = googleProfile.email.split('@')[0];
+          }
+        }
       }
       return token;
     },
     // @ts-ignore
     async session({ session, token }) {
       session.accessToken = token.accessToken;
-      if (token.login) {
-        session.user.login = token.login; // GitHub username
+      if (token.username) {
+        session.user.login = token.username;
       }
       return session;
     },
@@ -34,31 +96,88 @@ export const authOptions = {
     async signIn({ user, account, profile }) {
       if (!account || !profile) return false;
 
-      // Extract GitHub info
-      const github_id = `github_${profile.id}`;
-      const email = user.email!;
-      const name = user.name || profile.login;
-      const avatar_url = profile.avatar_url;
-      const github_token = account.access_token;
+      try {
+        const email = user.email as string;
+        if (!email) {
+          console.error('No email provided in user data');
+          return false;
+        }
 
-      // Insert or update user in Supabase
-      const { data, error } = await supabase.from('users').upsert(
-        {
-          github_id,
-          email,
-          name,
-          avatar_url,
-          github_token,
-        },
-        { onConflict: 'github_id' }
-      );
+        // Check if user already exists by email
+        const { data: existingUser, error: fetchError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .limit(1)
+          .single();
 
-      if (error) {
-        console.error('Supabase user insert error:', error.message);
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          // PGRST116 is "no rows returned", which is fine for new users
+          console.error('Error fetching existing user:', fetchError.message);
+          return false;
+        }
+
+        let updateData: Record<string, any> = {};
+
+        if (account.provider === 'github') {
+          const githubProfile = profile as GithubProfile;
+          updateData = {
+            github_id: `github_${githubProfile.id}`,
+            email,
+            name: user.name || githubProfile.login || existingUser?.name || '',
+            avatar_url: githubProfile.avatar_url || existingUser?.avatar_url,
+            github_token: account.access_token as string,
+            github_username: githubProfile.username || githubProfile.login,
+            // Preserve Google data if user already exists
+            ...(existingUser?.google_id && { google_id: existingUser.google_id }),
+            ...(existingUser?.google_token && { google_token: existingUser.google_token }),
+            ...(existingUser?.username && !existingUser.github_username && { username: existingUser.username }),
+          };
+        } else if (account.provider === 'google') {
+          const googleProfile = profile as GoogleProfile;
+          const username = googleProfile.email.split('@')[0];
+          
+          updateData = {
+            google_id: `google_${googleProfile.sub}`,
+            email,
+            name: googleProfile.name || existingUser?.name || '',
+            avatar_url: googleProfile.picture || existingUser?.avatar_url,
+            google_token: account.access_token as string,
+            username: username,
+            // Preserve GitHub data if user already exists
+            ...(existingUser?.github_id && { github_id: existingUser.github_id }),
+            ...(existingUser?.github_token && { github_token: existingUser.github_token }),
+            ...(existingUser?.github_username && { github_username: existingUser.github_username }),
+          };
+        }
+
+        // If user exists, update; otherwise insert
+        if (existingUser) {
+          const { error: updateError } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('email', email);
+
+          if (updateError) {
+            console.error('Supabase user update error:', updateError.message);
+            return false;
+          }
+        } else {
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert(updateData);
+
+          if (insertError) {
+            console.error('Supabase user insert error:', insertError.message);
+            return false;
+          }
+        }
+
+        return true;
+      } catch (error) {
+        console.error('SignIn error:', error);
         return false;
       }
-
-      return true;
     },
   },
 };
