@@ -25,12 +25,14 @@ import { joinProjectRole } from "@/app/actions/joinProject";
 import { use, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { JoinProjectModal } from "./JoinProjectModal";
+import { EditProjectModal } from "./EditProjectModal";
 import Header from "@/components/Header";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import calendar from "dayjs/plugin/calendar";
 import { AddTaskModal } from "./AddTaskModal";
 import { AddIssueModal } from "./AddIssueModal";
+import { Edit } from "lucide-react";
 
 // Form validation imports
 import { useForm } from "react-hook-form";
@@ -164,6 +166,7 @@ export default function ProjectDetails() {
 
   // Modals
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
 
   // React Hook Form setup for Discussions
@@ -597,17 +600,31 @@ export default function ProjectDetails() {
             </div>
           </div>
 
-          {/* Join Button - full width on mobile */}
-          <button
-            onClick={() => setShowJoinModal(true)}
-            className="group flex items-center justify-center cursor-pointer gap-1 bg-gradient-to-r from-cyan-900 to-emerald-500  text-gray-900 px-4 py-2 sm:py-1.5 text-sm sm:text-base rounded-md font-medium hover:opacity-90 transition-all duration-200 w-full md:w-auto"
-          >
-            <span className="relative">
-              <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-              <span className="absolute inset-0 bg-amber-400 rounded-full opacity-0 group-hover:opacity-40 blur-sm group-hover:animate-ping duration-1000"></span>
-            </span>
-            <span>Join Project</span>
-          </button>
+          {/* Action Buttons - Edit (Owner only) and Join */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            {/* Edit Button - Only show for project owner */}
+            {userId && project?.creator_id === userId && (
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 px-4 py-2 sm:py-1.5 text-sm rounded-md font-medium transition-all duration-200 w-full sm:w-auto"
+              >
+                <Edit className="w-4 h-4" />
+                <span>Edit Project</span>
+              </button>
+            )}
+
+            {/* Join Button - full width on mobile */}
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="group flex items-center justify-center cursor-pointer gap-1 bg-gradient-to-r from-cyan-900 to-emerald-500 text-gray-900 px-4 py-2 sm:py-1.5 text-sm sm:text-base rounded-md font-medium hover:opacity-90 transition-all duration-200 w-full sm:w-auto"
+            >
+              <span className="relative">
+                <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                <span className="absolute inset-0 bg-amber-400 rounded-full opacity-0 group-hover:opacity-40 blur-sm group-hover:animate-ping duration-1000"></span>
+              </span>
+              <span>Join Project</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1203,6 +1220,58 @@ export default function ProjectDetails() {
       />
 
       {/* Join Project Modal */}
+      {/* Edit Project Modal */}
+      <EditProjectModal
+        show={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onProjectUpdated={async () => {
+          // Refresh project data
+          const { data: projectData, error } = await supabase
+            .from("projects")
+            .select("*")
+            .eq("id", params.id)
+            .single();
+
+          if (!error && projectData) {
+            setProject(projectData);
+            // Update available roles
+            const allRoles = projectData.roles_needed || [];
+            if (session?.user?.email) {
+              const { data: userData } = await supabase
+                .from("users")
+                .select("id")
+                .eq("email", session.user.email)
+                .single();
+
+              if (userData?.id) {
+                const { data: takenRoles } = await supabase
+                  .from("project_roles")
+                  .select("title")
+                  .eq("project_id", params.id)
+                  .eq("filled_by", userData.id);
+
+                const userTakenRoles = takenRoles?.map((r) => r.title) || [];
+                setAvailableRoles(
+                  allRoles.filter((role) => !userTakenRoles.includes(role))
+                );
+              } else {
+                setAvailableRoles(allRoles);
+              }
+            } else {
+              setAvailableRoles(allRoles);
+            }
+          }
+        }}
+        projectId={project?.id || ""}
+        initialData={{
+          title: project?.title || "",
+          description: project?.description || "",
+          github_url: project?.github_url || "",
+          tech_stack: project?.tech_stack || [],
+          roles_needed: project?.roles_needed || [],
+        }}
+      />
+
       <JoinProjectModal
         projectName={project.title}
         rolesNeeded={availableRoles}
