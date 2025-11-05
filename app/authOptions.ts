@@ -121,6 +121,31 @@ export const authOptions = {
 
         if (account.provider === 'github') {
           const githubProfile = profile as GithubProfile;
+          
+          // Fetch additional GitHub profile data if token is available
+          let githubBio = null;
+          let githubBlog = null;
+          
+          if (account.access_token) {
+            try {
+              const githubResponse = await fetch('https://api.github.com/user', {
+                headers: {
+                  Authorization: `Bearer ${account.access_token}`,
+                  Accept: 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                },
+              });
+              
+              if (githubResponse.ok) {
+                const githubUserData = await githubResponse.json();
+                githubBio = githubUserData.bio || null;
+                githubBlog = githubUserData.blog || null;
+              }
+            } catch (err) {
+              console.warn('Failed to fetch additional GitHub data:', err);
+            }
+          }
+          
           updateData = {
             github_id: `github_${githubProfile.id}`,
             email,
@@ -128,10 +153,16 @@ export const authOptions = {
             avatar_url: githubProfile.avatar_url || existingUser?.avatar_url,
             github_token: account.access_token as string,
             github_username: githubProfile.username || githubProfile.login,
+            username: githubProfile.username || githubProfile.login,
+            // Set bio from GitHub if not already set
+            bio: existingUser?.bio || githubBio || null,
+            // Set portfolio_url from GitHub blog if not already set
+            portfolio_url: existingUser?.portfolio_url || githubBlog || null,
             // Preserve Google data if user already exists
             ...(existingUser?.google_id && { google_id: existingUser.google_id }),
             ...(existingUser?.google_token && { google_token: existingUser.google_token }),
-            ...(existingUser?.username && !existingUser.github_username && { username: existingUser.username }),
+            // Preserve social_links if user already exists, otherwise initialize as empty object
+            social_links: existingUser?.social_links || {},
           };
         } else if (account.provider === 'google') {
           const googleProfile = profile as GoogleProfile;
@@ -148,6 +179,12 @@ export const authOptions = {
             ...(existingUser?.github_id && { github_id: existingUser.github_id }),
             ...(existingUser?.github_token && { github_token: existingUser.github_token }),
             ...(existingUser?.github_username && { github_username: existingUser.github_username }),
+            // Preserve bio if user already exists
+            ...(existingUser?.bio && { bio: existingUser.bio }),
+            // Preserve portfolio_url if user already exists
+            ...(existingUser?.portfolio_url && { portfolio_url: existingUser.portfolio_url }),
+            // Preserve social_links if user already exists, otherwise initialize as empty object
+            social_links: existingUser?.social_links || {},
           };
         }
 
