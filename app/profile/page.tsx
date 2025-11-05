@@ -10,6 +10,7 @@ import {
   ProjectsSection,
   GithubStatsSection,
   RecentReposSection,
+  EditProfileModal,
 } from "@/components/profile";
 import { Project, SocialLink, GithubData } from "@/types/profile";
 import { Session } from "next-auth";
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [githubData, setGithubData] = useState<GithubData | null>(null);
   const [userData, setUserData] = useState<any>(null);
   const [allCommits, setAllCommits] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const session = data as Session & {
     user: {
@@ -313,29 +315,68 @@ export default function ProfilePage() {
     }
   };
 
-  const socialLinks: SocialLink[] = [
-    {
-      name: "Twitter",
-      url: "https://twitter.com",
-      icon: Twitter,
-      username: "@username",
-      color: "text-gray-400 hover:text-blue-400",
-    },
-    {
-      name: "LinkedIn",
-      url: "https://linkedin.com",
-      icon: Linkedin,
-      username: "username",
-      color: "text-gray-400 hover:text-blue-500",
-    },
-    {
-      name: "Website",
-      url: "https://example.com",
+  // Build social links from user data
+  const socialLinks: SocialLink[] = [];
+
+  // Add portfolio URL if it exists
+  if (userData?.portfolio_url) {
+    socialLinks.push({
+      name: "Portfolio",
+      url: userData.portfolio_url,
       icon: Globe,
-      username: "portfolio.dev",
+      username:
+        userData.portfolio_url.replace(/^https?:\/\//, "").split("/")[0] ||
+        "Portfolio",
       color: "text-gray-400 hover:text-emerald-400",
-    },
-  ];
+    });
+  }
+
+  if (userData?.social_links) {
+    const socials = userData.social_links;
+    if (socials.twitter) {
+      socialLinks.push({
+        name: "Twitter",
+        url: socials.twitter,
+        icon: Twitter,
+        username: socials.twitter.includes("twitter.com/")
+          ? "@" + socials.twitter.split("twitter.com/")[1]?.split("/")[0] ||
+            "Twitter"
+          : "Twitter",
+        color: "text-gray-400 hover:text-blue-400",
+      });
+    }
+    if (socials.linkedin) {
+      socialLinks.push({
+        name: "LinkedIn",
+        url: socials.linkedin,
+        icon: Linkedin,
+        username: socials.linkedin.includes("linkedin.com/in/")
+          ? socials.linkedin.split("linkedin.com/in/")[1]?.split("/")[0] ||
+            "LinkedIn"
+          : "LinkedIn",
+        color: "text-gray-400 hover:text-blue-500",
+      });
+    }
+    if (socials.website) {
+      socialLinks.push({
+        name: "Website",
+        url: socials.website,
+        icon: Globe,
+        username:
+          socials.website.replace(/^https?:\/\//, "").split("/")[0] ||
+          "Website",
+        color: "text-gray-400 hover:text-emerald-400",
+      });
+    }
+  }
+
+  const handleProfileUpdate = async () => {
+    // Refresh user data after update
+    if (session?.user?.email) {
+      const updatedUserData = await fetchUserData(session.user.email);
+      setUserData(updatedUserData);
+    }
+  };
 
   if (loading) {
     return (
@@ -368,21 +409,27 @@ export default function ProfilePage() {
       <div className="container mx-auto px-4 py-8">
         <ProfileHeader
           profile={{
-            name: session?.user?.name || userData?.name || "User",
+            name: userData?.name || session?.user?.name || "User",
             avatar_url:
-              session?.user?.image ||
               userData?.avatar_url ||
+              session?.user?.image ||
               githubData?.profile?.avatar_url ||
               "/default-avatar.png",
-            bio: githubData?.profile?.bio || "Update your profile to add a bio",
+            bio:
+              userData?.bio ||
+              githubData?.profile?.bio ||
+              "Update your profile to add a bio",
             public_repos: githubData?.profile?.public_repos || 0,
             followers: githubData?.profile?.followers || 0,
             following: githubData?.profile?.following || 0,
             created_at:
-              githubData?.profile?.created_at || new Date().toISOString(),
+              userData?.created_at ||
+              githubData?.profile?.created_at ||
+              new Date().toISOString(),
           }}
           socialLinks={socialLinks}
           commitsCount={allCommits?.total_count || 0}
+          onEdit={() => setShowEditModal(true)}
         />
 
         <div className="flex flex-col md:flex-row gap-8">
@@ -400,6 +447,21 @@ export default function ProfilePage() {
             <RecentReposSection repos={githubData.recentRepos} />
           )}
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        show={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onProfileUpdated={handleProfileUpdate}
+        initialData={{
+          name: userData?.name,
+          bio: userData?.bio,
+          username: userData?.username,
+          avatar_url: userData?.avatar_url,
+          portfolio_url: userData?.portfolio_url,
+          social_links: userData?.social_links,
+        }}
+      />
     </div>
   );
 }

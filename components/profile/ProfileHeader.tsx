@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { Edit } from 'lucide-react';
 import { GithubProfile, SocialLink } from '@/types/profile';
 
 const ProfileHeader = ({
   profile,
   socialLinks,
   commitsCount,
+  onEdit,
 }: {
   profile: {
     name: string;
@@ -18,6 +20,7 @@ const ProfileHeader = ({
   };
   socialLinks: SocialLink[];
   commitsCount: number;
+  onEdit?: () => void;
 }) => {
   const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -72,7 +75,18 @@ const ProfileHeader = ({
       </div>
 
       <div className='flex-1'>
-        <h1 className='text-3xl font-bold mb-2'>{profile.name}</h1>
+        <div className='flex items-center justify-between mb-2'>
+          <h1 className='text-3xl font-bold'>{profile.name}</h1>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className='flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm text-gray-300 hover:text-emerald-400 transition-colors'
+            >
+              <Edit className='w-4 h-4' />
+              Edit Profile
+            </button>
+          )}
+        </div>
         <p className='text-gray-400 mb-4 max-w-2xl'>{profile.bio}</p>
 
         <div className='flex flex-wrap gap-3 mb-6'>
