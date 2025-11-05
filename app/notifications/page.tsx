@@ -228,28 +228,80 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
       <Header />
 
-      <div className="container mx-auto px-4 py-8 pt-20">
+      <div className="container mx-auto px-4 py-4 md:py-8 pt-16 md:pt-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Bell className="w-6 h-6 text-emerald-400" />
-              <h1 className="text-2xl font-bold text-gray-100">
-                Notifications
-              </h1>
+          {/* Header - Mobile optimized */}
+          <div className="mb-4 md:mb-6">
+            {/* Title and badge row */}
+            <div className="flex items-center justify-between mb-4 md:mb-0">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Bell className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
+                <h1 className="text-xl md:text-2xl font-bold text-gray-100">
+                  Notifications
+                </h1>
+                {unreadCount > 0 && (
+                  <span className="px-2 py-0.5 md:py-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+
+              {/* Mark all as read - Desktop only */}
               {unreadCount > 0 && (
-                <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                  {unreadCount} unread
-                </span>
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="hidden md:flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm text-gray-300 hover:text-emerald-400 transition-colors"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                  Mark all read
+                </button>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Filter and Mark all row - Mobile */}
+            <div className="flex items-center justify-between gap-2 md:hidden">
               {/* Filter */}
+              <div className="flex items-center gap-1 bg-gray-800/50 border border-gray-700 rounded-lg p-1 flex-1">
+                <button
+                  onClick={() => setFilter("all")}
+                  className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                    filter === "all"
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "text-gray-400"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter("unread")}
+                  className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                    filter === "unread"
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "text-gray-400"
+                  }`}
+                >
+                  Unread
+                </button>
+              </div>
+
+              {/* Mark all as read - Mobile */}
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 active:bg-gray-700 transition-colors"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                  <span className="hidden sm:inline">Mark all</span>
+                </button>
+              )}
+            </div>
+
+            {/* Filter - Desktop */}
+            <div className="hidden md:flex items-center gap-2 mt-4">
               <div className="flex items-center gap-2 bg-gray-800/50 border border-gray-700 rounded-lg p-1">
                 <button
                   onClick={() => setFilter("all")}
@@ -272,17 +324,6 @@ export default function NotificationsPage() {
                   Unread
                 </button>
               </div>
-
-              {/* Mark all as read */}
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllAsRead}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm text-gray-300 hover:text-emerald-400 transition-colors"
-                >
-                  <CheckCheck className="w-4 h-4" />
-                  Mark all read
-                </button>
-              )}
             </div>
           </div>
 
@@ -292,44 +333,46 @@ export default function NotificationsPage() {
               <div className="animate-pulse text-gray-400">Loading...</div>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-12 text-center">
-              <Bell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 mb-2">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8 md:p-12 text-center">
+              <Bell className="w-10 h-10 md:w-12 md:h-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400 mb-2 text-sm md:text-base">
                 {filter === "unread"
                   ? "No unread notifications"
                   : "No notifications yet"}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs md:text-sm text-gray-500">
                 You'll see notifications here when you receive updates
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3 md:space-y-2">
               {filteredNotifications.map((notification) => (
                 <motion.div
                   key={notification.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className={`bg-gray-800/50 border rounded-lg p-4 transition-all ${
+                  className={`bg-gray-800/50 border rounded-xl md:rounded-lg p-3 md:p-4 transition-all ${
                     !notification.read
                       ? "border-emerald-500/30 bg-emerald-500/5"
                       : "border-gray-700"
                   }`}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3 md:gap-4">
+                    {/* Icon */}
                     <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${getNotificationColor(
+                      className={`w-12 h-12 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-xl md:text-xl flex-shrink-0 ${getNotificationColor(
                         notification.type
                       )}`}
                     >
                       {getNotificationIcon(notification.type)}
                     </div>
 
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 min-w-0">
                           <h3
-                            className={`font-medium mb-1 ${
+                            className={`font-semibold md:font-medium mb-1 text-sm md:text-base ${
                               !notification.read
                                 ? "text-gray-100"
                                 : "text-gray-400"
@@ -337,49 +380,55 @@ export default function NotificationsPage() {
                           >
                             {notification.title}
                           </h3>
-                          <p className="text-sm text-gray-500 mb-2">
+                          <p className="text-xs md:text-sm text-gray-500 mb-1.5 md:mb-2 line-clamp-2">
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-600">
-                            {formatTimeAgo(notification.created_at)}
-                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-xs text-gray-600">
+                              {formatTimeAgo(notification.created_at)}
+                            </p>
+                            {notification.link && (
+                              <Link
+                                href={notification.link}
+                                onClick={() => {
+                                  if (!notification.read) {
+                                    handleMarkAsRead(notification.id);
+                                  }
+                                }}
+                                className="text-xs md:text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                              >
+                                View →
+                              </Link>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
+                        {/* Action buttons - Mobile optimized */}
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                           {!notification.read && (
                             <button
-                              onClick={() =>
-                                handleMarkAsRead(notification.id)
-                              }
-                              className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsRead(notification.id);
+                              }}
+                              className="p-2 md:p-1.5 active:bg-gray-700 md:hover:bg-gray-700 rounded-lg transition-colors touch-manipulation"
                               title="Mark as read"
                             >
-                              <Check className="w-4 h-4 text-gray-400 hover:text-emerald-400" />
+                              <Check className="w-5 h-5 md:w-4 md:h-4 text-gray-400 active:text-emerald-400 md:hover:text-emerald-400" />
                             </button>
                           )}
                           <button
-                            onClick={() => handleDelete(notification.id)}
-                            className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(notification.id);
+                            }}
+                            className="p-2 md:p-1.5 active:bg-gray-700 md:hover:bg-gray-700 rounded-lg transition-colors touch-manipulation"
                             title="Delete"
                           >
-                            <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
+                            <Trash2 className="w-5 h-5 md:w-4 md:h-4 text-gray-400 active:text-red-400 md:hover:text-red-400" />
                           </button>
                         </div>
                       </div>
-
-                      {notification.link && (
-                        <Link
-                          href={notification.link}
-                          onClick={() => {
-                            if (!notification.read) {
-                              handleMarkAsRead(notification.id);
-                            }
-                          }}
-                          className="mt-2 inline-block text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
-                        >
-                          View →
-                        </Link>
-                      )}
                     </div>
                   </div>
                 </motion.div>

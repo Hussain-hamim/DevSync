@@ -20,6 +20,17 @@ export default function NotificationBell() {
   const [recentNotifications, setRecentNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Get user ID
   useEffect(() => {
@@ -173,8 +184,7 @@ export default function NotificationBell() {
     const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
 
     if (diffInSeconds < 60) return "just now";
-    if (diffInSeconds < 3600)
-      return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400)
       return `${Math.floor(diffInSeconds / 3600)}h ago`;
     if (diffInSeconds < 604800)
@@ -184,10 +194,20 @@ export default function NotificationBell() {
 
   if (!session?.user) return null;
 
+  const handleClick = () => {
+    if (isMobile) {
+      // On mobile, navigate to notifications page
+      router.push("/notifications");
+    } else {
+      // On desktop, toggle dropdown
+      setShowDropdown(!showDropdown);
+    }
+  };
+
   return (
     <div className="relative">
       <button
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={handleClick}
         className="relative p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
       >
         <Bell className="w-5 h-5 text-gray-300" />
@@ -202,93 +222,95 @@ export default function NotificationBell() {
         )}
       </button>
 
-      <AnimatePresence>
-        {showDropdown && (
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setShowDropdown(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="absolute right-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-hidden flex flex-col"
-            >
-              <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-100">Notifications</h3>
-                {unreadCount > 0 && (
-                  <span className="text-xs text-emerald-400">
-                    {unreadCount} new
-                  </span>
-                )}
-              </div>
+      {/* Desktop dropdown only - mobile navigates to page */}
+      {!isMobile && (
+        <AnimatePresence>
+          {showDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowDropdown(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-hidden flex flex-col"
+              >
+                <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-100">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <span className="text-xs text-emerald-400">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
 
-              <div className="overflow-y-auto max-h-80">
-                {loading ? (
-                  <div className="p-4 text-center text-gray-400">
-                    Loading...
-                  </div>
-                ) : recentNotifications.length === 0 ? (
-                  <div className="p-4 text-center text-gray-400">
-                    No notifications
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-700">
-                    {recentNotifications.map((notification) => (
-                      <button
-                        key={notification.id}
-                        onClick={() => handleNotificationClick(notification)}
-                        className={`w-full text-left p-3 hover:bg-gray-700/50 transition-colors ${
-                          !notification.read ? "bg-gray-700/30" : ""
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-xl">
-                            {getNotificationIcon(notification.type)}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className={`text-sm font-medium ${
-                                !notification.read
-                                  ? "text-gray-100"
-                                  : "text-gray-400"
-                              }`}
-                            >
-                              {notification.title}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                              {notification.message}
-                            </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              {formatTimeAgo(notification.created_at)}
-                            </p>
+                <div className="overflow-y-auto max-h-80">
+                  {loading ? (
+                    <div className="p-4 text-center text-gray-400">
+                      Loading...
+                    </div>
+                  ) : recentNotifications.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400">
+                      No notifications
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-700">
+                      {recentNotifications.map((notification) => (
+                        <button
+                          key={notification.id}
+                          onClick={() => handleNotificationClick(notification)}
+                          className={`w-full text-left p-3 hover:bg-gray-700/50 transition-colors ${
+                            !notification.read ? "bg-gray-700/30" : ""
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="text-xl">
+                              {getNotificationIcon(notification.type)}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p
+                                className={`text-sm font-medium ${
+                                  !notification.read
+                                    ? "text-gray-100"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                {notification.title}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {formatTimeAgo(notification.created_at)}
+                              </p>
+                            </div>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0 mt-2" />
+                            )}
                           </div>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0 mt-2" />
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-              <div className="px-4 py-3 border-t border-gray-700">
-                <Link
-                  href="/notifications"
-                  onClick={() => setShowDropdown(false)}
-                  className="block text-center text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
-                >
-                  View all notifications
-                </Link>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                <div className="px-4 py-3 border-t border-gray-700">
+                  <Link
+                    href="/notifications"
+                    onClick={() => setShowDropdown(false)}
+                    className="block text-center text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    View all notifications
+                  </Link>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 }
-
