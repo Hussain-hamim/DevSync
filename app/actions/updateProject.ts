@@ -3,6 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "../authOptions";
 import { supabase } from "../lib/supabase";
+import { createNotification } from "./notifications";
 
 interface UpdateProjectData {
   title: string;
@@ -79,6 +80,49 @@ export async function updateProject(
         title: data.title,
       },
     });
+
+    // Get project info
+    const { data: projectInfo } = await supabase
+      .from("projects")
+      .select("title")
+      .eq("id", projectId)
+      .single();
+
+    // Get all project members (excluding the creator who made the update)
+    const { data: projectRoles } = await supabase
+      .from("project_roles")
+      .select("filled_by")
+      .eq("project_id", projectId)
+      .not("filled_by", "is", null);
+
+    // Get unique member IDs
+    const memberIds = new Set<string>();
+    if (projectRoles) {
+      projectRoles.forEach((role) => {
+        if (role.filled_by && role.filled_by !== currentUser.id) {
+          memberIds.add(role.filled_by);
+        }
+      });
+    }
+
+    // Notify all team members about project update
+    const { data: creatorData } = await supabase
+      .from("users")
+      .select("name")
+      .eq("id", currentUser.id)
+      .single();
+
+    const notificationPromises = Array.from(memberIds).map((memberId) =>
+      createNotification(memberId, {
+        type: "project_update",
+        title: "Project Updated",
+        message: `${creatorData?.name || "Project owner"} updated "${projectInfo?.title || "the project"}"`,
+        link: `/projects/${projectId}`,
+        related_id: projectId,
+      })
+    );
+
+    await Promise.all(notificationPromises);
 
     return { success: true };
   } catch (error) {

@@ -318,6 +318,42 @@ export default function TaskDetailsPage() {
 
       if (teamActivityError) throw teamActivityError;
 
+      // Notify task creator and project owner when task is completed
+      if (newStatus === 'Completed') {
+        const { createNotification } = await import('@/app/actions/notifications');
+        
+        // Get project info
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('creator_id, title')
+          .eq('id', params.id)
+          .single();
+
+        // Notify task creator (if different from current user)
+        if (task.created_by && task.created_by !== userData.id) {
+          await createNotification(task.created_by, {
+            type: 'task_completed',
+            title: 'Task Completed',
+            message: `${userData.name} completed the task "${task.title}"`,
+            link: `/projects/${params.id}/tasks/${task.id}`,
+            related_id: task.id,
+          });
+        }
+
+        // Notify project owner (if different from current user and task creator)
+        if (projectData?.creator_id && 
+            projectData.creator_id !== userData.id && 
+            projectData.creator_id !== task.created_by) {
+          await createNotification(projectData.creator_id, {
+            type: 'task_completed',
+            title: 'Task Completed',
+            message: `${userData.name} completed the task "${task.title}" in ${projectData.title}`,
+            link: `/projects/${params.id}/tasks/${task.id}`,
+            related_id: task.id,
+          });
+        }
+      }
+
       // Update local state
       setTask((prev) =>
         prev
@@ -454,6 +490,40 @@ export default function TaskDetailsPage() {
         new_value:
           newComment.substring(0, 50) + (newComment.length > 50 ? '...' : ''),
       });
+
+      // Notify task assignee and creator about new comment (if different from commenter)
+      if (userData?.id) {
+        const { createNotification } = await import('@/app/actions/notifications');
+        const notificationsToSend = [];
+
+        // Notify task assignee
+        if (task.assigned_to && task.assigned_to !== userData.id) {
+          notificationsToSend.push(
+            createNotification(task.assigned_to, {
+              type: 'comment',
+              title: 'New Comment',
+              message: `${userData.name} commented on task "${task.title}"`,
+              link: `/projects/${params.id}/tasks/${task.id}`,
+              related_id: task.id,
+            })
+          );
+        }
+
+        // Notify task creator
+        if (task.created_by && task.created_by !== userData.id && task.created_by !== task.assigned_to) {
+          notificationsToSend.push(
+            createNotification(task.created_by, {
+              type: 'comment',
+              title: 'New Comment',
+              message: `${userData.name} commented on task "${task.title}"`,
+              link: `/projects/${params.id}/tasks/${task.id}`,
+              related_id: task.id,
+            })
+          );
+        }
+
+        await Promise.all(notificationsToSend);
+      }
 
       // Update local state
       setTask((prev) =>

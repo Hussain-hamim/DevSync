@@ -1,6 +1,7 @@
 'use server';
 
 import { supabase } from '../lib/supabase';
+import { createNotification } from './notifications';
 
 export async function joinProjectRole({
   filled_by,
@@ -25,6 +26,30 @@ export async function joinProjectRole({
 
   if (error || !data.length)
     return { error: error?.message || 'Role not available' };
+
+  // Get project creator and member info for notification
+  const { data: projectData } = await supabase
+    .from('projects')
+    .select('creator_id, title')
+    .eq('id', project_id)
+    .single();
+
+  const { data: memberData } = await supabase
+    .from('users')
+    .select('name')
+    .eq('id', filled_by)
+    .single();
+
+  // Notify project creator when someone joins
+  if (projectData?.creator_id && projectData.creator_id !== filled_by) {
+    await createNotification(projectData.creator_id, {
+      type: 'join_approved',
+      title: 'New Team Member',
+      message: `${memberData?.name || 'Someone'} joined your project "${projectData.title}" as ${title}`,
+      link: `/projects/${project_id}`,
+      related_id: project_id,
+    });
+  }
 
   return { success: true, role: data[0] };
 }

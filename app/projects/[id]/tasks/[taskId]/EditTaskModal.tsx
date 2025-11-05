@@ -157,6 +157,80 @@ export function EditTaskModal({
         },
       });
 
+      // Notify if task is assigned to someone new
+      if (formData.assignee && formData.assignee !== task.assigned_to && formData.assignee !== userData.id) {
+        const { createNotification } = await import('@/app/actions/notifications');
+        
+        // Get project info
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('title')
+          .eq('id', projectId)
+          .single();
+
+        const { data: assignerData } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', userData.id)
+          .single();
+
+        await createNotification(formData.assignee, {
+          type: 'task_assigned',
+          title: 'Task Assigned',
+          message: `${assignerData?.name || 'Someone'} assigned you the task "${formData.title}" in ${projectData?.title || 'project'}`,
+          link: `/projects/${projectId}/tasks/${task.id}`,
+          related_id: task.id,
+        });
+      }
+
+      // Notify if task is completed
+      if (formData.status === 'Completed' && task.status !== 'Completed') {
+        const { createNotification } = await import('@/app/actions/notifications');
+        
+        // Get project info
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('creator_id, title')
+          .eq('id', projectId)
+          .single();
+
+        // Notify task creator (if different from current user)
+        if (task.created_by && task.created_by !== userData.id) {
+          const { data: creatorData } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', userData.id)
+            .single();
+
+          await createNotification(task.created_by, {
+            type: 'task_completed',
+            title: 'Task Completed',
+            message: `${creatorData?.name || 'Someone'} completed the task "${formData.title}"`,
+            link: `/projects/${projectId}/tasks/${task.id}`,
+            related_id: task.id,
+          });
+        }
+
+        // Notify project owner (if different from current user and task creator)
+        if (projectData?.creator_id && 
+            projectData.creator_id !== userData.id && 
+            projectData.creator_id !== task.created_by) {
+          const { data: completerData } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', userData.id)
+            .single();
+
+          await createNotification(projectData.creator_id, {
+            type: 'task_completed',
+            title: 'Task Completed',
+            message: `${completerData?.name || 'Someone'} completed the task "${formData.title}" in ${projectData.title}`,
+            link: `/projects/${projectId}/tasks/${task.id}`,
+            related_id: task.id,
+          });
+        }
+      }
+
       toast.success('Task updated successfully!');
       onTaskUpdated();
       onClose();

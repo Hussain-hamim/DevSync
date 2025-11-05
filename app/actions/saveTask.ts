@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { supabase } from '@/app/lib/supabase';
 import { authOptions } from '@/app/authOptions';
 import { getServerSession } from 'next-auth';
+import { createNotification } from './notifications';
 
 interface TaskData {
   title: string;
@@ -76,6 +77,30 @@ export async function saveTask(formData: TaskData) {
     task_title: taskData.title,
     task_id: data.id,
   });
+
+  // Notify assignee if task is assigned
+  if (formData.assignee && formData.assignee !== creator_id) {
+    // Get project and creator info for notification
+    const { data: projectData } = await supabase
+      .from('projects')
+      .select('title')
+      .eq('id', formData.projectId)
+      .single();
+
+    const { data: creatorData } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', creator_id)
+      .single();
+
+    await createNotification(formData.assignee, {
+      type: 'task_assigned',
+      title: 'New Task Assigned',
+      message: `${creatorData?.name || 'Someone'} assigned you a task: "${formData.title}" in ${projectData?.title || 'project'}`,
+      link: `/projects/${formData.projectId}/tasks/${data.id}`,
+      related_id: data.id,
+    });
+  }
 
   revalidatePath(`/projects/${formData.projectId}/tasks`);
   revalidatePath(`/projects/${formData.projectId}`);

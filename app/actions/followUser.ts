@@ -3,6 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "../authOptions";
 import { supabase } from "../lib/supabase";
+import { createNotification } from "./notifications";
 
 export async function followUser(followingId: string) {
   try {
@@ -53,6 +54,22 @@ export async function followUser(followingId: string) {
       console.error("Follow error:", followError);
       return { success: false, error: "Failed to follow user" };
     }
+
+    // Get follower's name for notification
+    const { data: followerData } = await supabase
+      .from("users")
+      .select("name")
+      .eq("id", followerId)
+      .single();
+
+    // Create notification for the user being followed
+    await createNotification(followingId, {
+      type: "follow",
+      title: "New Follower",
+      message: `${followerData?.name || "Someone"} started following you`,
+      link: `/profile/${followerId}`,
+      related_id: followerId,
+    });
 
     return { success: true };
   } catch (error) {

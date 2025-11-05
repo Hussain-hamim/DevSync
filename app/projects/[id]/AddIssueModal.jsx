@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { supabase } from '@/app/lib/supabase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { X } from 'lucide-react';
+import { createNotification } from '@/app/actions/notifications';
 
 const issueSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
@@ -15,6 +17,7 @@ const issueSchema = z.object({
 });
 
 export function AddIssueModal({ projectId, show, onClose, onIssueCreated }) {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const {
     register,
@@ -31,6 +34,21 @@ export function AddIssueModal({ projectId, show, onClose, onIssueCreated }) {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
+      if (!session?.user?.email) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get current user ID
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id, name')
+        .eq('email', session.user.email)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error('User not found');
+      }
+
       const labels = data.labels
         ? data.labels.split(',').map((l) => l.trim())
         : [];
@@ -45,11 +63,31 @@ export function AddIssueModal({ projectId, show, onClose, onIssueCreated }) {
             priority: data.priority,
             labels,
             status: 'Open',
+            created_by: userData.id,
           },
         ])
         .select();
 
       if (error) throw error;
+
+      // Notify project creator about new issue
+      // Get project info
+      const { data: projectData } = await supabase
+        .from('projects')
+        .select('creator_id, title')
+        .eq('id', projectId)
+        .single();
+
+      // Notify project creator (if different from issue creator)
+      if (projectData?.creator_id && projectData.creator_id !== userData.id) {
+        await createNotification(projectData.creator_id, {
+          type: 'issue_created',
+          title: 'New Issue Reported',
+          message: `${userData.name} reported a new issue: "${data.title}" in ${projectData.title}`,
+          link: `/projects/${projectId}`,
+          related_id: issue[0].id,
+        });
+      }
 
       onIssueCreated(issue[0]);
       reset();

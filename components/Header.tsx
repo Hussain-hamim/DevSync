@@ -6,6 +6,7 @@ import { Terminal, Menu, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import MyDropdownMenu from "./DropdownMenu";
+import NotificationBell from "./NotificationBell";
 import { supabase } from "@/app/lib/supabase";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
@@ -100,9 +101,12 @@ const Header = () => {
             </motion.button>
 
             {/* Desktop Auth Button/Dropdown */}
-            <div className="hidden md:block">
+            <div className="hidden md:flex items-center gap-3">
               {session || user ? (
-                <MyDropdownMenu />
+                <>
+                  <NotificationBell />
+                  <MyDropdownMenu />
+                </>
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -141,6 +145,11 @@ const Header = () => {
                       {item}
                     </Link>
                   ))}
+                  {(session || user) && (
+                    <div className="px-3 py-2">
+                      <NotificationBell />
+                    </div>
+                  )}
                   {session || user ? (
                     <button
                       onClick={handleLogout}
