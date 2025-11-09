@@ -203,9 +203,7 @@ export default function ProjectsPage() {
               <Filter className='w-5 h-5' />
               <span>Filter</span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  showFilters ? 'rotate-180' : ''
-                }`}
+                className={`w-4 h-4 transition-transform ${showFilters && 'rotate-180' }`}
               />
             </motion.button>
 
@@ -213,7 +211,7 @@ export default function ProjectsPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10'
+                className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-20'
               >
                 {['all', 'web', 'ai', 'devops', 'tools'].map((filter) => (
                   <button
@@ -222,21 +220,20 @@ export default function ProjectsPage() {
                       setActiveFilter(filter);
                       setShowFilters(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm ${
-                      activeFilter === filter
-                        ? 'bg-gray-700 text-emerald-400'
-                        : 'text-gray-300 hover:bg-gray-700'
-                    }`}
+                    className={`w-full text-left px-4 py-2 text-sm ${activeFilter === filter
+                      ? 'bg-gray-700 text-emerald-400'
+                      : 'text-gray-300 hover:bg-gray-700'
+                      }`}
                   >
                     {filter === 'all'
                       ? 'All Projects'
                       : filter === 'web'
-                      ? 'Web Development'
-                      : filter === 'ai'
-                      ? 'AI/ML'
-                      : filter === 'devops'
-                      ? 'DevOps'
-                      : 'Developer Tools'}
+                        ? 'Web Development'
+                        : filter === 'ai'
+                          ? 'AI/ML'
+                          : filter === 'devops'
+                            ? 'DevOps'
+                            : 'Developer Tools'}
                   </button>
                 ))}
               </motion.div>
