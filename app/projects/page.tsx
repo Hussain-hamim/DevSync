@@ -393,7 +393,7 @@ export default function ProjectsPage() {
                     boxShadow: '0 2px 5px rgba(16, 185, 129, 0.1)',
                   }}
                   transition={{ type: 'spring', stiffness: 300 }}
-                  className='bg-gray-800/60 border border-gray-700 rounded-xl p-5 overflow-hidden hover:border-emerald-400/30 transition-colors'
+                  className='bg-gray-800/60 h-[25rem] border border-gray-700 rounded-xl p-5 overflow-hidden hover:border-emerald-400/30 transition-colors'
                 >
                   {/* Project Header */}
                   <div className='flex justify-between items-start mb-4'>
