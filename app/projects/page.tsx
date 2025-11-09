@@ -203,7 +203,7 @@ export default function ProjectsPage() {
               <Filter className='w-5 h-5' />
               <span>Filter</span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${showFilters && 'rotate-180' }`}
+                className={`w-4 h-4 transition-transform ${showFilters && 'rotate-180'}`}
               />
             </motion.button>
 
@@ -211,7 +211,7 @@ export default function ProjectsPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-20'
+                className='absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden'
               >
                 {['all', 'web', 'ai', 'devops', 'tools'].map((filter) => (
                   <button
