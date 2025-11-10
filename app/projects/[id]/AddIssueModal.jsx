@@ -6,7 +6,7 @@ import { supabase } from '@/app/lib/supabase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { createNotification } from '@/app/actions/notifications';
 
 const issueSchema = z.object({
@@ -156,15 +156,19 @@ export function AddIssueModal({ projectId, show, onClose, onIssueCreated }) {
               <label className='block text-sm font-medium text-gray-300 mb-1'>
                 Priority*
               </label>
-              <select
-                {...register('priority')}
-                className='w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:border-emerald-500 focus:ring-emerald-500'
-              >
-                <option value='Low'>Low</option>
-                <option value='Medium'>Medium</option>
-                <option value='High'>High</option>
-                <option value='Critical'>Critical</option>
-              </select>
+
+              <div className="relative">
+                <select
+                  {...register('priority')}
+                  className="w-full h-10 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 pr-10 text-gray-100 appearance-none focus:border-emerald-500 focus:ring-emerald-500"
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             <div>
@@ -174,8 +178,8 @@ export function AddIssueModal({ projectId, show, onClose, onIssueCreated }) {
               <input
                 {...register('labels')}
                 type='text'
-                className='w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:border-emerald-500 focus:ring-emerald-500'
-                placeholder='bug,feature,ui (comma separated)'
+                className='w-full h-10 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:border-emerald-500 focus:ring-emerald-500'
+                placeholder='Bug, Feature, UI'
               />
             </div>
           </div>
