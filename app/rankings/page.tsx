@@ -223,14 +223,14 @@ export default function RankingsPage() {
                     {sortBy === "score"
                       ? "Points"
                       : sortBy === "commits"
-                      ? "Commits"
-                      : sortBy === "repositories"
-                      ? "Repos"
-                      : sortBy === "stars"
-                      ? "Stars"
-                      : sortBy === "followers"
-                      ? "Followers"
-                      : "PRs"}
+                        ? "Commits"
+                        : sortBy === "repositories"
+                          ? "Repos"
+                          : sortBy === "stars"
+                            ? "Stars"
+                            : sortBy === "followers"
+                              ? "Followers"
+                              : "PRs"}
                   </span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
@@ -265,23 +265,22 @@ export default function RankingsPage() {
                             setSortBy(metric);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 text-sm ${
-                            sortBy === metric
-                              ? "text-emerald-400 bg-gray-700"
-                              : "text-gray-300 hover:bg-gray-700"
-                          }`}
+                          className={`w-full text-left px-4 py-2 text-sm ${sortBy === metric
+                            ? "text-emerald-400 bg-gray-700"
+                            : "text-gray-300 hover:bg-gray-700"
+                            }`}
                         >
                           {metric === "score"
                             ? "Points"
                             : metric === "commits"
-                            ? "Commits"
-                            : metric === "repositories"
-                            ? "Repositories"
-                            : metric === "stars"
-                            ? "Stars"
-                            : metric === "followers"
-                            ? "Followers"
-                            : "Pull Requests"}
+                              ? "Commits"
+                              : metric === "repositories"
+                                ? "Repositories"
+                                : metric === "stars"
+                                  ? "Stars"
+                                  : metric === "followers"
+                                    ? "Followers"
+                                    : "Pull Requests"}
                         </button>
                       ))}
                     </div>
@@ -354,12 +353,12 @@ export default function RankingsPage() {
         {/* Last Updated & Search Results Count */}
         {!isLoading && (
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {lastUpdated && (
                 <>
-                  <Calendar className="w-4 h-4" />
-                  <span>Last updated: {lastUpdated}</span>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-amber-300 bg-gray-800/40 p-2 rounded">
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-xs md:text-sm">Last updated: {lastUpdated}</span>
+                  <div className="flex items-center text-xs text-amber-300 bg-gray-800/40 p-2 rounded">
                     <span>
                       Want to appear in the rankings?{" "}
                       <span className="font-semibold text-amber-200">
@@ -397,41 +396,36 @@ export default function RankingsPage() {
           <div className="col-span-6 grid grid-cols-5 gap-2 text-center">
             <button
               onClick={() => setSortBy("commits")}
-              className={`text-gray-400 text-sm font-medium ${
-                sortBy === "commits" ? "text-emerald-400" : ""
-              }`}
+              className={`text-gray-400 text-sm font-medium ${sortBy === "commits" ? "text-emerald-400" : ""
+                }`}
             >
               Commits {sortBy === "commits" && "↓"}
             </button>
             <button
               onClick={() => setSortBy("repositories")}
-              className={`text-gray-400 text-sm font-medium ${
-                sortBy === "repositories" ? "text-emerald-400" : ""
-              }`}
+              className={`text-gray-400 text-sm font-medium ${sortBy === "repositories" ? "text-emerald-400" : ""
+                }`}
             >
               Repos {sortBy === "repositories" && "↓"}
             </button>
             <button
               onClick={() => setSortBy("stars")}
-              className={`text-gray-400 text-sm font-medium ${
-                sortBy === "stars" ? "text-emerald-400" : ""
-              }`}
+              className={`text-gray-400 text-sm font-medium ${sortBy === "stars" ? "text-emerald-400" : ""
+                }`}
             >
               Stars {sortBy === "stars" && "↓"}
             </button>
             <button
               onClick={() => setSortBy("followers")}
-              className={`text-gray-400 text-sm font-medium ${
-                sortBy === "followers" ? "text-emerald-400" : ""
-              }`}
+              className={`text-gray-400 text-sm font-medium ${sortBy === "followers" ? "text-emerald-400" : ""
+                }`}
             >
               Followers {sortBy === "followers" && "↓"}
             </button>
             <button
               onClick={() => setSortBy("pull_requests")}
-              className={`text-gray-400 text-sm font-medium ${
-                sortBy === "pull_requests" ? "text-emerald-400" : ""
-              }`}
+              className={`text-gray-400 text-sm font-medium ${sortBy === "pull_requests" ? "text-emerald-400" : ""
+                }`}
             >
               PRs {sortBy === "pull_requests" && "↓"}
             </button>
@@ -476,9 +470,8 @@ export default function RankingsPage() {
                       stiffness: 300,
                       damping: 25,
                     }}
-                    className={`bg-gray-800/50 border rounded-lg p-3 md:p-4 relative overflow-hidden group cursor-pointer transition-all hover:bg-gray-800/70 ${
-                      user.isLive ? "border-emerald-400/30" : "border-gray-700"
-                    }`}
+                    className={`bg-gray-800/50 border rounded-lg p-3 md:p-4 relative overflow-hidden group cursor-pointer transition-all hover:bg-gray-800/70 ${user.isLive ? "border-emerald-400/30" : "border-gray-700"
+                      }`}
                     onClick={() => router.push(`/profile/${user.id}`)}
                   >
                     {/* Desktop Layout */}
@@ -848,11 +841,11 @@ async function fetchGitHubData(user: User): Promise<Partial<User>> {
 const calculateScore = (user: User): number => {
   return Math.round(
     (user.commits || 0) * 0.5 +
-      (user.repositories || 0) * 3 +
-      (user.stars || 0) * 0.2 +
-      (user.followers || 0) * 0.3 +
-      (user.pull_requests || 0) * 0.7 +
-      (user.forks || 0) * 0.1
+    (user.repositories || 0) * 3 +
+    (user.stars || 0) * 0.2 +
+    (user.followers || 0) * 0.3 +
+    (user.pull_requests || 0) * 0.7 +
+    (user.forks || 0) * 0.1
   );
 };
 
