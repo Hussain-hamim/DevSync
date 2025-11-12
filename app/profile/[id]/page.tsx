@@ -444,10 +444,10 @@ export default function ProfilePage() {
 
   const joinDate = githubData?.profile?.created_at
     ? new Date(githubData.profile.created_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
     : "Unknown";
 
   const StatsCard = ({
@@ -585,9 +585,9 @@ export default function ProfilePage() {
                       <span>
                         {userData.social_links.twitter.includes("twitter.com/")
                           ? "@" +
-                              userData.social_links.twitter
-                                .split("twitter.com/")[1]
-                                ?.split("/")[0] || "Twitter"
+                          userData.social_links.twitter
+                            .split("twitter.com/")[1]
+                            ?.split("/")[0] || "Twitter"
                           : "Twitter"}
                       </span>
                     </motion.a>
@@ -606,8 +606,8 @@ export default function ProfilePage() {
                           "linkedin.com/in/"
                         )
                           ? userData.social_links.linkedin
-                              .split("linkedin.com/in/")[1]
-                              ?.split("/")[0] || "LinkedIn"
+                            .split("linkedin.com/in/")[1]
+                            ?.split("/")[0] || "LinkedIn"
                           : "LinkedIn"}
                       </span>
                     </motion.a>
@@ -679,11 +679,10 @@ export default function ProfilePage() {
                   onClick={toggleFollow}
                   disabled={followLoading}
                   whileHover={{ y: -2 }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                    isFollowing
-                      ? "bg-gray-800/50 border-gray-700 text-gray-300 hover:text-rose-400 hover:border-rose-400/30"
-                      : "bg-purple-900/50 border-purple-700 text-purple-300 hover:text-purple-400 hover:border-purple-400/30"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${isFollowing
+                    ? "bg-gray-800/50 border-gray-700 text-gray-300 hover:text-rose-400 hover:border-rose-400/30"
+                    : "bg-purple-900/50 border-purple-700 text-purple-300 hover:text-purple-400 hover:border-purple-400/30"
+                    }`}
                 >
                   {followLoading ? (
                     <span>...</span>
@@ -890,7 +889,7 @@ export default function ProfilePage() {
                     href={repo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block hover:bg-gray-700/50 p-4 rounded-lg transition-colors border border-gray-700"
+                    className="block hover:bg-gray-700/50 p-4 rounded-lg transition-colors border border-gray-700 h-[9rem]"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-medium group-hover:text-emerald-400 transition-colors">
