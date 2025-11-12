@@ -25,6 +25,11 @@ import {
   ChevronRight,
   Star,
   TrendingUp,
+  Heart,
+  Building2,
+  Crown,
+  Medal,
+  Award,
 } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { TypeAnimation } from "react-type-animation";
@@ -476,6 +481,188 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Sponsors Section */}
+        <section className="py-32 px-6 relative overflow-hidden">
+          <div className="container mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 px-4 py-1.5 rounded-full mb-6">
+                <Heart className="w-4 h-4 text-red-500" />
+                <span className="text-sm text-purple-400 font-semibold">
+                  Proudly Supported By
+                </span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black mb-6">
+                <span className="text-gray-300">Our Amazing</span>
+                <br />
+                <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                  Sponsors & Partners
+                </span>
+              </h2>
+              <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                These incredible organizations help make DevSync possible
+              </p>
+            </div>
+
+            {/* Sponsor Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-12">
+              {sponsors.map((sponsor, index) => {
+                const tierColors = {
+                  Gold: {
+                    gradient:
+                      "from-yellow-500/20 via-amber-500/20 to-yellow-400/20",
+                    border: "border-yellow-500/50",
+                    hoverBorder: "border-yellow-400/80",
+                    glow: "shadow-yellow-500/20",
+                    hoverGlow: "shadow-yellow-400/40",
+                    iconColor: "text-yellow-400",
+                    badgeBg:
+                      "bg-gradient-to-r from-yellow-500/20 to-amber-500/20",
+                    badgeBorder: "border-yellow-500/50",
+                    badgeText: "text-yellow-300",
+                  },
+                  Silver: {
+                    gradient:
+                      "from-gray-400/20 via-slate-400/20 to-gray-300/20",
+                    border: "border-gray-400/50",
+                    hoverBorder: "border-gray-300/80",
+                    glow: "shadow-gray-400/20",
+                    hoverGlow: "shadow-gray-300/40",
+                    iconColor: "text-gray-300",
+                    badgeBg:
+                      "bg-gradient-to-r from-gray-400/20 to-slate-400/20",
+                    badgeBorder: "border-gray-400/50",
+                    badgeText: "text-gray-200",
+                  },
+                  Bronze: {
+                    gradient:
+                      "from-amber-600/20 via-orange-600/20 to-amber-500/20",
+                    border: "border-amber-600/50",
+                    hoverBorder: "border-amber-500/80",
+                    glow: "shadow-amber-600/20",
+                    hoverGlow: "shadow-amber-500/40",
+                    iconColor: "text-amber-500",
+                    badgeBg:
+                      "bg-gradient-to-r from-amber-600/20 to-orange-600/20",
+                    badgeBorder: "border-amber-600/50",
+                    badgeText: "text-amber-400",
+                  },
+                };
+                const colors = sponsor.tier
+                  ? tierColors[sponsor.tier as keyof typeof tierColors]
+                  : {
+                      gradient:
+                        "from-purple-500/20 via-pink-500/20 to-purple-400/20",
+                      border: "border-purple-500/50",
+                      hoverBorder: "border-purple-400/80",
+                      glow: "shadow-purple-500/20",
+                      hoverGlow: "shadow-purple-400/40",
+                      iconColor: "text-purple-400",
+                      badgeBg:
+                        "bg-gradient-to-r from-purple-500/20 to-pink-500/20",
+                      badgeBorder: "border-purple-500/50",
+                      badgeText: "text-purple-300",
+                    };
+
+                return (
+                  <a
+                    key={index}
+                    href={sponsor.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group relative bg-gradient-to-br ${colors.gradient} backdrop-blur-xl border ${colors.border} rounded-3xl p-8 hover:border-opacity-80 transition-all duration-500 flex flex-col items-center justify-center min-h-[180px] hover:scale-[1.05] hover:shadow-2xl ${colors.hoverGlow} ${colors.glow} overflow-hidden`}
+                  >
+                    {/* Animated background gradient */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`}
+                    />
+
+                    {/* Shimmer effect */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative z-10 w-full flex flex-col items-center">
+                      {sponsor.logo ? (
+                        <div className="mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                          <img
+                            src={sponsor.logo}
+                            alt={sponsor.name}
+                            className="h-16 w-auto object-contain opacity-80 group-hover:opacity-100 transition-all duration-300 filter drop-shadow-lg"
+                          />
+                        </div>
+                      ) : (
+                        <div className="mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 flex items-center justify-center group-hover:border-purple-500/50 transition-all duration-300">
+                            <Building2 className="w-8 h-8 text-gray-400 group-hover:text-purple-400 transition-colors duration-300" />
+                          </div>
+                        </div>
+                      )}
+
+                      <h3 className="text-base font-bold text-gray-200 group-hover:text-white transition-colors duration-300 text-center mb-2">
+                        {sponsor.name}
+                      </h3>
+
+                      {sponsor.tier && (
+                        <div
+                          className={`mt-2 px-3 py-1.5 rounded-full ${colors.badgeBg} border ${colors.badgeBorder} backdrop-blur-sm flex items-center gap-1.5 group-hover:scale-110 transition-transform duration-300`}
+                        >
+                          {sponsor.tier === "Gold" && (
+                            <Crown
+                              className={`w-4 h-4 ${colors.iconColor} drop-shadow-lg`}
+                            />
+                          )}
+                          {sponsor.tier === "Silver" && (
+                            <Medal
+                              className={`w-4 h-4 ${colors.iconColor} drop-shadow-lg`}
+                            />
+                          )}
+                          {sponsor.tier === "Bronze" && (
+                            <Award
+                              className={`w-4 h-4 ${colors.iconColor} drop-shadow-lg`}
+                            />
+                          )}
+                          <span
+                            className={`text-xs font-bold ${colors.badgeText} tracking-wide`}
+                          >
+                            {sponsor.tier}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Corner accent */}
+                    <div
+                      className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${colors.gradient} opacity-0 group-hover:opacity-30 rounded-bl-full transition-opacity duration-500`}
+                    />
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Become a Sponsor CTA */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl px-8 py-6 backdrop-blur-sm">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-100 mb-2">
+                    Want to support DevSync?
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Join our sponsors and help developers build amazing projects
+                  </p>
+                  <Link
+                    href="/sponsors"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50"
+                  >
+                    <Heart className="w-4 h-4 text-red-500" />
+                    Become a Sponsor
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <footer className="border-t border-gray-800/50 py-12 px-6 relative z-10">
           <div className="container mx-auto">
@@ -558,5 +745,20 @@ const steps = [
     icon: <Code2 className="w-12 h-12 text-pink-400" />,
     title: "Start Contributing",
     desc: "Join teams, tackle tasks, and build something amazing together",
+  },
+];
+
+const sponsors = [
+  {
+    name: "Supabase",
+    url: "https://supabase.com/",
+    logo: null,
+    tier: "Gold",
+  },
+  {
+    name: "GitHub",
+    url: "https://github.com/",
+    logo: null,
+    tier: "Silver",
   },
 ];

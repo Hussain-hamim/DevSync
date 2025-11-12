@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEffect, useState } from "react";
-import { Terminal, Menu, LogOut } from "lucide-react";
+import { Terminal, Menu, LogOut, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import MyDropdownMenu from "./DropdownMenu";
@@ -43,7 +43,7 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const navItems = ["Projects", "Teams", "Rankings", "Profile"];
+  const navItems = ["Projects", "Teams", "Rankings", "Profile", "Sponsors"];
 
   const handleLogout = async () => {
     await signOut();
@@ -82,8 +82,15 @@ const Header = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
                   href={"/" + item.toLowerCase()}
-                  className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
+                  className={`text-gray-300 hover:text-emerald-400 transition-colors text-sm flex items-center gap-1 ${
+                    item === "Sponsors"
+                      ? "text-purple-400 hover:text-purple-300"
+                      : ""
+                  }`}
                 >
+                  {item === "Sponsors" && (
+                    <Heart className="w-4 h-4 text-red-500" />
+                  )}
                   {item}
                 </motion.a>
               ))}
