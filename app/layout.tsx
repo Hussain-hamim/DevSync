@@ -1,11 +1,12 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import Providers from './Providers';
-import { Analytics } from '@vercel/analytics/react';
+import type { Metadata } from "next";
+import "./globals.css";
+import Providers from "./Providers";
+import { Analytics } from "@vercel/analytics/react";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 
 export const metadata: Metadata = {
-  title: 'DevSync',
-  description: 'For Developers',
+  title: "DevSync",
+  description: "For Developers",
 };
 
 export default function RootLayout({
@@ -14,12 +15,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
+    <html lang="en">
       <body className={`antialiased`}>
         <Providers>
           {/* <Header /> */}
           {children}
           <Analytics />
+          <AnalyticsTracker />
         </Providers>
       </body>
     </html>

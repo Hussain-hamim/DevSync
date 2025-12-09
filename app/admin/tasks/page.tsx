@@ -1,0 +1,66 @@
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../authOptions";
+import { supabaseAdmin } from "../../lib/supabaseAdmin";
+import AdminLayout from "../components/AdminLayout";
+import TasksTable from "../components/TasksTable";
+
+export default async function TasksPage({
+  searchParams,
+}: {
+  searchParams: { status?: string; priority?: string; page?: string };
+}) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.role !== "admin") {
+    redirect("/admin/login");
+  }
+
+  const page = parseInt(searchParams.page || "1");
+  const limit = 20;
+  const offset = (page - 1) * limit;
+
+  let query = supabaseAdmin
+    .from("tasks")
+    .select(
+      "id,title,description,status,priority,created_at,due_date,projects!tasks_project_id_fkey(title),users!tasks_created_by_fkey(name)",
+      { count: "exact" }
+    )
+    .order("created_at", { ascending: false });
+
+  if (searchParams.status && searchParams.status !== "all") {
+    query = query.eq("status", searchParams.status);
+  }
+
+  if (searchParams.priority && searchParams.priority !== "all") {
+    query = query.eq("priority", searchParams.priority);
+  }
+
+  const {
+    data: tasks,
+    count,
+    error,
+  } = await query.range(offset, offset + limit - 1);
+
+  const totalPages = Math.ceil((count || 0) / limit);
+
+  return (
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Task Management</h1>
+          <p className="text-gray-400">
+            View and manage all tasks across projects
+          </p>
+        </div>
+
+        <TasksTable
+          tasks={tasks || []}
+          currentPage={page}
+          totalPages={totalPages}
+          statusFilter={searchParams.status || "all"}
+          priorityFilter={searchParams.priority || "all"}
+        />
+      </div>
+    </AdminLayout>
+  );
+}
