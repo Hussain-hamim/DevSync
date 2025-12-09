@@ -4,6 +4,7 @@ import { authOptions } from "../../authOptions";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import AdminLayout from "../components/AdminLayout";
 import ProjectsTable from "../components/ProjectsTable";
+import { Suspense } from "react";
 
 export default async function ProjectsPage({
   searchParams,
@@ -49,12 +50,14 @@ export default async function ProjectsPage({
           </p>
         </div>
 
-        <ProjectsTable
-          projects={projects || []}
-          currentPage={page}
-          totalPages={totalPages}
-          search={searchParams.search || ""}
-        />
+        <Suspense fallback={<div className="text-gray-400">Loading...</div>}>
+          <ProjectsTable
+            projects={projects || []}
+            currentPage={page}
+            totalPages={totalPages}
+            search={searchParams.search || ""}
+          />
+        </Suspense>
       </div>
     </AdminLayout>
   );

@@ -4,7 +4,7 @@ import { authOptions } from "../../authOptions";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import AdminLayout from "../components/AdminLayout";
 import UsersTable from "../components/UsersTable";
-import { Search } from "lucide-react";
+import { Suspense } from "react";
 
 export default async function UsersPage({
   searchParams,
@@ -55,13 +55,15 @@ export default async function UsersPage({
           </p>
         </div>
 
-        <UsersTable
-          users={users || []}
-          currentPage={page}
-          totalPages={totalPages}
-          search={searchParams.search || ""}
-          roleFilter={searchParams.role || "all"}
-        />
+        <Suspense fallback={<div className="text-gray-400">Loading...</div>}>
+          <UsersTable
+            users={users || []}
+            currentPage={page}
+            totalPages={totalPages}
+            search={searchParams.search || ""}
+            roleFilter={searchParams.role || "all"}
+          />
+        </Suspense>
       </div>
     </AdminLayout>
   );

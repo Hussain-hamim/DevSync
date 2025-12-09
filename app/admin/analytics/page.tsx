@@ -45,27 +45,29 @@ export default async function AnalyticsPage() {
     .eq("status", "In Progress");
 
   // Get analytics summary for public pages only (excluding admin)
-  // We'll calculate this manually to exclude admin pages
-  const { count: totalPageViews } = await supabaseAdmin
+  // Fetch all page views and filter in JavaScript to exclude admin pages
+  const { data: allPageViewsRaw } = await supabaseAdmin
     .from("page_views")
-    .select("*", { count: "exact", head: true })
-    .not("page_path", "like", "/admin%");
+    .select("page_path, time_spent, created_at, session_id, user_id");
 
-  const { count: uniqueSessionsCount } = await supabaseAdmin
-    .from("page_views")
-    .select("session_id", { count: "exact", head: true })
-    .not("page_path", "like", "/admin%");
+  // Filter out admin pages
+  const allPageViews =
+    allPageViewsRaw?.filter((view) => !view.page_path.startsWith("/admin")) ||
+    [];
 
-  const { count: uniqueUsersCount } = await supabaseAdmin
-    .from("page_views")
-    .select("user_id", { count: "exact", head: true })
-    .not("page_path", "like", "/admin%")
-    .not("user_id", "is", null);
+  const totalPageViews = allPageViews.length;
 
-  const { data: allPageViews } = await supabaseAdmin
-    .from("page_views")
-    .select("page_path, time_spent, created_at")
-    .not("page_path", "like", "/admin%");
+  // Get unique sessions (excluding admin pages)
+  const uniqueSessionsSet = new Set(
+    allPageViews.map((v) => v.session_id).filter(Boolean)
+  );
+  const uniqueSessionsCount = uniqueSessionsSet.size;
+
+  // Get unique users (excluding admin pages and nulls)
+  const uniqueUsersSet = new Set(
+    allPageViews.map((v) => v.user_id).filter(Boolean)
+  );
+  const uniqueUsersCount = uniqueUsersSet.size;
 
   const uniquePages = new Set(allPageViews?.map((v) => v.page_path) || []).size;
   const totalTimeSpent =
@@ -105,12 +107,16 @@ export default async function AnalyticsPage() {
   };
 
   // Get top pages with aggregation - EXCLUDE admin pages
-  const { data: topPagesData } = await supabaseAdmin
+  const { data: topPagesDataRaw } = await supabaseAdmin
     .from("page_views")
     .select("page_path, page_title, time_spent")
-    .not("page_path", "like", "/admin%") // Exclude admin pages
     .order("created_at", { ascending: false })
     .limit(1000);
+
+  // Filter out admin pages
+  const topPagesData =
+    topPagesDataRaw?.filter((view) => !view.page_path.startsWith("/admin")) ||
+    [];
 
   // Count page views per path (excluding admin)
   const pageViewsCount: Record<
@@ -134,20 +140,19 @@ export default async function AnalyticsPage() {
   });
 
   // Get recent visitors - EXCLUDE admin pages
-  const { data: recentVisitors } = await supabaseAdmin
+  const { data: recentVisitorsRaw } = await supabaseAdmin
     .from("page_views")
     .select(
       "id, session_id, page_path, page_title, time_spent, created_at, device_type, browser, os, users(name, email)"
     )
-    .not("page_path", "like", "/admin%") // Exclude admin pages
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(100);
 
-  // Get unique sessions count - EXCLUDE admin pages
-  const { count: uniqueSessions } = await supabaseAdmin
-    .from("page_views")
-    .select("session_id", { count: "exact", head: true })
-    .not("page_path", "like", "/admin%");
+  // Filter out admin pages
+  const recentVisitors =
+    recentVisitorsRaw
+      ?.filter((visitor) => !visitor.page_path.startsWith("/admin"))
+      .slice(0, 50) || [];
 
   return (
     <AdminLayout>

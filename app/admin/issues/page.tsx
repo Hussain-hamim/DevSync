@@ -4,6 +4,7 @@ import { authOptions } from "../../authOptions";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import AdminLayout from "../components/AdminLayout";
 import IssuesTable from "../components/IssuesTable";
+import { Suspense } from "react";
 
 export default async function IssuesPage({
   searchParams,
@@ -53,13 +54,15 @@ export default async function IssuesPage({
           </p>
         </div>
 
-        <IssuesTable
-          issues={issues || []}
-          currentPage={page}
-          totalPages={totalPages}
-          statusFilter={searchParams.status || "all"}
-          priorityFilter={searchParams.priority || "all"}
-        />
+        <Suspense fallback={<div className="text-gray-400">Loading...</div>}>
+          <IssuesTable
+            issues={issues || []}
+            currentPage={page}
+            totalPages={totalPages}
+            statusFilter={searchParams.status || "all"}
+            priorityFilter={searchParams.priority || "all"}
+          />
+        </Suspense>
       </div>
     </AdminLayout>
   );

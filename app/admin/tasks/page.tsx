@@ -4,6 +4,7 @@ import { authOptions } from "../../authOptions";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import AdminLayout from "../components/AdminLayout";
 import TasksTable from "../components/TasksTable";
+import { Suspense } from "react";
 
 export default async function TasksPage({
   searchParams,
@@ -53,13 +54,15 @@ export default async function TasksPage({
           </p>
         </div>
 
-        <TasksTable
-          tasks={tasks || []}
-          currentPage={page}
-          totalPages={totalPages}
-          statusFilter={searchParams.status || "all"}
-          priorityFilter={searchParams.priority || "all"}
-        />
+        <Suspense fallback={<div className="text-gray-400">Loading...</div>}>
+          <TasksTable
+            tasks={tasks || []}
+            currentPage={page}
+            totalPages={totalPages}
+            statusFilter={searchParams.status || "all"}
+            priorityFilter={searchParams.priority || "all"}
+          />
+        </Suspense>
       </div>
     </AdminLayout>
   );
