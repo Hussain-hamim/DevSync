@@ -11,12 +11,21 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
-        
-        // Allow public access to landing page and login page
-        if (pathname === "/" || pathname === "/login") {
+
+        // Allow public access to landing page and login pages
+        if (
+          pathname === "/" ||
+          pathname === "/login" ||
+          pathname === "/admin/login"
+        ) {
           return true;
         }
-        
+
+        // Protect admin routes - require admin role
+        if (pathname.startsWith("/admin")) {
+          return token?.role === "admin";
+        }
+
         // Require authentication for all other routes
         return !!token;
       },
@@ -39,4 +48,3 @@ export const config = {
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
-
