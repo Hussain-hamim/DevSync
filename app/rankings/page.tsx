@@ -213,8 +213,8 @@ export default function RankingsPage() {
               </motion.button>
 
               {/* Metric filter dropdown */}
-              <motion.div whileHover={{ scale: 1.03 }} className="relative">
-                <button
+              <motion.div className="relative">
+                <motion.button whileHover={{ scale: 1.03 }}
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="w-full sm:w-auto bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
                 >
@@ -233,7 +233,7 @@ export default function RankingsPage() {
                               : "PRs"}
                   </span>
                   <ChevronDown className="w-4 h-4" />
-                </button>
+                </motion.button>
 
                 {isDropdownOpen && (
                   <div
@@ -246,9 +246,9 @@ export default function RankingsPage() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute right-0  mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-100"
+                    className="absolute right-0  mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-100 overflow-hidden"
                   >
-                    <div className="py-1">
+                    <div>
                       {(
                         [
                           "score",
