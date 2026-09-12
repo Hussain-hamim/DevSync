@@ -1,4 +1,3 @@
-import { supabase } from "@/app/lib/supabase";
 import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
@@ -23,7 +22,48 @@ interface GoogleProfile extends Profile {
   picture: string;
 }
 
+async function resolveGithubEmail(
+  accessToken: string | undefined,
+  fallbackEmail?: string | null
+) {
+  if (fallbackEmail) return fallbackEmail;
+  if (!accessToken) return null;
+
+  try {
+    const res = await fetch("https://api.github.com/user/emails", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    });
+
+    if (!res.ok) {
+      console.error("GitHub emails fetch failed:", res.status, await res.text());
+      return null;
+    }
+
+    const emails = (await res.json()) as Array<{
+      email: string;
+      primary: boolean;
+      verified: boolean;
+    }>;
+
+    const primary =
+      emails.find((e) => e.primary && e.verified) ||
+      emails.find((e) => e.verified) ||
+      emails[0];
+
+    return primary?.email ?? null;
+  } catch (err) {
+    console.error("GitHub emails fetch error:", err);
+    return null;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
   providers: [
     CredentialsProvider({
       id: "admin-credentials",
@@ -69,6 +109,9 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      // GitHub now returns iss=https://github.com/login/oauth (RFC 9207).
+      // Without this, openid-client throws "issuer must be configured on the issuer".
+      issuer: "https://github.com/login/oauth",
       authorization: {
         params: {
           scope: "read:user user:email",
@@ -86,28 +129,32 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-          scope: "openid email profile",
-        },
-      },
-      profile(profile: GoogleProfile) {
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-          username: profile.email.split("@")[0],
-          role: "user",
-        };
-      },
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            authorization: {
+              params: {
+                prompt: "consent",
+                access_type: "offline",
+                response_type: "code",
+                scope: "openid email profile",
+              },
+            },
+            profile(profile: GoogleProfile) {
+              return {
+                id: profile.sub,
+                name: profile.name,
+                email: profile.email,
+                image: profile.picture,
+                username: profile.email.split("@")[0],
+                role: "user",
+              };
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     async jwt({ token, account, user }) {
@@ -147,34 +194,66 @@ export const authOptions: NextAuthOptions = {
         return true;
       }
 
-      if (!account || !profile) return false;
+      if (!account || !profile) {
+        console.error("SignIn aborted: missing account or profile");
+        return false;
+      }
 
       try {
-        const email = user.email as string;
+        let email = (user.email as string | null | undefined) || null;
+
+        if (account.provider === "github" && !email) {
+          email = await resolveGithubEmail(account.access_token);
+          if (email) user.email = email;
+        }
+
         if (!email) {
           console.error("No email provided in user data");
           return false;
         }
 
-        const { data: existingUser, error: fetchError } = await supabaseAdmin
+        const githubProfile =
+          account.provider === "github" ? (profile as GithubProfile) : null;
+        const githubId = githubProfile ? `github_${githubProfile.id}` : null;
+
+        let existingUser = null as Record<string, any> | null;
+
+        const { data: byEmail, error: emailFetchError } = await supabaseAdmin
           .from("users")
           .select("*")
           .eq("email", email)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
-        if (fetchError && fetchError.code !== "PGRST116") {
-          console.error("Error fetching existing user:", fetchError.message);
+        if (emailFetchError) {
+          console.error("Error fetching existing user by email:", emailFetchError.message);
           return false;
+        }
+
+        existingUser = byEmail;
+
+        if (!existingUser && githubId) {
+          const { data: byGithub, error: githubFetchError } = await supabaseAdmin
+            .from("users")
+            .select("*")
+            .eq("github_id", githubId)
+            .maybeSingle();
+
+          if (githubFetchError) {
+            console.error(
+              "Error fetching existing user by github_id:",
+              githubFetchError.message
+            );
+            return false;
+          }
+
+          existingUser = byGithub;
         }
 
         let updateData: Record<string, any> = {
           role: existingUser?.role || "user",
         };
 
-        if (account.provider === "github") {
-          const githubProfile = profile as GithubProfile;
-
+        if (account.provider === "github" && githubProfile) {
           let githubBio = null;
           let githubBlog = null;
 
@@ -201,15 +280,17 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
+          const login = githubProfile.login || githubProfile.username;
+
           updateData = {
             ...updateData,
-            github_id: `github_${githubProfile.id}`,
+            github_id: githubId,
             email,
-            name: user.name || githubProfile.login || existingUser?.name || "",
+            name: user.name || login || existingUser?.name || "",
             avatar_url: githubProfile.avatar_url || existingUser?.avatar_url,
             github_token: account.access_token as string,
-            github_username: githubProfile.username || githubProfile.login,
-            username: githubProfile.username || githubProfile.login,
+            github_username: login,
+            username: login,
             bio: existingUser?.bio || githubBio || null,
             portfolio_url: existingUser?.portfolio_url || githubBlog || null,
             ...(existingUser?.google_id && {
@@ -253,7 +334,7 @@ export const authOptions: NextAuthOptions = {
           const { error: updateError } = await supabaseAdmin
             .from("users")
             .update(updateData)
-            .eq("email", email);
+            .eq("id", existingUser.id);
 
           if (updateError) {
             console.error("Supabase user update error:", updateError.message);
