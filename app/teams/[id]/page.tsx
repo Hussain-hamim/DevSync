@@ -24,7 +24,7 @@ import {
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { JoinProjectModal } from '@/app/projects/[id]/JoinProjectModal';
-import Header from '@/components/Header';
+
 
 dayjs.extend(relativeTime);
 
@@ -361,7 +361,7 @@ export default function TeamDetails() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
-        <Header />
+        
         <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
           <motion.div
             animate={{ rotate: 360 }}
@@ -386,7 +386,7 @@ export default function TeamDetails() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
-      <Header />
+      
 
       <div className='container mx-auto px-6 py-8'>
         {/* Team Header */}

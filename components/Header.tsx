@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Terminal, Menu, LogOut, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import MyDropdownMenu from "./DropdownMenu";
 import NotificationBell from "./NotificationBell";
 import { supabase } from "@/app/lib/supabase";
@@ -15,8 +16,17 @@ const Header = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [visible, setVisible] = useState(true);
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Header now persists across soft navigations (rendered from the root
+  // layout). Reset transient UI state on route change to preserve the
+  // previous per-page remount behaviour.
+  useEffect(() => {
+    setVisible(true);
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const getUser = async () => {
@@ -47,6 +57,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     await signOut();
+    setUser(null);
     setMobileMenuOpen(false);
   };
 
@@ -76,23 +87,26 @@ const Header = () => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
               {navItems.map((item, index) => (
-                <motion.a
+                <motion.div
                   key={item}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
-                  href={"/" + item.toLowerCase()}
-                  className={`text-gray-300 hover:text-emerald-400 transition-colors text-sm flex items-center gap-1 ${
-                    item === "Sponsors"
-                      ? "text-purple-400 hover:text-purple-300"
-                      : ""
-                  }`}
                 >
-                  {item === "Sponsors" && (
-                    <Heart className="w-4 h-4 text-red-500" />
-                  )}
-                  {item}
-                </motion.a>
+                  <Link
+                    href={"/" + item.toLowerCase()}
+                    className={`text-gray-300 hover:text-emerald-400 transition-colors text-sm flex items-center gap-1 ${
+                      item === "Sponsors"
+                        ? "text-purple-400 hover:text-purple-300"
+                        : ""
+                    }`}
+                  >
+                    {item === "Sponsors" && (
+                      <Heart className="w-4 h-4 text-red-500" />
+                    )}
+                    {item}
+                  </Link>
+                </motion.div>
               ))}
             </nav>
 
@@ -111,7 +125,11 @@ const Header = () => {
             <div className="hidden md:flex items-center gap-3">
               {session || user ? (
                 <>
-                  <NotificationBell />
+                  {/* Avoid mounting a second NotificationBell (with its own
+                      realtime subscription) while the mobile menu Bell is
+                      open. Desktop nav is md+ only, mobile menu is md- only,
+                      so this has no visual effect. */}
+                  {!mobileMenuOpen && <NotificationBell />}
                   <MyDropdownMenu />
                 </>
               ) : (

@@ -1,5 +1,5 @@
 'use client';
-import Header from '@/components/Header';
+
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Users, GitBranch, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -36,8 +36,7 @@ const TeamPage = () => {
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
 
-  useEffect(() => {
-    const fetchProjectsWithMembers = async () => {
+  const fetchProjectsWithMembers = async () => {
       setLoading(true);
       setError(null);
 
@@ -128,14 +127,15 @@ const TeamPage = () => {
       } finally {
         setLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     fetchProjectsWithMembers();
   }, [session]);
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
-      <Header />
+      
 
       <div className='container mx-auto px-4 py-8 pt-10'>
         <section className='py-12 relative overflow-hidden'>
@@ -165,7 +165,7 @@ const TeamPage = () => {
                   </h3>
                   <p className='text-gray-400 mb-4'>{error}</p>
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={() => fetchProjectsWithMembers()}
                     className='bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors'
                   >
                     Try Again
@@ -174,7 +174,7 @@ const TeamPage = () => {
               </div>
             ) : loading ? (
               <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                <Header />
+                
                 {[...Array(6)].map((_, index) => (
                   <motion.div
                     key={index}
@@ -188,7 +188,7 @@ const TeamPage = () => {
               </div>
             ) : teams.length > 0 ? (
               <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                <Header />
+                
                 {teams.map((team, index) => (
                   <Link href={`/teams/${team.id}`} key={team.id}>
                     <motion.div

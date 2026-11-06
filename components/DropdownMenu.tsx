@@ -20,11 +20,10 @@ import {
   HandHeart,
 } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import React from 'react';
 
 const ProfileDropdown = () => {
-  const router = useRouter();
   const { data: session } = useSession();
 
   const truncateEmail = (email: string | null | undefined, maxLength = 24) => {
@@ -135,16 +134,18 @@ const ProfileDropdown = () => {
               <DropdownMenuItem
                 key={index}
                 className='px-2 py-1.5 text-sm rounded-md hover:bg-gray-700/50 hover:text-emerald-400 outline-none cursor-pointer transition-colors data-[highlighted]:bg-gray-700/50 data-[highlighted]:text-emerald-400'
-                onClick={() => router.push(item.path)}
+                asChild
               >
-                <motion.div
-                  whileHover={{ x: 4 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
-                  className='flex items-center gap-2'
-                >
-                  {item.icon}
-                  {item.label}
-                </motion.div>
+                <Link href={item.path}>
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
+                    className='flex items-center gap-2'
+                  >
+                    {item.icon}
+                    {item.label}
+                  </motion.div>
+                </Link>
               </DropdownMenuItem>
             ))}
 

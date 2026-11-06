@@ -11,7 +11,7 @@ import {
   Filter,
   X,
 } from "lucide-react";
-import Header from "@/components/Header";
+
 import { supabase } from "@/app/lib/supabase";
 import {
   getNotifications,
@@ -216,7 +216,7 @@ export default function NotificationsPage() {
   if (!session?.user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-        <Header />
+        
         <div className="container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]">
           <div className="text-gray-400">Please login to view notifications</div>
         </div>
@@ -226,7 +226,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      <Header />
+      
 
       <div className="container mx-auto px-4 py-4 md:py-8 pt-16 md:pt-20">
         <motion.div
