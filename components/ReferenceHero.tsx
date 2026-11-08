@@ -17,12 +17,15 @@ void main(){
  float drift=sin(t+p.x*5.)*.009+sin(t*.7+p.y*4.)*.006;
  float edge=.62-.44*p.x-.28*exp(-p.x/.07)+.12*exp(-pow((p.x-.15-drift)/.075,2.));
  edge+=.018*noise(vec2(p.x*7.+t*.15,p.y*4.));
- float d=p.y-edge;float n=noise(p*6.+vec2(t*.12,-t*.08));
+ float d=p.y-edge;
  vec3 base=vec3(.039);
- vec3 cyan=vec3(.22,.741,.973),purple=vec3(.545,.361,.965);
- float cyanGlow=exp(-dot((p-vec2(.2,.3))*vec2(1.6,1.6),(p-vec2(.2,.3))*vec2(1.6,1.6)))*.4;
- float purpleGlow=exp(-dot((p-vec2(.8,.7))*vec2(1.5,1.5),(p-vec2(.8,.7))*vec2(1.5,1.5)))*.3;
- vec3 c=base+cyan*cyanGlow+purple*purpleGlow;
+ vec3 cyan=vec3(.10,.34,.44),purple=vec3(.22,.13,.38);
+ vec3 c=mix(base,cyan,smoothstep(-.16,.025,d));
+ c=mix(c,purple,smoothstep(.015,.20,d));
+ float lower=p.y-(.89-.32*p.x+sin(p.x*9.+t)*.025);
+ float pool=smoothstep(-.08,.12,lower)*(1.-smoothstep(.45,.95,p.x));
+ c=mix(c,cyan,pool*.85);
+ c=mix(c,purple,smoothstep(.65,1.2,p.x+p.y*.15)*smoothstep(.05,.35,d)*.22);
  float grain=hash(gl_FragCoord.xy)-.5;c+=grain*.028;
  gl_FragColor=vec4(c,1.);
 }`;
@@ -71,7 +74,7 @@ export function FlowBackground({ className }: { className?: string }) {
 export default function ReferenceHero({ startHref, signedIn }: { startHref: string; signedIn: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return <section className={styles.hero} aria-labelledby="hero-heading">
-    <FlowBackground key="cyan-purple-only" />
+    <FlowBackground key="cyan-purple-flow" />
     <header className={styles.header}>
       <Link href="/" className={styles.brand}><Terminal size={24} strokeWidth={2.5} />DevSync</Link>
       <nav className={`${styles.navigation} ${menuOpen ? styles.menuOpen : ""}`} aria-label="Main navigation">
