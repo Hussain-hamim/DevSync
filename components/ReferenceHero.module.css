@@ -105,9 +105,9 @@
 .primaryAction:active,.secondaryAction:active{translate:0 1px}
 @media(prefers-reduced-motion:reduce){.primaryAction svg,.secondaryAction svg{transition:none}.primaryAction:hover svg,.secondaryAction:hover svg{transform:none}.primaryAction:hover,.secondaryAction:hover{translate:none}}
 
-/* Two-color aurora: cyan and purple over near-black. */
+/* Cyan aurora over near-black. */
 .hero{background:#0a0a0a;color:#f3f4f6}
-.flow{background:radial-gradient(ellipse at 20% 30%,#38bdf866,transparent 60%),radial-gradient(ellipse at 80% 70%,#8b5cf64d,transparent 70%),#0a0a0a}
+.flow{background:radial-gradient(ellipse at 20% 30%,#38bdf866,transparent 60%),radial-gradient(ellipse at 80% 70%,#0891b24d,transparent 70%),#0a0a0a}
 .brand,.navigation a,.heroLayout .content h1{color:#f3f4f6}
 .brand svg{color:#22d3ee}
 .heroLayout .content>p{color:#d1d5db}

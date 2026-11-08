@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Lightbulb, ListChecks, MessageSquare, Menu, Rocket, Terminal, Users, X } from "lucide-react";
 import styles from "./ReferenceHero.module.css";
 
-// Recreated from the supplied Arcade recording: a login-inspired cyan/purple aurora flow field.
+// Recreated from the supplied Arcade recording: a dark cyan aurora flow field.
 // The field is procedural so it stays sharp, responsive, and independent of video playback.
 const vertex = `attribute vec2 position; varying vec2 uv;
 void main(){uv=position*.5+.5;gl_Position=vec4(position,0.,1.);}`;
@@ -19,13 +19,13 @@ void main(){
  edge+=.018*noise(vec2(p.x*7.+t*.15,p.y*4.));
  float d=p.y-edge;
  vec3 base=vec3(.039);
- vec3 cyan=vec3(.10,.34,.44),purple=vec3(.22,.13,.38);
+ vec3 cyan=vec3(.10,.34,.44),deepCyan=vec3(.035,.15,.20);
  vec3 c=mix(base,cyan,smoothstep(-.16,.025,d));
- c=mix(c,purple,smoothstep(.015,.20,d));
+ c=mix(c,deepCyan,smoothstep(.015,.20,d));
  float lower=p.y-(.89-.32*p.x+sin(p.x*9.+t)*.025);
  float pool=smoothstep(-.08,.12,lower)*(1.-smoothstep(.45,.95,p.x));
  c=mix(c,cyan,pool*.85);
- c=mix(c,purple,smoothstep(.65,1.2,p.x+p.y*.15)*smoothstep(.05,.35,d)*.22);
+ c=mix(c,deepCyan,smoothstep(.65,1.2,p.x+p.y*.15)*smoothstep(.05,.35,d)*.22);
  float grain=hash(gl_FragCoord.xy)-.5;c+=grain*.028;
  gl_FragColor=vec4(c,1.);
 }`;
@@ -74,7 +74,7 @@ export function FlowBackground({ className }: { className?: string }) {
 export default function ReferenceHero({ startHref, signedIn }: { startHref: string; signedIn: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return <section className={styles.hero} aria-labelledby="hero-heading">
-    <FlowBackground key="cyan-purple-flow" />
+    <FlowBackground key="cyan-flow" />
     <header className={styles.header}>
       <Link href="/" className={styles.brand}><Terminal size={24} strokeWidth={2.5} />DevSync</Link>
       <nav className={`${styles.navigation} ${menuOpen ? styles.menuOpen : ""}`} aria-label="Main navigation">
