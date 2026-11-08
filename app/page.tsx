@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Check, Code2, GitBranch, GitPullRequest, Search, Rocket, Layers, Lightbulb, Plus, Terminal, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
-import ReferenceHero from "@/components/ReferenceHero";
+import ReferenceHero, { FlowBackground } from "@/components/ReferenceHero";
 import { supabase } from "./lib/supabase";
 import Link from "next/link";
 import styles from "./landing.module.css";
@@ -153,14 +153,17 @@ export default function Home() {
           </div>
         </section>
 
+        <div className={styles.closingSection}>
+          <FlowBackground className={styles.closingFlow} />
         <section className={`${styles.finalCta} ${styles.container}`}>
           <span className={styles.launchMark} aria-hidden="true"><Rocket size={40}/></span><h2>Your next build<br />starts with a hello.</h2>
 
           <Link href={startHref} className={styles.primaryButton}>{session ? "Open your workspace" : "Get started"}<ArrowRight size={17} /></Link>
         </section>
         <div className={`${styles.supportRow} ${styles.container}`}><Link href="/sponsors">Meet our sponsors & support DevSync <ArrowRight size={15} /></Link></div>
+      <footer className={`${styles.footer} ${styles.container}`}><Link href="/" className={styles.brand}><Terminal size={22} />DevSync</Link><nav aria-label="Footer"><Link href="/projects">Projects</Link><Link href="/teams">Teams</Link><Link href="/rankings">Rankings</Link><Link href="/sponsors">Sponsors</Link></nav><div className={styles.footerBottom}><span>© {new Date().getFullYear()} DevSync</span></div><div className={styles.footerWordmark} aria-hidden="true"><span>DevSync</span></div></footer>
+        </div>
       </main>
-      <footer className={`${styles.footer} ${styles.container}`}><Link href="/" className={styles.brand}><Terminal size={22} />DevSync</Link><nav aria-label="Footer"><Link href="/projects">Projects</Link><Link href="/teams">Teams</Link><Link href="/rankings">Rankings</Link><Link href="/sponsors">Sponsors</Link></nav><div className={styles.footerBottom}><span>© {new Date().getFullYear()} DevSync</span></div><div className={styles.footerWordmark} aria-hidden="true">DevSync</div></footer>
     </div>
   );
 }
