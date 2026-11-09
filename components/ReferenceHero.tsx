@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Lightbulb, Menu, Rocket, Terminal, Users, X } from "lucide-react";
+import GitHubStarButton from "./GitHubStarButton";
 import styles from "./ReferenceHero.module.css";
 import VectorWordmark from "./originkit/ui/vector-wordmark";
 
@@ -80,8 +81,9 @@ export default function ReferenceHero({ startHref, signedIn }: { startHref: stri
       <Link href="/" className={styles.brand}><Terminal size={24} strokeWidth={2.5} />DevSync</Link>
       <nav className={`${styles.navigation} ${menuOpen ? styles.menuOpen : ""}`} aria-label="Main navigation">
         {["Projects", "Teams", "Rankings", "Profile", "Sponsors"].map(label => <Link key={label} href={`/${label.toLowerCase()}`}>{label}</Link>)}
+        <Link className={styles.mobileAccount} href={signedIn ? "/teams" : startHref}>{signedIn ? "Find a team" : "Get started"}</Link>
       </nav>
-      <div className={styles.headerActions}><Link className={styles.login} href="/projects">Explore projects</Link><Link className={styles.signup} href={signedIn ? "/teams" : startHref}>{signedIn ? "Find a team" : "Get started"}</Link></div>
+      <div className={styles.headerActions}><GitHubStarButton /><Link className={styles.login} href="/projects">Explore projects</Link><Link className={styles.signup} href={signedIn ? "/teams" : startHref}>{signedIn ? "Find a team" : "Get started"}</Link></div>
       <button className={styles.menuButton} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation" : "Open navigation"} onClick={() => setMenuOpen(value => !value)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
     </header>
     <div className={styles.heroLayout}>

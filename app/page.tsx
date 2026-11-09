@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Pause, Play, Code2, Rocket, Layers, Lightbulb, Plus, Terminal, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
+import RepositoryCommunity from "@/components/RepositoryCommunity";
 import ReferenceHero from "@/components/ReferenceHero";
 import { supabase } from "./lib/supabase";
 import Link from "next/link";
@@ -173,6 +174,8 @@ export default function Home() {
             <a href="https://ideahunt.pro" target="_blank" rel="noopener noreferrer" className={styles.secondaryButton}>Find ideas on IdeaHunt<ArrowUpRight size={16} aria-hidden="true" /><span className={styles.srOnly}> (opens in a new tab)</span></a>
           </div>
         </section>
+
+        <RepositoryCommunity />
 
         <section className={`${styles.faqSection} ${styles.container}`} aria-labelledby="faq-heading">
           <div><h2 id="faq-heading">Questions?</h2></div>

@@ -6,6 +6,7 @@ import { Terminal, Menu, LogOut, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import GitHubStarButton from "./GitHubStarButton";
 import MyDropdownMenu from "./DropdownMenu";
 import NotificationBell from "./NotificationBell";
 import { supabase } from "@/app/lib/supabase";
@@ -71,7 +72,7 @@ const Header = () => {
           transition={{ type: "spring", damping: 20 }}
           className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full rounded-3xl z-50 bg-gray-800/90 backdrop-blur-md border-b border-gray-700"
         >
-          <div className="container mx-auto px-6 py-3 flex justify-between items-center">
+          <div className="container mx-auto px-6 py-3 flex items-center gap-4 lg:gap-8">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -85,7 +86,7 @@ const Header = () => {
             </motion.div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center gap-3 lg:gap-6">
               {navItems.map((item, index) => (
                 <motion.div
                   key={item}
@@ -109,6 +110,9 @@ const Header = () => {
                 </motion.div>
               ))}
             </nav>
+
+            <div className="ml-auto flex items-center gap-2 md:gap-3">
+            <GitHubStarButton compact />
 
             {/* Mobile Menu Button - Always visible on mobile */}
             <motion.button
@@ -146,6 +150,7 @@ const Header = () => {
                   </Link>
                 </motion.div>
               )}
+            </div>
             </div>
           </div>
 

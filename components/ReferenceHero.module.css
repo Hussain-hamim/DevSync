@@ -166,3 +166,19 @@
 /* Interactive wordmark scales with the hero on every screen. */
 .wordmark{width:100%;height:340px;align-self:center}
 @media(max-width:800px){.wordmark{height:clamp(140px,36vw,210px);max-width:520px;flex-shrink:0}}
+
+.githubButton{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:10px 16px;border:1px solid #30383d;border-radius:10px;background:#0f171c;color:#f1f5f4;font-size:14px;white-space:nowrap;text-decoration:none;flex-shrink:0}
+.githubButton:hover{background:#18252b;border-color:#5de4bb70}
+.githubCount{font-variant-numeric:tabular-nums;min-width:1ch}
+.githubButton svg{flex-shrink:0}
+.mobileAccount{display:none}
+@media(min-width:801px) and (max-width:1200px){.header{gap:20px}.navigation{gap:14px}.headerActions .login{display:none}.githubButton{gap:8px;padding-inline:12px;font-size:13px}}
+@media(max-width:800px){.githubLabel{display:none}.githubButton{gap:8px;padding:8px 10px}}
+@media(max-width:480px){.headerActions .signup{display:none}.menuOpen .mobileAccount{display:block}.headerActions{gap:6px}}
+
+.githubButton:focus-visible{outline:2px solid #5de4bb;outline-offset:4px}
+@media(max-width:1200px){.githubCompact .githubLabel{display:none}.githubCompact{gap:8px;padding:8px 10px}}
+
+/* Blend the repository action into the signed-in header. */
+.githubCompact{background:transparent;border-color:#ffffff20;color:#d1d5db}
+.githubCompact:hover{background:#ffffff08;border-color:#ffffff38;color:#6ee7b7}

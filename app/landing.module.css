@@ -1227,3 +1227,15 @@
 .rotationToggle { display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; margin-right:16px; border:1px solid var(--line); border-radius:8px; color:var(--muted); background:transparent; cursor:pointer; }
 .rotationToggle:hover { color:var(--mint); background:var(--raised); }
 @media(max-width:480px) { .showcaseControls .showcaseTabs { gap:8px; padding-inline:12px; } .rotationToggle { margin-right:10px; } }
+
+.repositorySection { padding-block:80px; border-bottom:1px solid var(--line); }
+.contributorGrid { display:flex; flex-wrap:wrap; gap:14px; }
+.contributor { display:flex; align-items:center; gap:12px; padding:14px 18px; border:1px solid #a8cfca30; border-radius:12px; background:linear-gradient(180deg, #cbd8df24 0%, #619b9126 48%, #17594d55 100%), #0d141e; font-size:14px; }
+.contributor img { border-radius:50%; }
+.contributor > svg { color:var(--mint); }
+.contributor:hover { border-color:var(--mint); transform:translateY(-2px); }
+.repositoryStatus { color:var(--muted); font-size:14px; }
+@media(max-width:480px) { .contributor { width:100%; } .contributor > svg { margin-left:auto; } }
+
+.contributorDetails { display:flex; flex-direction:column; gap:5px; min-width:0; overflow-wrap:anywhere; }
+.contributorDetails small { color:var(--muted); font-size:12px; line-height:1.4; }
