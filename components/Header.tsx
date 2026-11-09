@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEffect, useState } from "react";
-import { Terminal, Menu, LogOut, Heart } from "lucide-react";
+import { Terminal, Menu, LogOut, GitPullRequest } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -54,7 +54,7 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const navItems = ["Projects", "Teams", "Rankings", "Profile", "Sponsors"];
+  const navItems = ["Projects", "Teams", "Rankings", "Profile", "Contributors"];
 
   const handleLogout = async () => {
     await signOut();
@@ -86,7 +86,7 @@ const Header = () => {
             </motion.div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-3 lg:gap-6">
+            <nav className="hidden md:flex items-center gap-1 lg:gap-3">
               {navItems.map((item, index) => (
                 <motion.div
                   key={item}
@@ -95,16 +95,10 @@ const Header = () => {
                   transition={{ delay: 0.3 + index * 0.1 }}
                 >
                   <Link
-                    href={"/" + item.toLowerCase()}
-                    className={`text-gray-300 hover:text-emerald-400 transition-colors text-sm flex items-center gap-1 ${
-                      item === "Sponsors"
-                        ? "text-purple-400 hover:text-purple-300"
-                        : ""
-                    }`}
+                    href={item === "Contributors" ? "/#contributors" : "/" + item.toLowerCase()}
+                    className="text-gray-300 hover:text-emerald-400 transition-colors text-sm flex items-center gap-1 border border-white/10 rounded-lg px-2 py-2"
                   >
-                    {item === "Sponsors" && (
-                      <Heart className="w-4 h-4 text-red-500" />
-                    )}
+                    {item === "Contributors" && <GitPullRequest className="w-4 h-4 text-emerald-400" aria-hidden="true" />}
                     {item}
                   </Link>
                 </motion.div>
@@ -119,7 +113,7 @@ const Header = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-700/50"
+              className="md:hidden p-2 border border-white/10 rounded-lg hover:bg-gray-700/50"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <Menu className="w-5 h-5 text-gray-300" />
@@ -144,7 +138,7 @@ const Header = () => {
                 >
                   <Link
                     href="/login"
-                    className="px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-emerald-400 to-cyan-400 text-gray-900 font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2 text-sm border border-white/10 rounded-lg bg-gradient-to-r from-emerald-400 to-cyan-400 text-gray-900 font-medium hover:opacity-90 transition-opacity"
                   >
                     Login
                   </Link>
@@ -168,8 +162,8 @@ const Header = () => {
                   {navItems.map((item) => (
                     <Link
                       key={item}
-                      href={"/" + item.toLowerCase()}
-                      className="block px-3 py-2 text-gray-300 hover:text-emerald-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                      href={item === "Contributors" ? "/#contributors" : "/" + item.toLowerCase()}
+                      className="block px-3 py-2 border border-white/10 text-gray-300 hover:text-emerald-400 hover:bg-gray-700/50 rounded-md transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {item}
@@ -183,7 +177,7 @@ const Header = () => {
                   {session || user ? (
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-left rounded-md hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
+                      className="w-full flex items-center gap-2 border border-white/10 px-3 py-2 mt-2 text-left rounded-md hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
                       <span className="text-rose-400">Log out</span>
@@ -191,7 +185,7 @@ const Header = () => {
                   ) : (
                     <Link
                       href="/login"
-                      className="block w-full px-3 py-2 mt-2 text-center rounded-md bg-gradient-to-r from-emerald-400 to-cyan-400 text-gray-900 font-medium hover:opacity-90 transition-opacity"
+                      className="block w-full border border-white/10 px-3 py-2 mt-2 text-center rounded-md bg-gradient-to-r from-emerald-400 to-cyan-400 text-gray-900 font-medium hover:opacity-90 transition-opacity"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Login

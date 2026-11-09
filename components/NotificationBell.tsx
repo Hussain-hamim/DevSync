@@ -210,7 +210,7 @@ export default function NotificationBell() {
       {isMobile ? (
         <Link
           href="/notifications"
-          className="relative p-2 rounded-lg hover:bg-gray-700/50 transition-colors block"
+          className="relative p-2 border border-white/10 rounded-lg hover:bg-gray-700/50 transition-colors block"
           aria-label="View notifications"
         >
           <Bell className="w-5 h-5 text-gray-300" />
@@ -227,7 +227,7 @@ export default function NotificationBell() {
       ) : (
         <button
           onClick={handleClick}
-          className="relative p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
+          className="relative p-2 border border-white/10 rounded-lg hover:bg-gray-700/50 transition-colors"
         >
           <Bell className="w-5 h-5 text-gray-300" />
           {unreadCount > 0 && (

@@ -29,7 +29,7 @@ export default function RepositoryCommunity() {
     return () => controller.abort();
   }, []);
   return (
-    <section className={`${styles.repositorySection} ${styles.container}`} aria-labelledby="contributors-heading">
+    <section id="contributors" className={`${styles.repositorySection} ${styles.container}`} aria-labelledby="contributors-heading">
       <div className={styles.sectionIntro}>
         <h2 id="contributors-heading">Built by contributors.</h2>
         <a href={repoUrl} target="_blank" rel="noopener noreferrer" className={styles.secondaryButton}>

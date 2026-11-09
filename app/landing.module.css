@@ -1239,3 +1239,5 @@
 
 .contributorDetails { display:flex; flex-direction:column; gap:5px; min-width:0; overflow-wrap:anywhere; }
 .contributorDetails small { color:var(--muted); font-size:12px; line-height:1.4; }
+
+.repositorySection { scroll-margin-top:90px; }

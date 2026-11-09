@@ -182,3 +182,17 @@
 /* Blend the repository action into the signed-in header. */
 .githubCompact{background:transparent;border-color:#ffffff20;color:#d1d5db}
 .githubCompact:hover{background:#ffffff08;border-color:#ffffff38;color:#6ee7b7}
+
+.navigation a{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.navigation a svg{flex-shrink:0;color:#7ed9c2}
+@media(min-width:801px) and (max-width:1100px){.header{gap:16px}.navigation{gap:12px}.githubButton{gap:6px;padding-inline:10px}.headerActions{gap:6px}}
+@media(min-width:801px) and (max-width:1100px){.navigation{gap:10px}.navigation a{font-size:12px;gap:4px}.navigation a svg{width:14px;height:14px}}
+
+/* Plain landing-page navigation, without outlines. */
+.header,.header .navigation a,.header .menuButton,.header .signup,.header .login,.header .githubButton,.header .menuOpen{border:0}
+.navigation a{padding:8px 0;min-height:40px}
+@media(max-width:800px){.menuOpen{gap:8px}.menuOpen a{width:100%;padding:12px}}
+
+/* Keep the underline directly beneath each link's text. */
+.header .navigation a,.header .login{text-decoration-line:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:#ffffff50;transition:text-decoration-color 160ms ease}
+.header .navigation a:hover,.header .navigation a:focus-visible,.header .login:hover,.header .login:focus-visible{text-decoration-color:currentColor}
+@media(prefers-reduced-motion:reduce){.header .navigation a,.header .login{transition:none}}

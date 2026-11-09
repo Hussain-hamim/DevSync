@@ -80,7 +80,7 @@ export default function ReferenceHero({ startHref, signedIn }: { startHref: stri
     <header className={styles.header}>
       <Link href="/" className={styles.brand}><Terminal size={24} strokeWidth={2.5} />DevSync</Link>
       <nav className={`${styles.navigation} ${menuOpen ? styles.menuOpen : ""}`} aria-label="Main navigation">
-        {["Projects", "Teams", "Rankings", "Profile", "Sponsors"].map(label => <Link key={label} href={`/${label.toLowerCase()}`}>{label}</Link>)}
+        {["Projects", "Teams", "Rankings", "Profile", "Contributors"].map(label => <Link key={label} href={label === "Contributors" ? "#contributors" : `/${label.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{label}</Link>)}
         <Link className={styles.mobileAccount} href={signedIn ? "/teams" : startHref}>{signedIn ? "Find a team" : "Get started"}</Link>
       </nav>
       <div className={styles.headerActions}><GitHubStarButton /><Link className={styles.login} href="/projects">Explore projects</Link><Link className={styles.signup} href={signedIn ? "/teams" : startHref}>{signedIn ? "Find a team" : "Get started"}</Link></div>
