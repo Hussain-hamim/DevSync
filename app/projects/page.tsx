@@ -17,7 +17,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
-import Header from '@/components/Header';
 import { techImages } from '../lib/projectImages';
 import { NewProjectModal } from './NewProjectModal';
 import { toast } from 'sonner';
@@ -133,7 +132,7 @@ export default function ProjectsPage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100'>
-        <Header />
+        
         <div className='container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]'>
           <div className='animate-pulse text-gray-400'>
             Loading projects data...
@@ -146,7 +145,7 @@ export default function ProjectsPage() {
   return (
     <div className='min-h-screen  bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8'>
       {/* Header */}
-      <Header />
+      
 
       <div className='container mt-10 mx-auto px-3 py-5'>
         <motion.header

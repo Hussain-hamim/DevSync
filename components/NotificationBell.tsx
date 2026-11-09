@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,11 @@ export default function NotificationBell() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const showDropdownRef = useRef(showDropdown);
+
+  useEffect(() => {
+    showDropdownRef.current = showDropdown;
+  }, [showDropdown]);
 
   // Detect mobile view
   useEffect(() => {
@@ -94,7 +99,8 @@ export default function NotificationBell() {
     }
   }, [showDropdown, userId]);
 
-  // Real-time subscription for notifications
+  // Real-time subscription for notifications. showDropdown is read via a ref
+  // so toggling the dropdown does not tear down and re-create the channel.
   useEffect(() => {
     if (!userId) return;
 
@@ -111,7 +117,7 @@ export default function NotificationBell() {
         (payload) => {
           // New notification received
           fetchUnreadCount();
-          if (showDropdown) {
+          if (showDropdownRef.current) {
             fetchRecentNotifications();
           }
         }
@@ -126,7 +132,7 @@ export default function NotificationBell() {
         },
         () => {
           fetchUnreadCount();
-          if (showDropdown) {
+          if (showDropdownRef.current) {
             fetchRecentNotifications();
           }
         }
@@ -136,7 +142,7 @@ export default function NotificationBell() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, showDropdown]);
+  }, [userId]);
 
   const handleNotificationClick = async (notification: any) => {
     if (!notification.read) {
@@ -195,32 +201,46 @@ export default function NotificationBell() {
   if (!session?.user) return null;
 
   const handleClick = () => {
-    if (isMobile) {
-      // On mobile, navigate to notifications page
-      router.push("/notifications");
-    } else {
-      // On desktop, toggle dropdown
-      setShowDropdown(!showDropdown);
-    }
+    // Desktop only (mobile renders a Link below). Toggle dropdown.
+    setShowDropdown(!showDropdown);
   };
 
   return (
     <div className="relative">
-      <button
-        onClick={handleClick}
-        className="relative p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
-      >
-        <Bell className="w-5 h-5 text-gray-300" />
-        {unreadCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </motion.span>
-        )}
-      </button>
+      {isMobile ? (
+        <Link
+          href="/notifications"
+          className="relative p-2 rounded-lg hover:bg-gray-700/50 transition-colors block"
+          aria-label="View notifications"
+        >
+          <Bell className="w-5 h-5 text-gray-300" />
+          {unreadCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </motion.span>
+          )}
+        </Link>
+      ) : (
+        <button
+          onClick={handleClick}
+          className="relative p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
+        >
+          <Bell className="w-5 h-5 text-gray-300" />
+          {unreadCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </motion.span>
+          )}
+        </button>
+      )}
 
       {/* Desktop dropdown only - mobile navigates to page */}
       {!isMobile && (
