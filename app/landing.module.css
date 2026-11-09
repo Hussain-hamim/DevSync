@@ -1241,3 +1241,24 @@
 .contributorDetails small { color:var(--muted); font-size:12px; line-height:1.4; }
 
 .repositorySection { scroll-margin-top:90px; }
+
+.contributorGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.contributor{display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:20px}
+.contributorIdentity{display:flex;align-items:center;gap:12px;min-width:0}
+.contributorIdentity>svg{margin-left:auto;flex-shrink:0;color:var(--mint)}
+.contributorActivity{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;color:var(--secondary)}
+.contributorActivity>svg{color:var(--mint);width:45%;height:32px;flex-shrink:0}
+.contributorActivity>small{font-size:10px;color:var(--muted)}
+@media(max-width:1000px){.contributorGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.contributorGrid{grid-template-columns:1fr}}
+
+/* GitHub-inspired contributor activity panels. */
+.contributorGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.contributor{padding:16px;gap:10px;background:linear-gradient(180deg,#cbd8df08,#17594d10),#0c1218;border-color:#ffffff25}
+.contributorDetails>span{color:#63b3ff;font-size:15px;font-weight:600}
+.contributorStats{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--secondary)}
+.linesAdded{color:#3dcc73}.linesRemoved{color:#ff695e}
+.activityChart{display:block;width:100%;height:auto;margin-top:0}
+.contributorIdentity{gap:10px}.contributorIdentity img{width:40px;height:40px}.contributorDetails{gap:3px}.contributorDetails small{font-size:11px}
+@media(max-width:900px){.contributorGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.contributorGrid{grid-template-columns:1fr}}
