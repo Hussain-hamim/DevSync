@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "./Providers";
 import { Analytics } from "@vercel/analytics/react";
 import AnalyticsTracker from "./components/AnalyticsTracker";
+import HeaderShell from "@/components/HeaderShell";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`antialiased`}>
         <Providers>
-          {/* <Header /> */}
+          <HeaderShell />
           {children}
           <Analytics />
           <Suspense fallback={null}>

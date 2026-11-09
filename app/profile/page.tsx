@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { Globe, Linkedin, Twitter, Github } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import Header from "@/components/Header";
+
 import {
   ProfileHeader,
   ProjectsSection,
@@ -396,7 +396,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100">
-        <Header />
+        
         <div className="container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]">
           <div className="animate-pulse text-gray-400">
             Loading profile data...
@@ -409,7 +409,7 @@ export default function ProfilePage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100">
-        <Header />
+        
         <div className="container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]">
           <div className="text-rose-400">Error: {error}</div>
         </div>
@@ -419,7 +419,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br pt-15 from-gray-900 to-gray-800 font-sans text-gray-100">
-      <Header />
+      
 
       <div className="container mx-auto px-4 py-8">
         <ProfileHeader

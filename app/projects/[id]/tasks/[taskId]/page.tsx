@@ -11,13 +11,13 @@ import {
   User,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { EditTaskModal } from './EditTaskModal';
-import Header from '@/components/Header';
+
 
 interface Comment {
   id: string;
@@ -67,6 +67,7 @@ interface TaskDetails {
 
 export default function TaskDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const { data: session } = useSession();
   const [task, setTask] = useState<TaskDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -223,8 +224,8 @@ export default function TaskDetailsPage() {
       });
 
       toast.success('Task deleted successfully');
-      // Redirect back to tasks list
-      window.location.href = `/projects/${params.id}/tasks`;
+      // Redirect back to tasks list via soft navigation
+      router.push(`/projects/${params.id}/tasks`);
     } catch (error) {
       console.error('Error deleting task:', error);
       toast.error('Failed to delete task');
@@ -574,7 +575,7 @@ export default function TaskDetailsPage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
-        <Header />
+        
         <div className='container mx-auto px-6 py-8'>
           <div className='animate-pulse space-y-6'>
             <div className='h-10 w-1/3 bg-gray-700 rounded'></div>
@@ -608,7 +609,7 @@ export default function TaskDetailsPage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-900 to-gray-800'>
       {/* Header */}
-      <Header />
+      
 
       {/* Main Content */}
       <div className='container mx-auto px-6 py-25'>

@@ -26,7 +26,7 @@ import {
   Twitter,
   Linkedin,
 } from "lucide-react";
-import Header from "@/components/Header";
+
 import {
   followUser,
   unfollowUser,
@@ -411,7 +411,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
-        <Header />
+        
         <div className="animate-pulse text-gray-400">
           Loading {userData?.name || "user"} data...
         </div>
@@ -476,7 +476,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100">
       <div className="container mx-auto px-4 py-8">
-        <Header />
+        
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

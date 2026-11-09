@@ -17,7 +17,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
-import Header from "@/components/Header";
+
 
 const sponsorTiers = [
   {
@@ -158,7 +158,7 @@ export default function SponsorsPage() {
       />
 
       <div className="relative z-10">
-        <Header />
+        
 
         {/* Hero Section */}
         <section className="pt-32 pb-20 px-6">

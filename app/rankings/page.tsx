@@ -1,5 +1,5 @@
 "use client";
-import Header from "@/components/Header";
+
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Award,
@@ -149,7 +149,7 @@ export default function RankingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100">
-      <Header />
+      
 
       <div className="container mx-auto px-4 pt-20 pb-8">
         {/* Page Header */}

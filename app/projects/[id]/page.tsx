@@ -26,7 +26,7 @@ import { use, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { JoinProjectModal } from "./JoinProjectModal";
 import { EditProjectModal } from "./EditProjectModal";
-import Header from "@/components/Header";
+
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import calendar from "dayjs/plugin/calendar";
@@ -534,7 +534,7 @@ export default function ProjectDetails() {
   if (loading || !project) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 font-sans text-gray-100">
-        <Header />
+        
         <div className="container mx-auto px-4 py-8 flex justify-center items-center h-[calc(100vh-80px)]">
           <div className="animate-pulse text-gray-400">
             Loading project details…
@@ -546,7 +546,7 @@ export default function ProjectDetails() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      <Header />
+      
 
       {/* Project Header */}
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
