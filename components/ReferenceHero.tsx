@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Lightbulb, ListChecks, MessageSquare, Menu, Rocket, Terminal, Users, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Lightbulb, Menu, Rocket, Terminal, Users, X } from "lucide-react";
 import styles from "./ReferenceHero.module.css";
+import VectorWordmark from "./originkit/ui/vector-wordmark";
 
 // Recreated from the supplied Arcade recording: a dark cyan aurora flow field.
 // The field is procedural so it stays sharp, responsive, and independent of video playback.
@@ -80,7 +81,7 @@ export default function ReferenceHero({ startHref, signedIn }: { startHref: stri
       <nav className={`${styles.navigation} ${menuOpen ? styles.menuOpen : ""}`} aria-label="Main navigation">
         {["Projects", "Teams", "Rankings", "Profile", "Sponsors"].map(label => <Link key={label} href={`/${label.toLowerCase()}`}>{label}</Link>)}
       </nav>
-      <div className={styles.headerActions}><Link className={styles.login} href="/projects">Explore projects</Link><Link className={styles.signup} href={startHref}>{signedIn ? "Workspace" : "Get started"}</Link></div>
+      <div className={styles.headerActions}><Link className={styles.login} href="/projects">Explore projects</Link><Link className={styles.signup} href={signedIn ? "/teams" : startHref}>{signedIn ? "Find a team" : "Get started"}</Link></div>
       <button className={styles.menuButton} aria-expanded={menuOpen} aria-label={menuOpen ? "Close navigation" : "Open navigation"} onClick={() => setMenuOpen(value => !value)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
     </header>
     <div className={styles.heroLayout}>
@@ -89,36 +90,20 @@ export default function ReferenceHero({ startHref, signedIn }: { startHref: stri
       <p>Find developers who share your curiosity.<br />Real projects. Shared ideas. Better together.</p>
       <div className={styles.actions}>
         <Link className={styles.primaryAction} href="/projects">Explore open projects <ArrowRight size={18} /></Link>
-        <Link className={styles.secondaryAction} href={startHref}>{signedIn ? "Open your workspace" : "Start building together"} <ArrowUpRight size={18} /></Link>
+        <Link className={styles.secondaryAction} href={signedIn ? "/teams" : startHref}>{signedIn ? "Find a team" : "Start building together"} <ArrowUpRight size={18} /></Link>
       </div>
     </div>
-    <div className={styles.appPreview} aria-label="Example DevSync project workspace">
-      <div className={styles.previewBar}><span><Terminal size={16} /> DevSync</span><small>Project preview</small></div>
-      <div className={styles.previewBody}>
-
-        <h2>Your next build.</h2>
-
-        <div className={styles.previewMeta}><span>Community dashboard</span><span><Users size={14} /> 3 builders</span></div>
-        <div className={styles.board}>
-          {[
-            {label: "To do", task: "Design the overview", tag: "Design", name: "Alex Kim", id: "DS-12", progress: "0/3", comments: 2, skin: "#c88964", hair: "#332521", shirt: "#7772cf", bg: "#e6dfff"},
-            {label: "In progress", task: "Connect the API", tag: "Backend", name: "Jamie Lee", id: "DS-13", progress: "2/4", comments: 4, skin: "#e8b98e", hair: "#292b37", shirt: "#397fa3", bg: "#cce8f6"},
-            {label: "Done", task: "Set up the project", tag: "Setup", name: "Morgan Noor", id: "DS-14", progress: "3/3", comments: 1, skin: "#986347", hair: "#24201e", shirt: "#379888", bg: "#c8eee4"},
-          ].map(column => <div key={column.label} className={styles.boardColumn}>
-            <div className={styles.columnTitle}><i />{column.label}<span>1</span></div>
-            <div className={styles.taskCard}>
-              <span className={styles.taskId}>{column.id}</span>
-              <strong>{column.task}</strong>
-              <span className={styles.taskTag}>{column.tag}</span>
-              <div className={styles.taskFooter}>
-                <span className={styles.taskStats}><span aria-label={`${column.progress} checklist items`}><ListChecks size={12} />{column.progress}</span><span aria-label={`${column.comments} comments`}><MessageSquare size={11} />{column.comments}</span></span>
-                <svg className={styles.assigneeAvatar} viewBox="0 0 32 32" role="img" aria-label={`Assigned to ${column.name}`}><title>{`${column.name} · Assignee`}</title><circle cx="16" cy="16" r="16" fill={column.bg} /><path d="M3 32c0-9 5-13 13-13s13 4 13 13" fill={column.shirt} /><rect x="13" y="18" width="6" height="7" rx="3" fill={column.skin} /><ellipse cx="16" cy="13" rx="8" ry="10" fill={column.hair} /><ellipse cx="16" cy="14" rx="6" ry="8" fill={column.skin} /><path d="M9 12c-1-9 14-11 14 1-4-1-6-3-8-5-1 3-3 4-6 4" fill={column.hair} /><circle cx="14" cy="14" r=".65" fill="#292524" /><circle cx="19" cy="14" r=".65" fill="#292524" /><path d="M14 18q2 2 4 0" fill="none" stroke="#fff" strokeWidth=".8" strokeLinecap="round" /></svg>
-              </div>
-            </div>
-          </div>)}
-        </div>
-        <div className={styles.previewFooter}><span className={styles.statusDot} />Built together.<ArrowUpRight size={15} /></div>
-      </div>
+    <div className={styles.wordmark} aria-hidden="true">
+      <VectorWordmark
+        text="DevSync"
+        background="transparent"
+        textColor="#f3f4f6"
+        shade="#34d399"
+        accent="rgba(52, 211, 153, 0.65)"
+        font={{ fontFamily: "Arial, Helvetica, sans-serif", fontWeight: 700, fontSize: 280, letterSpacing: "-5px" }}
+        handles={{ size: 64, spread: 27, labels: true }}
+        style={{ minWidth: 0, minHeight: 0 }}
+      />
     </div>
     </div>
     <ol className={styles.buildSteps} aria-label="Your path to building together">

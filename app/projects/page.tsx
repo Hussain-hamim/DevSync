@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import Header from '@/components/Header';
+import { techImages } from '../lib/projectImages';
 import { NewProjectModal } from './NewProjectModal';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -497,18 +498,3 @@ export default function ProjectsPage() {
     </div>
   );
 }
-
-const techImages = [
-  // Original working images
-  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Coding
-  'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React
-  'https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer
-
-  'https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // JavaScript
-  'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Macbook Code
-
-  // 10 New reliable additions
-  // 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Developer Workspace
-  // 'https://images.unsplash.com/photo-1621839673705-6617adf9e890?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // Terminal Commands
-  // 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&w=600&h=400&fit=crop', // React Components
-];
