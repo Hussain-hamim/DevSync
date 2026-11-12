@@ -6,9 +6,12 @@ import AnalyticsTracker from "./components/AnalyticsTracker";
 import HeaderShell from "@/components/HeaderShell";
 import { Suspense } from "react";
 
+import { siteDescription, siteTitle, siteUrl } from "./lib/site";
+
 export const metadata: Metadata = {
-  title: "DevSync",
-  description: "For Developers",
+  metadataBase: new URL(siteUrl),
+  title: { default: siteTitle, template: "%s | DevSync" },
+  description: siteDescription,
 };
 
 export default function RootLayout({

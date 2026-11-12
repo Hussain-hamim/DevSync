@@ -2,7 +2,7 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
 export default withAuth(
-  function middleware(req) {
+  function middleware() {
     // This function runs after authorization check
     // All protected routes will have already been validated
     return NextResponse.next();
@@ -15,6 +15,9 @@ export default withAuth(
         // Allow public access to landing page and login pages
         if (
           pathname === "/" ||
+          pathname === "/robots.txt" ||
+          pathname === "/sitemap.xml" ||
+          pathname === "/opengraph-image" ||
           pathname === "/login" ||
           pathname === "/admin/login"
         ) {
